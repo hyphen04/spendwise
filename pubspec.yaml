@@ -1,7 +1,7 @@
 name: spendwise
 description: SpendWise — smart expense tracker.
 publish_to: 'none'
-version: 2.0.0+2
+version: 2.1.0+3
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
@@ -52,6 +52,11 @@ dependencies:
   path: ^1.9.0
   provider: ^6.1.5
   flutter_slidable: ^4.0.0
+
+  # --- Updates ---
+  http: ^1.2.0
+  open_file: ^3.3.2
+  package_info_plus: ^8.0.0
 
   # --- Kept (used by new code too) ---
   intl: ^0.20.2
