@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../app/widgets/mono_numpad.dart';
 import '../../services/biometric_service.dart';
 import '../../services/secure_storage_service.dart';
@@ -357,6 +359,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
               ],
             ),
           ),
+          // ── Made by ─────────────────────────────────────────────────────────
+          const SizedBox(height: 32),
+          const _AboutCard(),
           const SizedBox(height: 32),
         ],
       ),
@@ -373,6 +378,208 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
               fontWeight: FontWeight.w700,
               letterSpacing: 1.1,
             ),
+      ),
+    );
+  }
+}
+
+// ── About / Made by card ──────────────────────────────────────────────────────
+
+class _AboutCard extends StatelessWidget {
+  const _AboutCard();
+
+  static const _githubUrl = 'https://github.com/hyphen04';
+  static const _portfolioUrl = 'https://kunj.dev';
+
+  Future<void> _launch(BuildContext context, String url) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      await Clipboard.setData(ClipboardData(text: url));
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Link copied to clipboard')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // SpendWise description
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: cs.surfaceContainer,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text('💸', style: const TextStyle(fontSize: 22)),
+                  const SizedBox(width: 10),
+                  Text(
+                    'SpendWise',
+                    style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'SpendWise is a personal finance tracker that finally answers '
+                'the age-old question: "where did all my money go?" '
+                '(Spoiler: food, impulse buys, and that subscription you forgot to cancel.)\n\n'
+                'Built to work fully offline — because your financial confessions '
+                'belong on your device, not on someone\'s cloud server in Oregon. '
+                'No ads, no accounts, no judgment. Just honest numbers.',
+                style: tt.bodyMedium?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  height: 1.55,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Developer card
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: cs.surfaceContainer,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: cs.onSurface,
+                    child: Text(
+                      'K',
+                      style: TextStyle(
+                        color: cs.surface,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Kunj Patel',
+                          style: tt.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700)),
+                      Text(
+                        'Considered interfaces, resilient systems',
+                        style: tt.bodySmall
+                            ?.copyWith(color: cs.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'A civil engineer who looked at concrete, said "hard pass," '
+                'and pivoted to building software instead. '
+                'Currently digitising the diamond industry by day, '
+                'shipping Flutter apps by night, and somehow maintaining a '
+                '99.9% on-time delivery rate — which is more than can be said '
+                'for most civil infrastructure.\n\n'
+                'Believes that good software respects its operator, '
+                'debugging is a thinking skill not a tooling one, '
+                'and that every app deserves a dark mode.',
+                style: tt.bodyMedium?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  height: 1.55,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  _LinkChip(
+                    icon: Icons.code_rounded,
+                    label: 'github.com/hyphen04',
+                    onTap: () => _launch(context, _githubUrl),
+                    cs: cs,
+                  ),
+                  const SizedBox(width: 8),
+                  _LinkChip(
+                    icon: Icons.language_rounded,
+                    label: 'kunj.dev',
+                    onTap: () => _launch(context, _portfolioUrl),
+                    cs: cs,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+        Center(
+          child: Text(
+            'Made with ☕ and questionable life choices',
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LinkChip extends StatelessWidget {
+  const _LinkChip({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    required this.cs,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final ColorScheme cs;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          border: Border.all(color: cs.outline),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: cs.onSurface),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: cs.onSurface,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
