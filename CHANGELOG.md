@@ -5,6 +5,21 @@ Format: `## vX.X.X — YYYY-MM-DD` with Added / Changed / Fixed sections.
 
 ---
 
+## v2.2.0 — 2026-06-07
+
+### Changed
+- Transactions screen redesigned: consistent "transactions" wordmark header (matching home screen), slim inline income/expense/net stats row, monochrome filter chips, cleaner group date headers
+- Pagination added to transactions list — loads 20 items at a time with a "Load N more" button at the bottom
+- All 4 main screens (home, transactions, reports, settings) now share a consistent header style: Manrope w800 24pt lowercase title, identical 40×40 action buttons with surfaceContainer background and 12px radius
+- Reports and Settings screens converted from Material AppBar to the same custom header used by home and transactions
+- Extracted shared `ScreenHeader` and `HeaderIconButton` widgets
+
+### Fixed
+- In-app update installer now correctly requests the "Install unknown apps" runtime permission on Android 8+ before launching the system installer — previously the install dialog would close silently without installing
+- Settings page header was positioned too high due to `ListView` consuming `MediaQuery.padding.top` for its children; header is now placed outside the scroll view
+
+---
+
 ## v2.1.0 — 2026-06-06
 
 ### Added

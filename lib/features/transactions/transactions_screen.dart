@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../app/themes/app_colors.dart';
+import '../../app/widgets/screen_header.dart';
 import '../../data/db/app_database.dart';
 import '../../data/models/transaction_row.dart';
 import '../../state/manage_providers.dart';
@@ -86,14 +87,16 @@ class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
 
   @override
-  ConsumerState<TransactionsScreen> createState() =>
-      _TransactionsScreenState();
+  ConsumerState<TransactionsScreen> createState() => _TransactionsScreenState();
 }
 
 class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   _Filters _filters = const _Filters();
   final _searchCtrl = TextEditingController();
   String _searchQuery = '';
+  int _visibleCount = 20;
+
+  static const _pageSize = 20;
 
   @override
   void dispose() {
@@ -161,27 +164,21 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
     if (_filters.categoryIds.isNotEmpty) {
       out = out
-          .where((r) =>
-              _filters.categoryIds.contains(r.transaction.categoryId))
+          .where((r) => _filters.categoryIds.contains(r.transaction.categoryId))
           .toList();
     }
 
     if (_filters.accountIds.isNotEmpty) {
       out = out
-          .where(
-              (r) => _filters.accountIds.contains(r.transaction.accountId))
+          .where((r) => _filters.accountIds.contains(r.transaction.accountId))
           .toList();
     }
 
     if (_filters.minAmount != null) {
-      out = out
-          .where((r) => r.transaction.amount >= _filters.minAmount!)
-          .toList();
+      out = out.where((r) => r.transaction.amount >= _filters.minAmount!).toList();
     }
     if (_filters.maxAmount != null) {
-      out = out
-          .where((r) => r.transaction.amount <= _filters.maxAmount!)
-          .toList();
+      out = out.where((r) => r.transaction.amount <= _filters.maxAmount!).toList();
     }
 
     if (_searchQuery.isNotEmpty) {
@@ -200,23 +197,26 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Consume navigation intent from Home's "View all" CTA.
     ref.listen<({DateTime from, DateTime to})?>(
       pendingTransactionsFilterProvider,
       (_, next) {
         if (next != null) {
           ref.read(pendingTransactionsFilterProvider.notifier).state = null;
-          setState(() => _filters = _Filters(
-                dateRange: _DateRange.custom,
-                customFrom: next.from,
-                customTo: next.to,
-              ));
+          setState(() {
+            _filters = _Filters(
+              dateRange: _DateRange.custom,
+              customFrom: next.from,
+              customTo: next.to,
+            );
+            _visibleCount = _pageSize;
+          });
         }
       },
     );
 
     final rowsAsync = ref.watch(transactionRowsProvider);
     final cs = Theme.of(context).colorScheme;
+    final appColors = Theme.of(context).extension<AppColors>()!;
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -229,50 +229,53 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
           return CustomScrollView(
             slivers: [
-              // ── Top bar ──────────────────────────────────────────────────
+              // ── Header: wordmark + count + filter + search ───────────
               SliverToBoxAdapter(
-                child: _TopBar(
+                child: _Header(
+                  count: filtered.length,
                   filterCount: _filters.activeCount,
                   onFilter: () => _showFilterSheet(context, rows),
                   searchCtrl: _searchCtrl,
-                  onQueryChanged: (v) =>
-                      setState(() => _searchQuery = v),
+                  onQueryChanged: (v) => setState(() {
+                    _searchQuery = v;
+                    _visibleCount = _pageSize;
+                  }),
+                ).animate().fadeIn(duration: 220.ms),
+              ),
+
+              // ── Inline stats ─────────────────────────────────────────
+              if (filtered.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: _StatsRow(totals: totals, appColors: appColors),
                 ),
-              ),
 
-              // ── Slim stats strip ─────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: _StatsStrip(totals: totals, count: filtered.length),
-              ),
-
-              // ── Active filter tags ────────────────────────────────────────
+              // ── Active filter chips ──────────────────────────────────
               if (_filters.hasActiveFilters)
                 SliverToBoxAdapter(
-                  child: _ActiveFilterTags(
+                  child: _ActiveFilterChips(
                     filters: _filters,
-                    onClear: () =>
-                        setState(() => _filters = const _Filters()),
+                    onClear: () => setState(() {
+                      _filters = const _Filters();
+                      _visibleCount = _pageSize;
+                    }),
                   ),
                 ),
 
-              // ── List ──────────────────────────────────────────────────────
+              // ── List / empty state ───────────────────────────────────
               if (filtered.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: _EmptyState(
-                    hasFilter: _filters.hasActiveFilters ||
-                        _searchQuery.isNotEmpty,
+                    hasFilter: _filters.hasActiveFilters || _searchQuery.isNotEmpty,
                     onAdd: () => showAddEditTransactionSheet(context),
-                    onClear: () =>
-                        setState(() => _filters = const _Filters()),
+                    onClear: () => setState(() => _filters = const _Filters()),
                   ),
                 )
               else
                 ..._groupedSlivers(filtered, cs),
 
               SliverToBoxAdapter(
-                child: SizedBox(
-                    height: MediaQuery.paddingOf(context).bottom + 96),
+                child: SizedBox(height: MediaQuery.paddingOf(context).bottom + 96),
               ),
             ],
           );
@@ -282,13 +285,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   }
 
   List<Widget> _groupedSlivers(List<TransactionRow> rows, ColorScheme cs) {
+    // Paginate first, then group — so groups are never split across pages.
+    final visible = rows.take(_visibleCount).toList();
+    final hasMore = _visibleCount < rows.length;
+
     final groups = <String, List<TransactionRow>>{};
-    for (final row in rows) {
+    for (final row in visible) {
       final key = row.transaction.transactionDate.substring(0, 10);
       groups.putIfAbsent(key, () => []).add(row);
     }
 
-    // Guarantee newest-date group appears first regardless of map iteration order.
     final sortedKeys = groups.keys.toList()..sort((a, b) => b.compareTo(a));
 
     final slivers = <Widget>[];
@@ -317,13 +323,24 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   .duplicate(row.transaction),
               onDelete: () => _confirmDelete(ctx, row),
             )
-                .animate(delay: Duration(milliseconds: i * 20))
-                .fadeIn(duration: 200.ms)
-                .slideX(begin: -0.02, end: 0);
+                .animate(delay: Duration(milliseconds: i * 18))
+                .fadeIn(duration: 180.ms)
+                .slideX(begin: -0.015, end: 0);
           },
         ),
       );
     }
+
+    if (hasMore) {
+      slivers.add(SliverToBoxAdapter(
+        child: _LoadMoreButton(
+          showing: _visibleCount,
+          total: rows.length,
+          onTap: () => setState(() => _visibleCount += _pageSize),
+        ),
+      ));
+    }
+
     return slivers;
   }
 
@@ -342,12 +359,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       ),
     );
     if (result != null) {
-      setState(() => _filters = result);
+      setState(() {
+        _filters = result;
+        _visibleCount = _pageSize;
+      });
     }
   }
 
-  Future<void> _confirmDelete(
-      BuildContext ctx, TransactionRow row) async {
+  Future<void> _confirmDelete(BuildContext ctx, TransactionRow row) async {
     final cs = Theme.of(ctx).colorScheme;
     final ok = await showDialog<bool>(
       context: ctx,
@@ -376,16 +395,18 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   }
 }
 
-// ── Top bar ────────────────────────────────────────────────────────────────────
+// ── Header ─────────────────────────────────────────────────────────────────────
 
-class _TopBar extends StatelessWidget {
-  const _TopBar({
+class _Header extends StatelessWidget {
+  const _Header({
+    required this.count,
     required this.filterCount,
     required this.onFilter,
     required this.searchCtrl,
     required this.onQueryChanged,
   });
 
+  final int count;
   final int filterCount;
   final VoidCallback onFilter;
   final TextEditingController searchCtrl;
@@ -394,168 +415,100 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-          16, MediaQuery.paddingOf(context).top + 12, 16, 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              height: 46,
-              decoration: BoxDecoration(
-                color: cs.surfaceContainer,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: TextField(
-                controller: searchCtrl,
-                onChanged: onQueryChanged,
-                style: GoogleFonts.inter(fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'Search transactions…',
-                  hintStyle: GoogleFonts.inter(
-                      fontSize: 14, color: cs.onSurfaceVariant),
-                  prefixIcon: Icon(Icons.search_rounded,
-                      size: 20, color: cs.onSurfaceVariant),
-                  border: InputBorder.none,
-                  isCollapsed: true,
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 14),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              IconButton(
-                onPressed: onFilter,
-                icon: const Icon(Icons.tune_rounded),
-                tooltip: 'Filters',
-                style: IconButton.styleFrom(
-                  backgroundColor: cs.surfaceContainer,
-                  foregroundColor: cs.onSurface,
-                  fixedSize: const Size(46, 46),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-              if (filterCount > 0)
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 18,
-                    height: 18,
-                    decoration: BoxDecoration(
-                      color: cs.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      '$filterCount',
-                      style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: cs.onPrimary),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ).animate().fadeIn(duration: 250.ms),
-    );
-  }
-}
 
-// ── Stats strip ────────────────────────────────────────────────────────────────
-
-class _StatsStrip extends StatelessWidget {
-  const _StatsStrip({required this.totals, required this.count});
-  final _Totals totals;
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final appColors = Theme.of(context).extension<AppColors>()!;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    // Search bar passed as ScreenHeader.bottom
+    final searchBar = Container(
+      height: 44,
       decoration: BoxDecoration(
         color: cs.surfaceContainer,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
       ),
-      child: Row(
-        children: [
-          _StatCell(
-            label: 'Income',
-            value: totals.income,
-            valueColor: appColors.income,
-          ),
-          _Divider(),
-          _StatCell(
-            label: 'Expense',
-            value: totals.expense,
-            valueColor: appColors.expense,
-          ),
-          _Divider(),
-          _StatCell(
-            label: 'Net',
-            value: totals.net,
-            valueColor: totals.net >= 0 ? appColors.income : appColors.expense,
-            showSign: true,
-          ),
-        ],
+      child: TextField(
+        controller: searchCtrl,
+        onChanged: onQueryChanged,
+        style: GoogleFonts.inter(fontSize: 14),
+        decoration: InputDecoration(
+          hintText: 'Search transactions…',
+          hintStyle:
+              GoogleFonts.inter(fontSize: 14, color: cs.onSurfaceVariant),
+          prefixIcon: Icon(Icons.search_rounded,
+              size: 18, color: cs.onSurfaceVariant),
+          border: InputBorder.none,
+          isCollapsed: true,
+          contentPadding: const EdgeInsets.symmetric(vertical: 13),
+        ),
       ),
+    );
+
+    return ScreenHeader(
+      title: 'transactions',
+      subtitle: count == 0
+          ? 'No transactions'
+          : '$count transaction${count == 1 ? '' : 's'}',
+      actions: [
+        HeaderIconButton(
+          icon: Icons.tune_rounded,
+          onTap: onFilter,
+          tooltip: 'Filters',
+          badge: filterCount,
+        ),
+      ],
+      bottom: searchBar,
     );
   }
 }
 
-class _StatCell extends StatelessWidget {
-  const _StatCell({
-    required this.label,
-    required this.value,
-    required this.valueColor,
-    this.showSign = false,
-  });
-  final String label;
-  final double value;
-  final Color valueColor;
-  final bool showSign;
+// ── Inline stats row ───────────────────────────────────────────────────────────
+
+class _StatsRow extends StatelessWidget {
+  const _StatsRow({required this.totals, required this.appColors});
+  final _Totals totals;
+  final AppColors appColors;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final prefix = showSign && value > 0 ? '+' : '';
-    final sign = showSign && value < 0 ? '−' : prefix;
-    final abs = value.abs();
+    final netColor = totals.net >= 0 ? appColors.income : appColors.expense;
+    final netPrefix = totals.net > 0 ? '+' : (totals.net < 0 ? '−' : '');
 
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 14),
+      child: Row(
         children: [
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: cs.onSurfaceVariant,
-            ),
+          _InlineStat(
+            arrow: '↑',
+            value: totals.income,
+            color: appColors.income,
           ),
-          const SizedBox(height: 3),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+            width: 1,
+            height: 14,
+            color: cs.outlineVariant,
+          ),
+          _InlineStat(
+            arrow: '↓',
+            value: totals.expense,
+            color: appColors.expense,
+          ),
+          const Spacer(),
           Text(
-            '$sign₹${_fmt(abs)}',
+            '$netPrefix₹${_fmt(totals.net.abs())}',
             style: GoogleFonts.manrope(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: valueColor,
+              color: netColor,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            'net',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -563,72 +516,99 @@ class _StatCell extends StatelessWidget {
   }
 }
 
-class _Divider extends StatelessWidget {
+class _InlineStat extends StatelessWidget {
+  const _InlineStat({
+    required this.arrow,
+    required this.value,
+    required this.color,
+  });
+  final String arrow;
+  final double value;
+  final Color color;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 28,
-      color:
-          Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          arrow,
+          style: TextStyle(
+            fontSize: 11,
+            color: color,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(width: 3),
+        Text(
+          '₹${_fmt(value)}',
+          style: GoogleFonts.manrope(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: color,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
     );
   }
 }
 
-// ── Active filter tags ─────────────────────────────────────────────────────────
+// ── Active filter chips ────────────────────────────────────────────────────────
 
-class _ActiveFilterTags extends StatelessWidget {
-  const _ActiveFilterTags({required this.filters, required this.onClear});
+class _ActiveFilterChips extends StatelessWidget {
+  const _ActiveFilterChips({required this.filters, required this.onClear});
   final _Filters filters;
   final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tags = <String>[];
-    if (filters.kind != 'all') tags.add(_kindLabel(filters.kind));
+    final chips = <String>[];
+    if (filters.kind != 'all') chips.add(_kindLabel(filters.kind));
     if (filters.dateRange != _DateRange.all) {
       if (filters.dateRange == _DateRange.custom && filters.customFrom != null) {
-        final label =
-            '${_shortDate(filters.customFrom!)} – ${_shortDate(filters.customTo ?? filters.customFrom!)}';
-        tags.add(label);
+        chips.add(
+            '${_shortDate(filters.customFrom!)} – ${_shortDate(filters.customTo ?? filters.customFrom!)}');
       } else {
-        tags.add(_dateRangeLabel(filters.dateRange));
+        chips.add(_dateRangeLabel(filters.dateRange));
       }
     }
     if (filters.categoryIds.isNotEmpty) {
-      tags.add('${filters.categoryIds.length} categor${filters.categoryIds.length == 1 ? 'y' : 'ies'}');
+      chips.add(
+          '${filters.categoryIds.length} categor${filters.categoryIds.length == 1 ? 'y' : 'ies'}');
     }
     if (filters.accountIds.isNotEmpty) {
-      tags.add('${filters.accountIds.length} account${filters.accountIds.length == 1 ? '' : 's'}');
+      chips.add(
+          '${filters.accountIds.length} account${filters.accountIds.length == 1 ? '' : 's'}');
     }
     if (filters.minAmount != null || filters.maxAmount != null) {
-      tags.add('Amount range');
+      chips.add('Amount range');
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 2, 16, 6),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
       child: Row(
         children: [
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: tags.map((t) {
+                children: chips.map((label) {
                   return Container(
                     margin: const EdgeInsets.only(right: 6),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: cs.primary.withValues(alpha: 0.10),
+                      color: cs.onSurface.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      t,
+                      label,
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: cs.primary,
+                        color: cs.onSurface,
                       ),
                     ),
                   );
@@ -636,21 +616,15 @@ class _ActiveFilterTags extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(width: 8),
           GestureDetector(
             onTap: onClear,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: cs.error.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                'Clear',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: cs.error,
-                ),
+            child: Text(
+              'Clear',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: cs.onSurfaceVariant,
               ),
             ),
           ),
@@ -677,16 +651,16 @@ class _GroupHeader extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final appColors = Theme.of(context).extension<AppColors>()!;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 20, 18, 6),
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 6),
       child: Row(
         children: [
           Text(
             label,
             style: GoogleFonts.inter(
               fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: cs.onSurfaceVariant,
-              letterSpacing: 0.3,
+              fontWeight: FontWeight.w700,
+              color: cs.onSurface,
+              letterSpacing: 0.2,
             ),
           ),
           const Spacer(),
@@ -700,11 +674,8 @@ class _GroupHeader extends StatelessWidget {
               ),
             ),
           if (income > 0 && expense > 0)
-            Text(
-              '  ·  ',
-              style: TextStyle(
-                  color: cs.outlineVariant, fontSize: 12),
-            ),
+            Text('  ·  ',
+                style: TextStyle(color: cs.outlineVariant, fontSize: 12)),
           if (expense > 0)
             Text(
               '−₹${_fmt(expense)}',
@@ -715,6 +686,42 @@ class _GroupHeader extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Load more button ───────────────────────────────────────────────────────────
+
+class _LoadMoreButton extends StatelessWidget {
+  const _LoadMoreButton({
+    required this.showing,
+    required this.total,
+    required this.onTap,
+  });
+  final int showing;
+  final int total;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final remaining = total - showing;
+    final loadNext = remaining > 20 ? 20 : remaining;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: cs.onSurface,
+          side: BorderSide(color: cs.outlineVariant),
+          minimumSize: const Size(double.infinity, 44),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle:
+              GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+        ),
+        child: Text('Load $loadNext more  ·  $remaining remaining'),
       ),
     );
   }
@@ -745,7 +752,7 @@ class _EmptyState extends StatelessWidget {
               hasFilter
                   ? Icons.filter_list_off_rounded
                   : Icons.receipt_long_rounded,
-              size: 52,
+              size: 48,
               color: cs.outlineVariant,
             ),
             const SizedBox(height: 16),
@@ -854,12 +861,10 @@ class _FilterSheetState extends State<_FilterSheet> {
         return Container(
           decoration: BoxDecoration(
             color: cs.surface,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
             children: [
-              // Handle
               Padding(
                 padding: const EdgeInsets.only(top: 12, bottom: 4),
                 child: Container(
@@ -871,7 +876,6 @@ class _FilterSheetState extends State<_FilterSheet> {
                   ),
                 ),
               ),
-              // Header
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -908,7 +912,8 @@ class _FilterSheetState extends State<_FilterSheet> {
                     const SizedBox(height: 10),
                     _KindRow(
                       selected: _f.kind,
-                      onChanged: (v) => setState(() => _f = _f.copyWith(kind: v)),
+                      onChanged: (v) =>
+                          setState(() => _f = _f.copyWith(kind: v)),
                     ),
                     const SizedBox(height: 20),
                     _Section(label: 'Date range'),
@@ -1046,7 +1051,7 @@ class _KindRow extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 3),
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: active ? cs.primary : cs.surfaceContainer,
+                color: active ? cs.onSurface : cs.surfaceContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -1054,14 +1059,14 @@ class _KindRow extends StatelessWidget {
                 children: [
                   Icon(icon,
                       size: 18,
-                      color: active ? cs.onPrimary : cs.onSurfaceVariant),
+                      color: active ? cs.surface : cs.onSurfaceVariant),
                   const SizedBox(height: 4),
                   Text(
                     label,
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: active ? cs.onPrimary : cs.onSurfaceVariant,
+                      color: active ? cs.surface : cs.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -1111,9 +1116,10 @@ class _DateRangeGrid extends StatelessWidget {
             onTap: () => onChanged(value),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 160),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: active ? cs.primary : cs.surfaceContainer,
+                color: active ? cs.onSurface : cs.surfaceContainer,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -1121,20 +1127,21 @@ class _DateRangeGrid extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: active ? cs.onPrimary : cs.onSurface,
+                  color: active ? cs.surface : cs.onSurface,
                 ),
               ),
             ),
           );
         }),
-        // Custom range pill
         GestureDetector(
           onTap: onCustomTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: selected == _DateRange.custom ? cs.primary : cs.surfaceContainer,
+              color: selected == _DateRange.custom
+                  ? cs.onSurface
+                  : cs.surfaceContainer,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
@@ -1142,7 +1149,9 @@ class _DateRangeGrid extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: selected == _DateRange.custom ? cs.onPrimary : cs.onSurface,
+                color: selected == _DateRange.custom
+                    ? cs.surface
+                    : cs.onSurface,
               ),
             ),
           ),
@@ -1193,7 +1202,7 @@ class _MultiSelect<T> extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(
-              color: active ? cs.primary : cs.surfaceContainer,
+              color: active ? cs.onSurface : cs.surfaceContainer,
               borderRadius: BorderRadius.circular(10),
               border: active
                   ? null
@@ -1203,15 +1212,14 @@ class _MultiSelect<T> extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(iconOf(item),
-                    style: const TextStyle(fontSize: 14)),
+                Text(iconOf(item), style: const TextStyle(fontSize: 14)),
                 const SizedBox(width: 6),
                 Text(
                   labelOf(item),
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: active ? cs.onPrimary : cs.onSurface,
+                    color: active ? cs.surface : cs.onSurface,
                   ),
                 ),
               ],
@@ -1241,8 +1249,8 @@ class _AmountField extends StatelessWidget {
       keyboardType: TextInputType.number,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.inter(
-            fontSize: 13, color: cs.onSurfaceVariant),
+        hintStyle:
+            GoogleFonts.inter(fontSize: 13, color: cs.onSurfaceVariant),
         filled: true,
         fillColor: cs.surfaceContainer,
         border: OutlineInputBorder(
@@ -1253,8 +1261,7 @@ class _AmountField extends StatelessWidget {
             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       ),
       style: GoogleFonts.inter(fontSize: 13),
-      onChanged: (v) =>
-          onChanged(v.isEmpty ? null : double.tryParse(v)),
+      onChanged: (v) => onChanged(v.isEmpty ? null : double.tryParse(v)),
     );
   }
 }
@@ -1283,41 +1290,24 @@ _Totals _totals(List<TransactionRow> rows) {
   return _Totals(inc, exp);
 }
 
-String _kindLabel(String kind) {
-  switch (kind) {
-    case 'expense':
-      return 'Expense';
-    case 'income':
-      return 'Income';
-    case 'transfer':
-      return 'Transfer';
-    default:
-      return 'All';
-  }
-}
+String _kindLabel(String kind) => switch (kind) {
+      'expense' => 'Expense',
+      'income' => 'Income',
+      'transfer' => 'Transfer',
+      _ => 'All',
+    };
 
-String _dateRangeLabel(_DateRange r) {
-  switch (r) {
-    case _DateRange.today:
-      return 'Today';
-    case _DateRange.week:
-      return 'This week';
-    case _DateRange.month:
-      return 'This month';
-    case _DateRange.quarter:
-      return 'This quarter';
-    case _DateRange.year:
-      return 'This year';
-    case _DateRange.lastMonth:
-      return 'Last month';
-    case _DateRange.lastQuarter:
-      return 'Last quarter';
-    case _DateRange.custom:
-      return 'Custom range';
-    default:
-      return 'All time';
-  }
-}
+String _dateRangeLabel(_DateRange r) => switch (r) {
+      _DateRange.today => 'Today',
+      _DateRange.week => 'This week',
+      _DateRange.month => 'This month',
+      _DateRange.quarter => 'This quarter',
+      _DateRange.year => 'This year',
+      _DateRange.lastMonth => 'Last month',
+      _DateRange.lastQuarter => 'Last quarter',
+      _DateRange.custom => 'Custom range',
+      _ => 'All time',
+    };
 
 String _shortDate(DateTime d) {
   const months = [

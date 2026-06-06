@@ -5,7 +5,19 @@ import 'package:http/http.dart' as http;
 import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+enum InstallResult {
+  /// System package installer launched successfully.
+  launched,
+  /// User has not granted REQUEST_INSTALL_PACKAGES — settings were opened.
+  permissionDenied,
+  /// The APK file was not found on disk.
+  fileNotFound,
+  /// OpenFile returned an error (wrong MIME, corrupt file, etc.).
+  error,
+}
 
 class UpdateInfo {
   const UpdateInfo({
@@ -122,12 +134,40 @@ class UpdateService {
     }
   }
 
-  /// Launches the system package installer for the downloaded APK.
-  static Future<void> installApk(String filePath) async {
-    await OpenFile.open(
+  /// Requests install permission if needed, then launches the system package
+  /// installer. Returns an [InstallResult] describing what happened.
+  ///
+  /// On Android 8+, REQUEST_INSTALL_PACKAGES is a special runtime permission —
+  /// the manifest entry is not enough. Calling `.request()` opens the
+  /// "Allow from this source" Settings screen; the user must enable it and
+  /// return to the app before tapping Install again.
+  static Future<InstallResult> installApk(String filePath) async {
+    if (!await File(filePath).exists()) return InstallResult.fileNotFound;
+
+    if (Platform.isAndroid) {
+      var status = await Permission.requestInstallPackages.status;
+      if (!status.isGranted) {
+        // Opens "Install unknown apps" settings for this app.
+        status = await Permission.requestInstallPackages.request();
+        if (!status.isGranted) {
+          return InstallResult.permissionDenied;
+        }
+      }
+    }
+
+    final result = await OpenFile.open(
       filePath,
       type: 'application/vnd.android.package-archive',
     );
+
+    switch (result.type) {
+      case ResultType.done:
+        return InstallResult.launched;
+      case ResultType.permissionDenied:
+        return InstallResult.permissionDenied;
+      default:
+        return InstallResult.error;
+    }
   }
 
   /// Call at app startup to delete any leftover APK from a previous update.

@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../app/widgets/screen_header.dart';
 import '../../app/widgets/smooth_line_chart.dart';
 import '../../data/models/transaction_row.dart';
 import '../../state/home_providers.dart';
@@ -49,36 +50,26 @@ class HomeScreen extends ConsumerWidget {
           // ── Top bar: wordmark + month nav + search ─────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(20, topPad + 16, 20, 8),
+              padding: EdgeInsets.fromLTRB(20, topPad + 16, 16, 8),
               child: Row(
                 children: [
-                  // spendwise wordmark
                   Text(
                     'spendwise',
                     style: GoogleFonts.manrope(
-                      fontSize: 22,
+                      fontSize: 24,
                       fontWeight: FontWeight.w800,
                       color: cs.onSurface,
-                      letterSpacing: -0.5,
+                      height: 1.0,
+                      letterSpacing: -0.3,
                     ),
                   ),
                   const Spacer(),
-                  // Month nav (‹ Jun 2026 ›)
                   const MonthNav(),
-                  const SizedBox(width: 10),
-                  // Search button
-                  GestureDetector(
+                  const SizedBox(width: 8),
+                  HeaderIconButton(
+                    icon: Icons.search_rounded,
                     onTap: () => showSearchSheet(context),
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: cs.surfaceContainer,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.search_rounded,
-                          size: 19, color: cs.onSurface),
-                    ),
+                    tooltip: 'Search',
                   ),
                 ],
               ).animate().fadeIn(duration: 250.ms),

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../app/widgets/mono_numpad.dart';
+import '../../app/widgets/screen_header.dart';
 import '../../services/biometric_service.dart';
 import '../../services/secure_storage_service.dart';
 import '../../services/update_service.dart';
@@ -180,10 +181,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      backgroundColor: cs.surface,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // ── Header (outside ListView so MediaQuery.padding.top is intact) ───
+          const ScreenHeader(title: 'settings'),
+
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+              children: [
+
           // ── Manage ──────────────────────────────────────────────────────────
           _sectionHeader('Manage', context),
           Card(
@@ -384,6 +393,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
           const SizedBox(height: 32),
           const _AboutCard(),
           const SizedBox(height: 32),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -429,6 +441,8 @@ class _UpdateCheckDialogState extends State<_UpdateCheckDialog> {
   double _progress = 0;
   String? _downloadedPath;
   String? _errorMessage;
+  // When true, Retry goes back to readyToInstall instead of re-checking GitHub.
+  bool _canRetryInstall = false;
 
   @override
   void initState() {
@@ -437,7 +451,10 @@ class _UpdateCheckDialogState extends State<_UpdateCheckDialog> {
   }
 
   Future<void> _check() async {
-    setState(() => _state = _UpdateState.checking);
+    setState(() {
+      _state = _UpdateState.checking;
+      _canRetryInstall = false;
+    });
     try {
       final info = await UpdateService.checkForUpdate();
       if (!mounted) return;
@@ -479,8 +496,44 @@ class _UpdateCheckDialogState extends State<_UpdateCheckDialog> {
 
   Future<void> _install() async {
     if (_downloadedPath == null) return;
-    await UpdateService.installApk(_downloadedPath!);
-    if (mounted) Navigator.of(context).pop();
+    final result = await UpdateService.installApk(_downloadedPath!);
+    if (!mounted) return;
+
+    switch (result) {
+      case InstallResult.launched:
+        // System installer is open — close the dialog.
+        Navigator.of(context).pop();
+        break;
+      case InstallResult.permissionDenied:
+        // Settings screen was opened so user can grant the permission.
+        // Keep the dialog open in error state with a retry path back to install.
+        setState(() {
+          _state = _UpdateState.error;
+          _canRetryInstall = true;
+          _errorMessage =
+              'SpendWise needs permission to install apps.\n\n'
+              'The Settings screen was just opened — find SpendWise and enable '
+              '"Allow from this source", then come back and tap Retry.';
+        });
+        break;
+      case InstallResult.fileNotFound:
+        // APK was deleted (e.g. by cleanup) — send user back to download.
+        setState(() {
+          _state = _UpdateState.updateAvailable;
+          _downloadedPath = null;
+          _errorMessage = null;
+        });
+        break;
+      case InstallResult.error:
+        setState(() {
+          _state = _UpdateState.error;
+          _canRetryInstall = false;
+          _errorMessage =
+              'The installer could not open the file. '
+              'Try downloading again.';
+        });
+        break;
+    }
   }
 
   @override
@@ -648,7 +701,13 @@ class _UpdateCheckDialogState extends State<_UpdateCheckDialog> {
             child: const Text('Close'),
           ),
           TextButton(
-            onPressed: _check,
+            onPressed: _canRetryInstall
+                ? () => setState(() {
+                      _state = _UpdateState.readyToInstall;
+                      _canRetryInstall = false;
+                      _errorMessage = null;
+                    })
+                : _check,
             child: const Text('Retry'),
           ),
         ],

@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../app/widgets/screen_header.dart';
 import '../../state/database_provider.dart';
 import '../../state/reports_providers.dart';
 import 'export/export_service.dart';
@@ -77,26 +78,29 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     final cashFlow = ref.watch(cashFlowProvider).valueOrNull ?? [];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reports'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.ios_share_outlined),
-            tooltip: 'Export',
-            onPressed: () => ExportService.showExportSheet(
-              context,
-              db,
-              from: _fromIso,
-              to: _toIso,
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: cs.surface,
       body: Column(
         children: [
-          // Period hero
+          // ── Header ───────────────────────────────────────────────────
+          ScreenHeader(
+            title: 'reports',
+            actions: [
+              HeaderIconButton(
+                icon: Icons.ios_share_outlined,
+                onTap: () => ExportService.showExportSheet(
+                  context,
+                  db,
+                  from: _fromIso,
+                  to: _toIso,
+                ),
+                tooltip: 'Export',
+              ),
+            ],
+          ),
+
+          // ── Period hero ───────────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
