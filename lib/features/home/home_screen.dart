@@ -33,8 +33,9 @@ class HomeScreen extends ConsumerWidget {
     final topPad = MediaQuery.paddingOf(context).top;
     final botPad = MediaQuery.paddingOf(context).bottom;
 
-    final chartValues =
-        cashflow.valueOrNull?.map((m) => m.net).toList() ?? [];
+    final cashflowData = cashflow.valueOrNull ?? [];
+    final chartIncomeValues = cashflowData.map((m) => m.income).toList();
+    final chartExpenseValues = cashflowData.map((m) => m.expense).toList();
     final recentRows = monthRows.take(_kRecentLimit).toList();
     final hasMore = monthRows.length > _kRecentLimit;
 
@@ -113,13 +114,27 @@ class HomeScreen extends ConsumerWidget {
                   ).animate().fadeIn(delay: 60.ms).slideY(
                       begin: 0.08, end: 0, duration: 300.ms),
                   const SizedBox(height: 4),
-                  Text(
-                    'net balance',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
-                      color: cs.onSurfaceVariant,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        'net balance',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        '↑ ₹${_fmt(summary.income)}  ↓ ₹${_fmt(summary.expense)}',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: cs.onSurfaceVariant,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
                   ).animate().fadeIn(delay: 100.ms),
                 ],
               ),
@@ -130,11 +145,12 @@ class HomeScreen extends ConsumerWidget {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
-              child: chartValues.length >= 2
+              child: chartIncomeValues.length >= 2
                   ? SmoothLineChart(
-                      values: chartValues,
+                      incomeValues: chartIncomeValues,
+                      expenseValues: chartExpenseValues,
                       height: 110,
-                      highlightIndex: chartValues.length - 1,
+                      highlightIndex: chartIncomeValues.length - 1,
                     ).animate().fadeIn(delay: 120.ms, duration: 400.ms)
                   : const SizedBox(height: 110),
             ),
@@ -161,12 +177,11 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   const Spacer(),
                   Text(
-                    '+₹${_fmt(summary.income)}  −₹${_fmt(summary.expense)}',
+                    '${monthRows.length} this month',
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w400,
                       color: cs.onSurfaceVariant,
-                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                 ],

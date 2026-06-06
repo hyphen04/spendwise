@@ -278,11 +278,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'fab_transactions',
-        onPressed: () => showAddEditTransactionSheet(context),
-        child: const Icon(Icons.add_rounded),
-      ),
     );
   }
 

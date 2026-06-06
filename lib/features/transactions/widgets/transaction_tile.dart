@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_colors.dart';
 import '../../../data/models/transaction_row.dart';
 
 /// Flat monochrome transaction row — no card, no shadow, no colored amounts.
@@ -27,22 +28,25 @@ class TransactionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final tx = row.transaction;
     final cs = Theme.of(context).colorScheme;
+    final appColors = Theme.of(context).extension<AppColors>()!;
     final isTransfer = tx.kind == 'transfer';
     final sign = isTransfer ? '' : (tx.kind == 'expense' ? '−' : '+');
+    final amountColor = appColors.forKind(tx.kind);
+    final avatarBg = appColors.containerForKind(tx.kind);
 
     return InkWell(
       onTap: onTap,
       onLongPress: () => _showActionsSheet(context),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
         child: Row(
           children: [
-            // Emoji avatar — plain circle
+            // Emoji avatar — kind-tinted circle
             Container(
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: cs.surfaceContainer,
+                color: avatarBg,
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
@@ -82,12 +86,12 @@ class TransactionTile extends StatelessWidget {
                     text: tx.note.isNotEmpty ? tx.note : row.accountName,
                     highlight: highlight,
                     baseStyle: GoogleFonts.inter(
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: FontWeight.w400,
                       color: cs.onSurfaceVariant,
                     ),
                     matchStyle: GoogleFonts.inter(
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: cs.onSurfaceVariant,
                     ),
@@ -98,13 +102,13 @@ class TransactionTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            // Amount (sign-only distinction)
+            // Amount — colored by kind
             Text(
               '$sign₹${_fmtAmt(tx.amount)}',
               style: GoogleFonts.manrope(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: cs.onSurface,
+                color: amountColor,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),

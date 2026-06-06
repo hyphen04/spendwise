@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../app/widgets/mono_numpad.dart';
 import '../../services/biometric_service.dart';
 import '../../services/secure_storage_service.dart';
+import '../../services/update_service.dart';
 import '../../state/database_provider.dart';
 import '../../state/prefs_providers.dart';
 import '../reports/export/export_service.dart';
@@ -19,12 +23,15 @@ class SettingsScreenV2 extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
   bool _biometricAvailable = false;
+  String _appVersion = '';
 
   @override
   void initState() {
     super.initState();
     BiometricService.isAvailable()
         .then((v) { if (mounted) setState(() => _biometricAvailable = v); });
+    PackageInfo.fromPlatform()
+        .then((info) { if (mounted) setState(() => _appVersion = info.version); });
   }
 
   // ── PIN helpers ─────────────────────────────────────────────────────────────
@@ -155,7 +162,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
 
     final db = ref.read(appDatabaseProvider);
     await db.transaction(() async {
-      await db.delete(db.transactionTags).go();
       await db.delete(db.transactions).go();
       await db.delete(db.budgets).go();
     });
@@ -184,7 +190,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
             child: ListTile(
               leading: const Icon(Icons.tune_rounded),
               title: const Text('Accounts, Categories & More'),
-              subtitle: const Text('Manage your accounts, categories, modes, budgets, tags'),
+              subtitle: const Text('Manage your accounts, categories, modes & budgets'),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () => context.push('/manage'),
             ),
@@ -339,13 +345,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                   leading: const Icon(Icons.info_outline_rounded),
                   title: const Text('Version'),
                   trailing: Text(
-                    '2.0.0',
+                    _appVersion.isEmpty ? '…' : _appVersion,
                     style: Theme.of(context)
                         .textTheme
                         .bodyMedium
                         ?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ),
+                if (Platform.isAndroid) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.system_update_outlined),
+                    title: const Text('Check for Update'),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => showDialog<void>(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (_) => _UpdateCheckDialog(
+                        currentVersion: _appVersion,
+                      ),
+                    ),
+                  ),
+                ],
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.article_outlined),
@@ -354,7 +375,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                   onTap: () => showLicensePage(
                       context: context,
                       applicationName: 'SpendWise',
-                      applicationVersion: '2.0.0'),
+                      applicationVersion: _appVersion),
                 ),
               ],
             ),
@@ -380,6 +401,258 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
             ),
       ),
     );
+  }
+}
+
+// ── Update check dialog ───────────────────────────────────────────────────────
+
+enum _UpdateState {
+  checking,
+  upToDate,
+  updateAvailable,
+  downloading,
+  readyToInstall,
+  error,
+}
+
+class _UpdateCheckDialog extends StatefulWidget {
+  const _UpdateCheckDialog({required this.currentVersion});
+  final String currentVersion;
+
+  @override
+  State<_UpdateCheckDialog> createState() => _UpdateCheckDialogState();
+}
+
+class _UpdateCheckDialogState extends State<_UpdateCheckDialog> {
+  _UpdateState _state = _UpdateState.checking;
+  UpdateInfo? _info;
+  double _progress = 0;
+  String? _downloadedPath;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _check();
+  }
+
+  Future<void> _check() async {
+    setState(() => _state = _UpdateState.checking);
+    try {
+      final info = await UpdateService.checkForUpdate();
+      if (!mounted) return;
+      setState(() {
+        _state = info == null ? _UpdateState.upToDate : _UpdateState.updateAvailable;
+        _info = info;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _state = _UpdateState.error;
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
+
+  Future<void> _download() async {
+    setState(() {
+      _state = _UpdateState.downloading;
+      _progress = 0;
+      _downloadedPath = null;
+    });
+    try {
+      await for (final event in UpdateService.downloadApk(_info!)) {
+        if (!mounted) return;
+        setState(() => _progress = event.progress);
+        if (event.filePath != null) _downloadedPath = event.filePath;
+      }
+      if (!mounted) return;
+      setState(() => _state = _UpdateState.readyToInstall);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _state = _UpdateState.error;
+        _errorMessage = 'Download failed: ${e.toString().replaceFirst('Exception: ', '')}';
+      });
+    }
+  }
+
+  Future<void> _install() async {
+    if (_downloadedPath == null) return;
+    await UpdateService.installApk(_downloadedPath!);
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final canDismiss = _state != _UpdateState.downloading;
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Row(
+        children: [
+          Icon(_titleIcon, size: 20, color: _titleColor(cs)),
+          const SizedBox(width: 10),
+          Text(_titleText, style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+        ],
+      ),
+      content: _buildContent(cs, tt),
+      actions: _buildActions(cs, canDismiss),
+    );
+  }
+
+  IconData get _titleIcon => switch (_state) {
+        _UpdateState.checking => Icons.search_rounded,
+        _UpdateState.upToDate => Icons.check_circle_outline_rounded,
+        _UpdateState.updateAvailable => Icons.system_update_outlined,
+        _UpdateState.downloading => Icons.download_rounded,
+        _UpdateState.readyToInstall => Icons.install_mobile_outlined,
+        _UpdateState.error => Icons.error_outline_rounded,
+      };
+
+  String get _titleText => switch (_state) {
+        _UpdateState.checking => 'Checking…',
+        _UpdateState.upToDate => 'Up to date',
+        _UpdateState.updateAvailable => 'Update available',
+        _UpdateState.downloading => 'Downloading…',
+        _UpdateState.readyToInstall => 'Ready to install',
+        _UpdateState.error => 'Check failed',
+      };
+
+  Color _titleColor(ColorScheme cs) => switch (_state) {
+        _UpdateState.upToDate => const Color(0xFF16A34A),
+        _UpdateState.error => cs.error,
+        _ => cs.onSurface,
+      };
+
+  Widget _buildContent(ColorScheme cs, TextTheme tt) {
+    return switch (_state) {
+      _UpdateState.checking => const SizedBox(
+          height: 48,
+          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        ),
+      _UpdateState.upToDate => Text(
+          'You\'re on the latest version${widget.currentVersion.isNotEmpty ? ' (v${widget.currentVersion})' : ''}.',
+          style: tt.bodyMedium,
+        ),
+      _UpdateState.updateAvailable => SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'SpendWise v${_info!.version} is available.',
+                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              if (_info!.releaseNotes.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 180),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainer,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Text(
+                      _info!.releaseNotes,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      _UpdateState.downloading => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${(_progress * 100).toInt()}%',
+              style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 10),
+            LinearProgressIndicator(
+              value: _progress,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Do not close the app…',
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
+        ),
+      _UpdateState.readyToInstall => Text(
+          'SpendWise v${_info!.version} downloaded. Tap Install to continue.',
+          style: tt.bodyMedium,
+        ),
+      _UpdateState.error => Text(
+          _errorMessage ?? 'Something went wrong.',
+          style: tt.bodyMedium?.copyWith(color: cs.error),
+        ),
+    };
+  }
+
+  List<Widget> _buildActions(ColorScheme cs, bool canDismiss) {
+    return switch (_state) {
+      _UpdateState.checking => [
+          if (canDismiss)
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+        ],
+      _UpdateState.upToDate => [
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Great'),
+          ),
+        ],
+      _UpdateState.updateAvailable => [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Later'),
+          ),
+          FilledButton(
+            onPressed: _download,
+            child: const Text('Download & Install'),
+          ),
+        ],
+      _UpdateState.downloading => [
+          TextButton(
+            onPressed: null, // disabled during download
+            child: const Text('Cancel'),
+          ),
+        ],
+      _UpdateState.readyToInstall => [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Later'),
+          ),
+          FilledButton(
+            onPressed: _install,
+            child: const Text('Install Now'),
+          ),
+        ],
+      _UpdateState.error => [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+          TextButton(
+            onPressed: _check,
+            child: const Text('Retry'),
+          ),
+        ],
+    };
   }
 }
 
@@ -493,15 +766,15 @@ class _AboutCard extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Text(
-                'A civil engineer who looked at concrete, said "hard pass," '
-                'and pivoted to building software instead. '
-                'Currently digitising the diamond industry by day, '
-                'shipping Flutter apps by night, and somehow maintaining a '
-                '99.9% on-time delivery rate — which is more than can be said '
-                'for most civil infrastructure.\n\n'
-                'Believes that good software respects its operator, '
-                'debugging is a thinking skill not a tooling one, '
-                'and that every app deserves a dark mode.',
+                'Software developer by trade, overthinker by nature. '
+                'I build things that respect the person using them — '
+                'which is exactly why SpendWise exists.\n\n'
+                'Turns out tracking where your money goes requires the '
+                'same discipline as tracking where your code breaks: '
+                'honest data, no excuses, and the courage to look at '
+                'the number staring back at you.\n\n'
+                'Based in Gujarat. Runs on strong opinions and '
+                'suspiciously optimised systems.',
                 style: tt.bodyMedium?.copyWith(
                   color: cs.onSurfaceVariant,
                   height: 1.55,

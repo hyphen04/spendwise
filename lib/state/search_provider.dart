@@ -10,28 +10,24 @@ class GlobalSearchResults {
     required this.categories,
     required this.accounts,
     required this.modes,
-    required this.tags,
   });
 
   const GlobalSearchResults.empty()
       : transactions = const [],
         categories = const [],
         accounts = const [],
-        modes = const [],
-        tags = const [];
+        modes = const [];
 
   final List<TransactionRow> transactions;
   final List<Category> categories;
   final List<Account> accounts;
   final List<Mode> modes;
-  final List<Tag> tags;
 
   bool get isEmpty =>
       transactions.isEmpty &&
       categories.isEmpty &&
       accounts.isEmpty &&
-      modes.isEmpty &&
-      tags.isEmpty;
+      modes.isEmpty;
 }
 
 final globalSearchProvider =
@@ -68,17 +64,11 @@ final globalSearchProvider =
       .take(5)
       .toList();
 
-  final tags = (ref.watch(tagsStreamProvider).valueOrNull ?? [])
-      .where((t) => !t.isArchived && t.name.toLowerCase().contains(q))
-      .take(5)
-      .toList();
-
   return GlobalSearchResults(
     transactions: matchedTx,
     categories: cats,
     accounts: accs,
     modes: modes,
-    tags: tags,
   );
 });
 

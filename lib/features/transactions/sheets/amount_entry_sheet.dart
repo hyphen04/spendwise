@@ -40,7 +40,6 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
   String? _accountId;
   String? _categoryId;
   String? _modeId;
-  List<String> _selectedTagIds = [];
   DateTime _selectedDate = DateTime.now();
   bool _saving = false;
 
@@ -151,7 +150,6 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
           modeId: _modeId!,
           kind: _kind,
           note: _noteCtrl.text.trim(),
-          tagIds: _selectedTagIds,
         );
       }
       if (mounted) Navigator.of(context).pop();
@@ -393,7 +391,6 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
             .valueOrNull ??
         [];
     final modes = ref.watch(modesStreamProvider).valueOrNull ?? [];
-    final allTags = ref.watch(tagsStreamProvider).valueOrNull ?? [];
 
     final modeSourceId = _isTransfer ? _fromAccountId : _accountId;
     final cashAccount = _isCashAccount(modeSourceId, accounts);
@@ -530,34 +527,6 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
               minLines: 1,
               textCapitalization: TextCapitalization.sentences,
             ),
-
-            // ── Tags ────────────────────────────────────────────────────────
-            if (allTags.isNotEmpty && !_isTransfer) ...[
-              const SizedBox(height: 16),
-              Text('Tags',
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelMedium
-                      ?.copyWith(color: cs.onSurfaceVariant)),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 6,
-                children: allTags
-                    .map((t) => FilterChip(
-                          label: Text(t.name),
-                          selected: _selectedTagIds.contains(t.id),
-                          onSelected: (sel) => setState(() {
-                            _selectedTagIds = sel
-                                ? [..._selectedTagIds, t.id]
-                                : _selectedTagIds
-                                    .where((id) => id != t.id)
-                                    .toList();
-                          }),
-                        ))
-                    .toList(),
-              ),
-            ],
 
             const SizedBox(height: 24),
 

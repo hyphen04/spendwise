@@ -3,8 +3,6 @@ import 'tabs/accounts_tab.dart';
 import 'tabs/budgets_tab.dart';
 import 'tabs/categories_tab.dart';
 import 'tabs/modes_tab.dart';
-import 'tabs/tags_tab.dart';
-
 class ManageScreen extends StatefulWidget {
   const ManageScreen({super.key});
 
@@ -19,7 +17,7 @@ class _ManageScreenState extends State<ManageScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -47,7 +45,6 @@ class _ManageScreenState extends State<ManageScreen>
             Tab(text: 'Categories'),
             Tab(text: 'Modes'),
             Tab(text: 'Budgets'),
-            Tab(text: 'Tags'),
           ],
         ),
       ),
@@ -58,7 +55,6 @@ class _ManageScreenState extends State<ManageScreen>
           CategoriesTab(),
           ModesTab(),
           BudgetsTab(),
-          TagsTab(),
         ],
       ),
     );

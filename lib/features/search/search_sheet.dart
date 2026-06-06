@@ -4,14 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../data/db/app_database.dart';
 import '../../data/models/transaction_row.dart';
 import '../../state/search_provider.dart';
 import '../../state/transactions_providers.dart';
 import '../manage/sheets/account_form_sheet.dart';
 import '../manage/sheets/category_form_sheet.dart';
 import '../manage/sheets/mode_form_sheet.dart';
-import '../manage/sheets/tag_form_sheet.dart';
 import '../transactions/sheets/add_edit_transaction_sheet.dart';
 import '../transactions/sheets/transaction_detail_sheet.dart';
 import '../transactions/widgets/transaction_tile.dart';
@@ -206,22 +204,6 @@ class _SearchSheetState extends ConsumerState<_SearchSheet> {
                   ),
                 ],
 
-                // ── Tags ────────────────────────────────────────────────
-                if (results.tags.isNotEmpty) ...[
-                  _SectionHeader(
-                    label: 'TAGS',
-                    count: results.tags.length,
-                    cs: cs,
-                  ),
-                  ...results.tags.map(
-                    (tag) => _TagTile(
-                      tag: tag,
-                      highlight: _debouncedQuery,
-                      cs: cs,
-                      onTap: () => showTagFormSheet(context, editing: tag),
-                    ),
-                  ),
-                ],
               ],
             ],
           ),
@@ -379,80 +361,6 @@ class _EntityTile extends StatelessWidget {
   }
 }
 
-// ── Tag tile ───────────────────────────────────────────────────────────────────
-
-class _TagTile extends StatelessWidget {
-  const _TagTile({
-    required this.tag,
-    required this.highlight,
-    required this.cs,
-    required this.onTap,
-  });
-
-  final Tag tag;
-  final String highlight;
-  final ColorScheme cs;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    Color dotColor;
-    try {
-      final hex = tag.color.replaceFirst('#', '');
-      dotColor = Color(int.parse('FF$hex', radix: 16));
-    } catch (_) {
-      dotColor = cs.primary;
-    }
-
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
-        child: Row(
-          children: [
-            Container(
-              width: 22,
-              height: 22,
-              decoration: BoxDecoration(
-                color: dotColor.withValues(alpha: 0.18),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: dotColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _HighlightText(
-                text: tag.name,
-                highlight: highlight,
-                baseStyle: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: cs.onSurface,
-                ),
-                highlightStyle: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: cs.onSurface,
-                ),
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded,
-                size: 18, color: cs.onSurfaceVariant),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ── Highlight text ─────────────────────────────────────────────────────────────
 

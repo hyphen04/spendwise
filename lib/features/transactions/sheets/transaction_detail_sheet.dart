@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../data/db/app_database.dart';
 import '../../../data/models/transaction_row.dart';
 import '../../../state/transactions_providers.dart';
 import 'add_edit_transaction_sheet.dart';
@@ -27,21 +26,6 @@ class _DetailSheet extends ConsumerStatefulWidget {
 }
 
 class _DetailSheetState extends ConsumerState<_DetailSheet> {
-  List<Tag> _tags = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTags();
-  }
-
-  Future<void> _loadTags() async {
-    final tags = await ref
-        .read(transactionsRepositoryProvider)
-        .getTagsFor(widget.row.transaction.id);
-    if (mounted) setState(() => _tags = tags);
-  }
-
   @override
   Widget build(BuildContext context) {
     final tx = widget.row.transaction;
@@ -187,35 +171,6 @@ class _DetailSheetState extends ConsumerState<_DetailSheet> {
               ),
             ),
 
-            // ── Tags ─────────────────────────────────────────────────────────
-            if (_tags.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: _tags
-                      .map((t) => Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: cs.outline),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              t.name,
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: cs.onSurface,
-                              ),
-                            ),
-                          ))
-                      .toList(),
-                ),
-              ),
-            ],
 
             const SizedBox(height: 24),
 

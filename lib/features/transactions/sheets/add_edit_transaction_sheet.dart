@@ -58,7 +58,6 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
   String? _toAccountId; // for transfers
   String? _categoryId;
   String? _modeId;
-  List<String> _selectedTagIds = [];
   bool _saving = false;
 
   @override
@@ -78,13 +77,6 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
         ? null
         : e?.categoryId;
     _modeId = e?.modeId;
-
-    if (e != null) _loadTags(e.id);
-  }
-
-  Future<void> _loadTags(String txId) async {
-    final tags = await ref.read(transactionsRepositoryProvider).getTagsFor(txId);
-    if (mounted) setState(() => _selectedTagIds = tags.map((t) => t.id).toList());
   }
 
   @override
@@ -176,7 +168,6 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
             modeId: _modeId!,
             kind: _kind,
             note: _noteCtrl.text.trim(),
-            tagIds: _selectedTagIds,
           );
         } else {
           await repo.create(
@@ -188,7 +179,6 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
             modeId: _modeId!,
             kind: _kind,
             note: _noteCtrl.text.trim(),
-            tagIds: _selectedTagIds,
           );
         }
       }
@@ -225,7 +215,6 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
         ).valueOrNull ??
         [];
     final modes = ref.watch(modesStreamProvider).valueOrNull ?? [];
-    final allTags = ref.watch(tagsStreamProvider).valueOrNull ?? [];
 
     final modeSourceId = _isTransfer ? null : _accountId;
     final cashAccount = _isCashAccount(modeSourceId, accounts);
@@ -409,31 +398,6 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
                 validator: AppValidators.note,
               ),
 
-              // Tags
-              if (allTags.isNotEmpty && !_isTransfer) ...[
-                const SizedBox(height: 16),
-                Text('Tags', style: Theme.of(context).textTheme.labelLarge),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: allTags
-                      .map((t) => FilterChip(
-                            label: Text(t.name),
-                            selected: _selectedTagIds.contains(t.id),
-                            onSelected: (sel) => setState(() {
-                              if (sel) {
-                                _selectedTagIds = [..._selectedTagIds, t.id];
-                              } else {
-                                _selectedTagIds = _selectedTagIds
-                                    .where((id) => id != t.id)
-                                    .toList();
-                              }
-                            }),
-                          ))
-                      .toList(),
-                ),
-              ],
               const SizedBox(height: 28),
 
               FilledButton(

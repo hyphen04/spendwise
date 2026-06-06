@@ -11,7 +11,6 @@ import 'reports/cashflow_trend_report.dart';
 import 'reports/category_drilldown_report.dart';
 import 'reports/mode_breakdown_report.dart';
 import 'reports/monthly_summary_report.dart';
-import 'reports/tag_report_report.dart';
 import 'reports/top_spends_report.dart';
 import 'reports/yearly_summary_report.dart';
 import 'widgets/report_card.dart';
@@ -256,16 +255,6 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   onTap: () => _push(
                       BudgetPerformanceReport(year: _year, month: _month)),
                 ),
-                ReportCard(
-                  emoji: '🏷️',
-                  title: 'Tag Report',
-                  description: 'Expenses grouped by tag',
-                  color: const Color(0xFF7C3AED),
-                  onTap: () => _push(TagReportReport(
-                      from: _fromIso,
-                      to: _toIso,
-                      monthLabel: _monthLabel)),
-                ),
               ],
             ),
           ),
@@ -292,9 +281,11 @@ class _MiniLineChart extends StatelessWidget {
   const _MiniLineChart({required this.data});
   final List<dynamic> data; // List<MonthTotal>
 
+  static const _green = Color(0xFF16A34A);
+  static const _red = Color(0xFFDC2626);
+
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final incomeSpots = <FlSpot>[];
     final expenseSpots = <FlSpot>[];
     for (var i = 0; i < data.length; i++) {
@@ -320,23 +311,23 @@ class _MiniLineChart extends StatelessWidget {
           LineChartBarData(
             spots: incomeSpots,
             isCurved: true,
-            color: cs.onSurface,
+            color: _green,
             barWidth: 2,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: cs.surfaceContainer,
+              color: _green.withValues(alpha: 0.08),
             ),
           ),
           LineChartBarData(
             spots: expenseSpots,
             isCurved: true,
-            color: cs.onSurface,
+            color: _red,
             barWidth: 2,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: cs.surfaceContainer,
+              color: _red.withValues(alpha: 0.08),
             ),
           ),
         ],

@@ -38,14 +38,14 @@ class AppColors extends ThemeExtension<AppColors> {
   // so amounts render in black (light) or off-white (dark). The +/− sign carries
   // the directional meaning. Containers map to the neutral surface fill.
   static AppColors light() => const AppColors(
-        income: Color(0xFF0A0A0A),
+        income: Color(0xFF16A34A),
         onIncome: Color(0xFFFFFFFF),
-        incomeContainer: Color(0xFFF2F2F2),
-        onIncomeContainer: Color(0xFF0A0A0A),
-        expense: Color(0xFF0A0A0A),
+        incomeContainer: Color(0xFFDCFCE7),
+        onIncomeContainer: Color(0xFF14532D),
+        expense: Color(0xFFDC2626),
         onExpense: Color(0xFFFFFFFF),
-        expenseContainer: Color(0xFFF2F2F2),
-        onExpenseContainer: Color(0xFF0A0A0A),
+        expenseContainer: Color(0xFFFEE2E2),
+        onExpenseContainer: Color(0xFF7F1D1D),
         transfer: Color(0xFF0A0A0A),
         onTransfer: Color(0xFFFFFFFF),
         transferContainer: Color(0xFFF2F2F2),
@@ -53,14 +53,14 @@ class AppColors extends ThemeExtension<AppColors> {
       );
 
   static AppColors dark() => const AppColors(
-        income: Color(0xFFF5F5F5),
-        onIncome: Color(0xFF0A0A0A),
-        incomeContainer: Color(0xFF1C1C1E),
-        onIncomeContainer: Color(0xFFF5F5F5),
-        expense: Color(0xFFF5F5F5),
-        onExpense: Color(0xFF0A0A0A),
-        expenseContainer: Color(0xFF1C1C1E),
-        onExpenseContainer: Color(0xFFF5F5F5),
+        income: Color(0xFF4ADE80),
+        onIncome: Color(0xFF052E16),
+        incomeContainer: Color(0xFF14532D),
+        onIncomeContainer: Color(0xFF4ADE80),
+        expense: Color(0xFFF87171),
+        onExpense: Color(0xFF450A0A),
+        expenseContainer: Color(0xFF7F1D1D),
+        onExpenseContainer: Color(0xFFF87171),
         transfer: Color(0xFFF5F5F5),
         onTransfer: Color(0xFF0A0A0A),
         transferContainer: Color(0xFF1C1C1E),

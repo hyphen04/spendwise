@@ -3,7 +3,6 @@ import '../data/db/app_database.dart';
 import '../data/repositories/accounts_repository.dart';
 import '../data/repositories/categories_repository.dart';
 import '../data/repositories/modes_repository.dart';
-import '../data/repositories/tags_repository.dart';
 import 'database_provider.dart';
 
 // ── Repositories ─────────────────────────────────────────────────────────────
@@ -16,9 +15,6 @@ final categoriesRepositoryProvider = Provider<CategoriesRepository>((ref) =>
 
 final modesRepositoryProvider = Provider<ModesRepository>((ref) =>
     ModesRepository(ref.watch(appDatabaseProvider)));
-
-final tagsRepositoryProvider = Provider<TagsRepository>((ref) =>
-    TagsRepository(ref.watch(appDatabaseProvider)));
 
 // ── Streams ───────────────────────────────────────────────────────────────────
 
@@ -36,5 +32,3 @@ final categoriesByKindProvider =
 final modesStreamProvider = StreamProvider<List<Mode>>((ref) =>
     ref.watch(modesRepositoryProvider).watchAll());
 
-final tagsStreamProvider = StreamProvider<List<Tag>>((ref) =>
-    ref.watch(tagsRepositoryProvider).watchAll());
