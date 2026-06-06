@@ -1,0 +1,604 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../app/widgets/mono_numpad.dart';
+import '../../services/biometric_service.dart';
+import '../../services/secure_storage_service.dart';
+import '../../state/database_provider.dart';
+import '../../state/prefs_providers.dart';
+import '../reports/export/export_service.dart';
+
+class SettingsScreenV2 extends ConsumerStatefulWidget {
+  const SettingsScreenV2({super.key});
+
+  @override
+  ConsumerState<SettingsScreenV2> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
+  bool _biometricAvailable = false;
+
+  @override
+  void initState() {
+    super.initState();
+    BiometricService.isAvailable()
+        .then((v) { if (mounted) setState(() => _biometricAvailable = v); });
+  }
+
+  // ── PIN helpers ─────────────────────────────────────────────────────────────
+
+  Future<bool> _showPinSetup(BuildContext context) async {
+    return await showModalBottomSheet<bool>(
+          context: context,
+          isScrollControlled: true,
+          isDismissible: false,
+          enableDrag: false,
+          builder: (_) => const _PinSetupSheet(),
+        ) ??
+        false;
+  }
+
+  Future<bool> _showPinVerify(BuildContext context, String title) async {
+    return await showModalBottomSheet<bool>(
+          context: context,
+          isScrollControlled: true,
+          isDismissible: false,
+          enableDrag: false,
+          builder: (_) => _PinVerifySheet(title: title),
+        ) ??
+        false;
+  }
+
+  // ── Lock toggle ──────────────────────────────────────────────────────────────
+
+  Future<void> _onLockToggle(bool value) async {
+    if (value) {
+      final ok = await _showPinSetup(context);
+      if (ok && mounted) {
+        await ref.read(lockEnabledProvider.notifier).set(true);
+      }
+    } else {
+      final hasPin = await SecureStorageService.hasPin();
+      bool confirmed = true;
+      if (hasPin && mounted) {
+        confirmed = await _showPinVerify(context, 'Confirm to disable lock');
+      }
+      if (confirmed && mounted) {
+        await SecureStorageService.clearPin();
+        await ref.read(lockEnabledProvider.notifier).set(false);
+      }
+    }
+  }
+
+  // ── Change PIN ───────────────────────────────────────────────────────────────
+
+  Future<void> _onChangePin() async {
+    final verified = await _showPinVerify(context, 'Enter current PIN');
+    if (!verified || !mounted) return;
+    final ok = await _showPinSetup(context);
+    if (ok && mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('PIN updated')));
+    }
+  }
+
+  // ── Timeout picker ───────────────────────────────────────────────────────────
+
+  static const _timeoutOptions = [
+    (0, 'Immediately'),
+    (15, '15 seconds'),
+    (30, '30 seconds'),
+    (60, '1 minute'),
+    (300, '5 minutes'),
+    (900, '15 minutes'),
+    (1800, '30 minutes'),
+    (3600, '1 hour'),
+  ];
+
+  String _timeoutLabel(int seconds) {
+    for (final t in _timeoutOptions) {
+      if (t.$1 == seconds) return t.$2;
+    }
+    return '$seconds seconds';
+  }
+
+  Future<void> _pickTimeout() async {
+    final current = ref.read(prefsServiceProvider).lockTimeoutSeconds;
+    final choice = await showDialog<int>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Lock after'),
+        children: _timeoutOptions
+            .map((t) => ListTile(
+                  title: Text(t.$2),
+                  trailing: t.$1 == current
+                      ? Icon(Icons.check_rounded,
+                          color: Theme.of(ctx).colorScheme.primary)
+                      : null,
+                  onTap: () => Navigator.pop(ctx, t.$1),
+                ))
+            .toList(),
+      ),
+    );
+    if (choice != null) {
+      await ref.read(prefsServiceProvider).setLockTimeout(choice);
+      if (mounted) setState(() {});
+    }
+  }
+
+  // ── Clear data ───────────────────────────────────────────────────────────────
+
+  Future<void> _clearAllData() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear all data?'),
+        content: const Text(
+            'This deletes all transactions and budgets. '
+            'Accounts, categories, and modes are kept. This cannot be undone.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(ctx).colorScheme.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final db = ref.read(appDatabaseProvider);
+    await db.transaction(() async {
+      await db.delete(db.transactionTags).go();
+      await db.delete(db.transactions).go();
+      await db.delete(db.budgets).go();
+    });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('All transaction data cleared')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeMode = ref.watch(themeModeProvider);
+    final oledDark = ref.watch(oledDarkProvider);
+    final lockEnabled = ref.watch(lockEnabledProvider);
+    final biometricEnabled = ref.watch(biometricEnabledProvider);
+    final cs = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Settings')),
+      body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        children: [
+          // ── Manage ──────────────────────────────────────────────────────────
+          _sectionHeader('Manage', context),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.tune_rounded),
+              title: const Text('Accounts, Categories & More'),
+              subtitle: const Text('Manage your accounts, categories, modes, budgets, tags'),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => context.push('/manage'),
+            ),
+          ),
+
+          // ── Appearance ──────────────────────────────────────────────────────
+          _sectionHeader('Appearance', context),
+          Card(
+            child: Column(
+              children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text('Theme',
+                            style: Theme.of(context).textTheme.bodyLarge),
+                      ),
+                      SegmentedButton<ThemeMode>(
+                        segments: const [
+                          ButtonSegment(
+                              value: ThemeMode.system,
+                              icon: Icon(Icons.brightness_auto_outlined),
+                              label: Text('Auto')),
+                          ButtonSegment(
+                              value: ThemeMode.light,
+                              icon: Icon(Icons.light_mode_outlined),
+                              label: Text('Light')),
+                          ButtonSegment(
+                              value: ThemeMode.dark,
+                              icon: Icon(Icons.dark_mode_outlined),
+                              label: Text('Dark')),
+                        ],
+                        selected: {themeMode},
+                        onSelectionChanged: (s) =>
+                            ref.read(themeModeProvider.notifier).set(s.first),
+                        style: const ButtonStyle(
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (themeMode == ThemeMode.dark) ...[
+                  const Divider(height: 1),
+                  SwitchListTile(
+                    title: const Text('OLED Dark'),
+                    subtitle: const Text('Pure black background'),
+                    secondary: const Icon(Icons.contrast_outlined),
+                    value: oledDark,
+                    onChanged: (v) =>
+                        ref.read(oledDarkProvider.notifier).set(v),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          // ── Security ────────────────────────────────────────────────────────
+          _sectionHeader('Security', context),
+          Card(
+            child: Column(
+              children: [
+                SwitchListTile(
+                  title: const Text('App Lock'),
+                  subtitle: const Text('Require PIN or biometric to open'),
+                  secondary: const Icon(Icons.lock_outline_rounded),
+                  value: lockEnabled,
+                  onChanged: _onLockToggle,
+                ),
+                if (lockEnabled) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.pin_outlined),
+                    title: const Text('Change PIN'),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: _onChangePin,
+                  ),
+                  if (_biometricAvailable) ...[
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      title: const Text('Biometric Unlock'),
+                      subtitle: const Text('Use Face ID or fingerprint'),
+                      secondary: const Icon(Icons.fingerprint_rounded),
+                      value: biometricEnabled,
+                      onChanged: (v) =>
+                          ref.read(biometricEnabledProvider.notifier).set(v),
+                    ),
+                  ],
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.timer_outlined),
+                    title: const Text('Lock after'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _timeoutLabel(
+                              ref.read(prefsServiceProvider).lockTimeoutSeconds),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.chevron_right_rounded),
+                      ],
+                    ),
+                    onTap: _pickTimeout,
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          // ── Data ────────────────────────────────────────────────────────────
+          _sectionHeader('Data', context),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.upload_outlined),
+                  title: const Text('Export Data'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () {
+                    final db = ref.read(appDatabaseProvider);
+                    final to = DateTime.now().toIso8601String().substring(0, 10);
+                    ExportService.showExportSheet(context, db,
+                        from: '2000-01-01', to: to);
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: Icon(Icons.delete_outline_rounded,
+                      color: cs.error),
+                  title: Text('Clear All Data',
+                      style: TextStyle(color: cs.error)),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: _clearAllData,
+                ),
+              ],
+            ),
+          ),
+
+          // ── About ────────────────────────────────────────────────────────────
+          _sectionHeader('About', context),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.info_outline_rounded),
+                  title: const Text('Version'),
+                  trailing: Text(
+                    '2.0.0',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.article_outlined),
+                  title: const Text('Open Source Licenses'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => showLicensePage(
+                      context: context,
+                      applicationName: 'SpendWise',
+                      applicationVersion: '2.0.0'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionHeader(String title, BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
+      child: Text(
+        title.toUpperCase(),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.1,
+            ),
+      ),
+    );
+  }
+}
+
+// ── PIN Setup Sheet ───────────────────────────────────────────────────────────
+
+class _PinSetupSheet extends StatefulWidget {
+  const _PinSetupSheet();
+
+  @override
+  State<_PinSetupSheet> createState() => _PinSetupSheetState();
+}
+
+enum _PinSetupStep { enter, confirm }
+
+class _PinSetupSheetState extends State<_PinSetupSheet> {
+  _PinSetupStep _step = _PinSetupStep.enter;
+  String _firstPin = '';
+  final List<String> _digits = [];
+  bool _error = false;
+
+  void _onDigit(String d) {
+    if (_digits.length >= 4) return;
+    setState(() {
+      _digits.add(d);
+      _error = false;
+    });
+    if (_digits.length == 4) _onComplete();
+  }
+
+  void _onBackspace() {
+    if (_digits.isEmpty) return;
+    setState(() {
+      _digits.removeLast();
+      _error = false;
+    });
+  }
+
+  Future<void> _onComplete() async {
+    final pin = _digits.join();
+    if (_step == _PinSetupStep.enter) {
+      setState(() {
+        _firstPin = pin;
+        _digits.clear();
+        _step = _PinSetupStep.confirm;
+      });
+    } else {
+      if (pin == _firstPin) {
+        await SecureStorageService.savePin(pin);
+        if (mounted) Navigator.pop(context, true);
+      } else {
+        setState(() {
+          _digits.clear();
+          _firstPin = '';
+          _step = _PinSetupStep.enter;
+          _error = true;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final prompt = _step == _PinSetupStep.enter
+        ? 'Enter a new 4-digit PIN'
+        : 'Confirm your PIN';
+    return _PinSheet(
+      title: 'Set PIN',
+      prompt: prompt,
+      digits: _digits,
+      error: _error,
+      errorText: 'PINs did not match — try again',
+      onDigit: _onDigit,
+      onBackspace: _onBackspace,
+      onCancel: () => Navigator.pop(context, false),
+    );
+  }
+}
+
+// ── PIN Verify Sheet ──────────────────────────────────────────────────────────
+
+class _PinVerifySheet extends StatefulWidget {
+  const _PinVerifySheet({required this.title});
+  final String title;
+
+  @override
+  State<_PinVerifySheet> createState() => _PinVerifySheetState();
+}
+
+class _PinVerifySheetState extends State<_PinVerifySheet> {
+  final List<String> _digits = [];
+  bool _error = false;
+
+  void _onDigit(String d) {
+    if (_digits.length >= 4) return;
+    setState(() {
+      _digits.add(d);
+      _error = false;
+    });
+    if (_digits.length == 4) _verify();
+  }
+
+  void _onBackspace() {
+    if (_digits.isEmpty) return;
+    setState(() {
+      _digits.removeLast();
+      _error = false;
+    });
+  }
+
+  Future<void> _verify() async {
+    final ok = await SecureStorageService.verifyPin(_digits.join());
+    if (!mounted) return;
+    if (ok) {
+      Navigator.pop(context, true);
+    } else {
+      setState(() {
+        _digits.clear();
+        _error = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _PinSheet(
+      title: widget.title,
+      prompt: 'Enter your PIN',
+      digits: _digits,
+      error: _error,
+      errorText: 'Incorrect PIN',
+      onDigit: _onDigit,
+      onBackspace: _onBackspace,
+      onCancel: () => Navigator.pop(context, false),
+    );
+  }
+}
+
+// ── Shared PIN Sheet UI ───────────────────────────────────────────────────────
+
+class _PinSheet extends StatelessWidget {
+  const _PinSheet({
+    required this.title,
+    required this.prompt,
+    required this.digits,
+    required this.error,
+    required this.errorText,
+    required this.onDigit,
+    required this.onBackspace,
+    required this.onCancel,
+  });
+
+  final String title;
+  final String prompt;
+  final List<String> digits;
+  final bool error;
+  final String errorText;
+  final ValueChanged<String> onDigit;
+  final VoidCallback onBackspace;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(title,
+                      style: tt.titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w600)),
+                ),
+                IconButton(
+                    onPressed: onCancel,
+                    icon: const Icon(Icons.close_rounded)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(prompt,
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(4, (i) {
+                final filled = i < digits.length;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 120),
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: filled
+                        ? (error ? cs.error : cs.primary)
+                        : Colors.transparent,
+                    border: Border.all(
+                      color: error ? cs.error : cs.outline,
+                      width: 2,
+                    ),
+                  ),
+                );
+              }),
+            ),
+            if (error) ...[
+              const SizedBox(height: 10),
+              Text(errorText,
+                  style: tt.bodySmall?.copyWith(color: cs.error)),
+            ] else
+              const SizedBox(height: 26),
+            const SizedBox(height: 12),
+            MonoNumpad(
+              onDigit: onDigit,
+              onBackspace: onBackspace,
+              showDecimal: false,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

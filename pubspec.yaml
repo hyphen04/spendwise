@@ -1,0 +1,76 @@
+name: spendwise
+description: SpendWise — smart expense tracker.
+publish_to: 'none'
+version: 2.0.0+2
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+  flutter: '>=3.27.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # --- Data layer (new) ---
+  drift: ^2.0.0
+  sqlite3_flutter_libs: ^0.5.0
+
+  # --- State (new) ---
+  flutter_riverpod: ^2.0.0
+  riverpod_annotation: ^2.0.0
+
+  # --- Models (new) ---
+  freezed_annotation: ^2.4.0
+  json_annotation: ^4.9.0
+
+  # --- Routing (new) ---
+  go_router: ^14.0.0
+
+  # --- Utils (new) ---
+  uuid: ^4.0.0
+  google_fonts: ^6.0.0
+  dynamic_color: ^1.7.0
+  flutter_animate: ^4.5.0
+  phosphor_flutter: ^2.1.0
+
+  # --- Export (new) ---
+  excel: ^4.0.0
+  csv: ^6.0.0
+  pdf: ^3.10.0
+  printing: ^5.13.0
+
+  # --- Notifications / Security (new) ---
+  permission_handler: ^11.3.0
+  local_auth: ^2.3.0
+  flutter_secure_storage: ^9.2.0
+  image_picker: ^1.1.0
+  showcaseview: ^3.0.0
+
+  # --- Legacy (kept while old code still exists) ---
+  sqflite: ^2.4.1
+  path: ^1.9.0
+  provider: ^6.1.5
+  flutter_slidable: ^4.0.0
+
+  # --- Kept (used by new code too) ---
+  intl: ^0.20.2
+  shared_preferences: ^2.3.5
+  fl_chart: ^1.0.0
+  url_launcher: ^6.3.1
+  file_picker: ^11.0.0
+  path_provider: ^2.1.5
+  share_plus: ^12.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.0
+  drift_dev: ^2.0.0
+  freezed: ^2.4.0
+  json_serializable: ^6.8.0
+  riverpod_generator: ^2.0.0
+
+flutter:
+  uses-material-design: true
