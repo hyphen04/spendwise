@@ -5,6 +5,18 @@ Format: `## vX.X.X — YYYY-MM-DD` with Added / Changed / Fixed sections.
 
 ---
 
+## v2.3.0 — 2026-06-07
+
+### Added
+- Auto-check for updates on startup: when connected to the internet, SpendWise silently checks GitHub for a new version once every 24 hours and shows a dismissible banner on the home screen if one is found
+- "Auto-check for updates" toggle in Settings (enabled by default) to disable the startup check
+
+### Fixed
+- Install flow now uses Android's `ACTION_INSTALL_PACKAGE` intent via a native MethodChannel — fixes the issue where tapping Install would close the dialog but the system installer never appeared (affected MIUI, OneUI, ColorOS, and other OEM ROMs)
+- Update dialog now shows "Opening installer…" briefly after tapping Install, giving the system installer time to come to the foreground before the dialog closes
+
+---
+
 ## v2.2.0 — 2026-06-07
 
 ### Changed
