@@ -58,14 +58,30 @@ class HomeScreen extends ConsumerWidget {
             padding: EdgeInsets.fromLTRB(20, topPad + 16, 16, 8),
             child: Row(
               children: [
-                Text(
-                  'spendwise',
-                  style: GoogleFonts.manrope(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: cs.onSurface,
-                    height: 1.0,
-                    letterSpacing: -0.3,
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'spend',
+                        style: GoogleFonts.manrope(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w500,
+                          color: cs.onSurface,
+                          height: 1.0,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      TextSpan(
+                        text: 'wise',
+                        style: GoogleFonts.manrope(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: cs.primary,
+                          height: 1.0,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const Spacer(),

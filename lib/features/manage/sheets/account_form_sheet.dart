@@ -164,26 +164,7 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
                           decimal: true),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  SizedBox(
-                    width: 90,
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _currency,
-                      decoration: const InputDecoration(
-                        isDense: true,
-                        contentPadding: EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 14),
-                      ),
-                      items: ['INR', 'USD', 'EUR', 'GBP', 'JPY']
-                          .map((c) => DropdownMenuItem(
-                                value: c,
-                                child: Text(c),
-                              ))
-                          .toList(),
-                      onChanged: (v) => setState(() => _currency = v!),
-                    ),
-                  ),
-                ],
+                    ],
               ),
               const SizedBox(height: 20),
               Text('Color', style: Theme.of(context).textTheme.labelLarge),

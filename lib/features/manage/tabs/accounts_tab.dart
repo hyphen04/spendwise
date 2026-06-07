@@ -58,7 +58,7 @@ class _AccountTile extends ConsumerWidget {
       name: account.name,
       colorHex: account.color,
       subtitle:
-          '$currencySymbol ${netBalance.toStringAsFixed(2)} · ${account.currency}',
+          '$currencySymbol ${netBalance.toStringAsFixed(2)}',
       isDefault: isDefault,
       onEdit: () => showAccountFormSheet(context, editing: account),
       onArchive: () => _confirmArchive(context, repo, account),

@@ -428,11 +428,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
 
 // ── About / Made by card ──────────────────────────────────────────────────────
 
-class _AboutCard extends StatelessWidget {
+class _AboutCard extends StatefulWidget {
   const _AboutCard();
 
+  @override
+  State<_AboutCard> createState() => _AboutCardState();
+}
+
+class _AboutCardState extends State<_AboutCard> {
   static const _githubUrl = 'https://github.com/hyphen04';
   static const _portfolioUrl = 'https://kunj.dev';
+
+  String _version = '';
+
+  @override
+  void initState() {
+    super.initState();
+    PackageInfo.fromPlatform()
+        .then((i) { if (mounted) setState(() => _version = i.version); });
+  }
 
   Future<void> _launch(BuildContext context, String url) async {
     final messenger = ScaffoldMessenger.of(context);
@@ -453,7 +467,7 @@ class _AboutCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // SpendWise description
+        // ── App card ────────────────────────────────────────────────────────
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(20),
@@ -466,26 +480,71 @@ class _AboutCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Text('💸', style: const TextStyle(fontSize: 22)),
-                  const SizedBox(width: 10),
-                  Text(
-                    'SpendWise',
-                    style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: cs.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Center(
+                      child: Text('💸', style: TextStyle(fontSize: 22)),
+                    ),
                   ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'SpendWise',
+                          style: tt.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          'Personal Finance',
+                          style: tt.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_version.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: cs.secondaryContainer,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'v$_version',
+                        style: tt.labelSmall?.copyWith(
+                          color: cs.onSecondaryContainer,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               Text(
-                'SpendWise is a personal finance tracker that finally answers '
-                'the age-old question: "where did all my money go?" '
-                '(Spoiler: food, impulse buys, and that subscription you forgot to cancel.)\n\n'
-                'Built to work fully offline — because your financial confessions '
-                'belong on your device, not on someone\'s cloud server in Oregon. '
-                'No ads, no accounts, no judgment. Just honest numbers.',
-                style: tt.bodyMedium?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  height: 1.55,
-                ),
+                'Finally, an app that tells you exactly where your money went. '
+                'You probably won\'t like the answer — but hey, at least it\'s offline so no one else can see your shame.',
+                style: tt.bodySmall
+                    ?.copyWith(color: cs.onSurfaceVariant, height: 1.55),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  _StatCell(emoji: '📵', label: 'Offline', cs: cs, tt: tt),
+                  const SizedBox(width: 8),
+                  _StatCell(emoji: '🚫', label: 'No Ads', cs: cs, tt: tt),
+                  const SizedBox(width: 8),
+                  _StatCell(emoji: '🔒', label: 'Private', cs: cs, tt: tt),
+                  const SizedBox(width: 8),
+                  _StatCell(emoji: '💾', label: 'On-Device', cs: cs, tt: tt),
+                ],
               ),
             ],
           ),
@@ -493,7 +552,7 @@ class _AboutCard extends StatelessWidget {
 
         const SizedBox(height: 12),
 
-        // Developer card
+        // ── Developer card ──────────────────────────────────────────────────
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(20),
@@ -507,18 +566,19 @@ class _AboutCard extends StatelessWidget {
               Row(
                 children: [
                   CircleAvatar(
-                    radius: 20,
-                    backgroundColor: cs.onSurface,
+                    radius: 22,
+                    backgroundColor: cs.primary,
                     child: Text(
-                      'K',
+                      'KP',
                       style: TextStyle(
-                        color: cs.surface,
+                        color: cs.onPrimary,
                         fontWeight: FontWeight.w800,
-                        fontSize: 16,
+                        fontSize: 13,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 14),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -526,7 +586,7 @@ class _AboutCard extends StatelessWidget {
                           style: tt.titleSmall
                               ?.copyWith(fontWeight: FontWeight.w700)),
                       Text(
-                        'Considered interfaces, resilient systems',
+                        'Software Developer · Gujarat',
                         style: tt.bodySmall
                             ?.copyWith(color: cs.onSurfaceVariant),
                       ),
@@ -536,19 +596,11 @@ class _AboutCard extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Text(
-                'Software developer by trade, overthinker by nature. '
-                'I build things that respect the person using them — '
-                'which is exactly why SpendWise exists.\n\n'
-                'Turns out tracking where your money goes requires the '
-                'same discipline as tracking where your code breaks: '
-                'honest data, no excuses, and the courage to look at '
-                'the number staring back at you.\n\n'
-                'Based in Gujarat. Runs on strong opinions and '
-                'suspiciously optimised systems.',
-                style: tt.bodyMedium?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  height: 1.55,
-                ),
+                'Builds software that respects the person using it. '
+                'Currently questioning why he made an app that judges his own spending — '
+                'but the code is clean, and that\'s what matters.',
+                style: tt.bodySmall
+                    ?.copyWith(color: cs.onSurfaceVariant, height: 1.55),
               ),
               const SizedBox(height: 16),
               Row(
@@ -580,6 +632,48 @@ class _AboutCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _StatCell extends StatelessWidget {
+  const _StatCell({
+    required this.emoji,
+    required this.label,
+    required this.cs,
+    required this.tt,
+  });
+
+  final String emoji;
+  final String label;
+  final ColorScheme cs;
+  final TextTheme tt;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 18)),
+            const SizedBox(height: 5),
+            Text(
+              label,
+              style: tt.labelSmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

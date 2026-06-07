@@ -41,15 +41,6 @@ class PdfExporter {
         },
       ));
     }
-    if (cols.contains(ExportColumn.title)) {
-      colDefs.add((
-        header: 'Title',
-        value: (r) {
-          final s = r.title as String;
-          return s.length > 25 ? '${s.substring(0, 23)}…' : s;
-        },
-      ));
-    }
     if (cols.contains(ExportColumn.note)) {
       colDefs.add((
         header: 'Note',
@@ -74,7 +65,7 @@ class PdfExporter {
     if (cols.contains(ExportColumn.amount)) {
       colDefs.add((
         header: 'Amount',
-        value: (r) => '₹${_fmt(r.amount as double)}',
+        value: (r) => 'Rs${_fmt(r.amount as double)}',
       ));
     }
     if (cols.contains(ExportColumn.id)) {
@@ -127,11 +118,11 @@ class PdfExporter {
           child: pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
             children: [
-              _summaryCol('Income', '₹${_fmt(totalIncome)}', PdfColors.green700),
-              _summaryCol('Expense', '₹${_fmt(totalExpense)}', PdfColors.red700),
+              _summaryCol('Income', 'Rs${_fmt(totalIncome)}', PdfColors.green700),
+              _summaryCol('Expense', 'Rs${_fmt(totalExpense)}', PdfColors.red700),
               _summaryCol(
                 'Net',
-                '₹${_fmt(totalIncome - totalExpense)}',
+                'Rs${_fmt(totalIncome - totalExpense)}',
                 totalIncome >= totalExpense
                     ? PdfColors.green700
                     : PdfColors.red700,

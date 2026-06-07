@@ -22,7 +22,6 @@ class XlsxExporter {
     final headers = <String>[];
     if (cols.contains(ExportColumn.date)) headers.add('Date');
     if (cols.contains(ExportColumn.time)) headers.add('Time');
-    if (cols.contains(ExportColumn.title)) headers.add('Title');
     if (cols.contains(ExportColumn.amount)) headers.add('Amount');
     if (cols.contains(ExportColumn.kind)) headers.add('Type');
     if (cols.contains(ExportColumn.account)) headers.add('Account');
@@ -44,7 +43,6 @@ class XlsxExporter {
         row.add(TextCellValue(
             '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}'));
       }
-      if (cols.contains(ExportColumn.title)) row.add(TextCellValue(r.title));
       if (cols.contains(ExportColumn.amount)) row.add(DoubleCellValue(r.amount));
       if (cols.contains(ExportColumn.kind)) row.add(TextCellValue(r.kind));
       if (cols.contains(ExportColumn.account)) row.add(TextCellValue(r.accountName));

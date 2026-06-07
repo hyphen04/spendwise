@@ -32,7 +32,6 @@ class JsonExporter {
           map['time'] =
               '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
         }
-        if (cols.contains(ExportColumn.title)) map['title'] = r.title;
         if (cols.contains(ExportColumn.amount)) map['amount'] = r.amount;
         if (cols.contains(ExportColumn.kind)) map['kind'] = r.kind;
         if (cols.contains(ExportColumn.account)) map['account'] = r.accountName;

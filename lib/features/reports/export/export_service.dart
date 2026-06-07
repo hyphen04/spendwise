@@ -17,7 +17,6 @@ enum ExportDateRange { thisMonth, lastMonth, last3Months, last6Months, thisYear,
 enum ExportColumn {
   date,
   time,
-  title,
   amount,
   kind,
   account,
@@ -42,7 +41,7 @@ class ExportConfig {
     this.presetAccountId,
     this.presetAccountName,
     DateTime? referenceDate,
-  })  : columns = columns ?? _defaultColumns,
+  })  : columns = columns != null ? Set.of(columns) : Set.of(_defaultColumns),
         _ref = referenceDate ?? DateTime.now();
 
   ExportDateRange dateRange;
@@ -429,7 +428,6 @@ class _ExportOptionsSheetState extends ConsumerState<_ExportOptionsSheet> {
                     final label = switch (col) {
                       ExportColumn.date => 'Date',
                       ExportColumn.time => 'Time',
-                      ExportColumn.title => 'Title',
                       ExportColumn.amount => 'Amount',
                       ExportColumn.kind => 'Type',
                       ExportColumn.account => 'Account',
