@@ -251,17 +251,35 @@ class ReportsRepository {
   Future<List<ExportRow>> transactionsForExport({
     required String from,
     required String to,
+    String? kind,
+    Set<String>? accountIds,
   }) async {
+    final vars = <Variable>[Variable.withString(from), Variable.withString(to)];
+
+    String kindClause = '';
+    if (kind != null) {
+      kindClause = "AND t.kind = '${kind.replaceAll("'", "''")}'";
+    }
+
+    String accountClause = '';
+    if (accountIds != null && accountIds.isNotEmpty) {
+      final placeholders = accountIds.map((_) => '?').join(',');
+      accountClause = 'AND t.account_id IN ($placeholders)';
+      vars.addAll(accountIds.map(Variable.withString));
+    }
+
     final rows = await _db.customSelect(
       'SELECT t.id, t.title, t.amount, t.transaction_date, t.kind, t.note, '
+      't.created_at, '
       'a.name AS account_name, c.name AS category_name, m.name AS mode_name '
       'FROM transactions t '
       'LEFT JOIN accounts a ON t.account_id = a.id '
       'LEFT JOIN categories c ON t.category_id = c.id '
       'LEFT JOIN modes m ON t.mode_id = m.id '
       'WHERE t.transaction_date >= ? AND t.transaction_date < ? '
+      '$kindClause $accountClause '
       'ORDER BY t.transaction_date ASC',
-      variables: [Variable.withString(from), Variable.withString(to)],
+      variables: vars,
     ).get();
 
     return rows
@@ -275,6 +293,7 @@ class ReportsRepository {
               categoryName: r.data['category_name'] as String? ?? '',
               modeName: r.data['mode_name'] as String? ?? '',
               note: r.data['note'] as String?,
+              createdAt: (r.data['created_at'] as num?)?.toInt() ?? 0,
             ))
         .toList();
   }

@@ -90,8 +90,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 onTap: () => ExportService.showExportSheet(
                   context,
                   db,
-                  from: _fromIso,
-                  to: _toIso,
+                  defaultFrom: _fromIso,
+                  defaultTo: _toIso,
                 ),
                 tooltip: 'Export',
               ),

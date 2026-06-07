@@ -327,9 +327,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () {
                     final db = ref.read(appDatabaseProvider);
-                    final to = DateTime.now().toIso8601String().substring(0, 10);
+                    final now = DateTime.now();
                     ExportService.showExportSheet(context, db,
-                        from: '2000-01-01', to: to);
+                        defaultFrom: DateTime(now.year, now.month).toIso8601String(),
+                        defaultTo: DateTime(now.year, now.month + 1).toIso8601String());
                   },
                 ),
                 const Divider(height: 1),

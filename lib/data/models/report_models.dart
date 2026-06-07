@@ -81,15 +81,17 @@ class ExportRow {
     required this.accountName,
     required this.categoryName,
     required this.modeName,
+    required this.createdAt,
     this.note,
   });
   final String id;
   final String title;
   final double amount;
-  final String date;
+  final String date;      // ISO 8601 transaction date
   final String kind;
   final String accountName;
   final String categoryName;
   final String modeName;
   final String? note;
+  final int createdAt;    // unix ms timestamp
 }
