@@ -60,12 +60,14 @@ class MonthlySummary {
     required this.topExpenseCategories,
     this.biggestSpendTitle,
     this.biggestSpendAmount,
+    this.biggestSpendNote,
   });
   final double income;
   final double expense;
   final List<CategoryTotal> topExpenseCategories;
   final String? biggestSpendTitle;
   final double? biggestSpendAmount;
+  final String? biggestSpendNote;
   double get net => income - expense;
 }
 

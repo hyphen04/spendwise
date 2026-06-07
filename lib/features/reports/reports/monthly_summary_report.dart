@@ -69,9 +69,28 @@ class MonthlySummaryReport extends ConsumerWidget {
                     const Text('🏆', style: TextStyle(fontSize: 20)),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(s.biggestSpendTitle!,
-                          style: const TextStyle(fontWeight: FontWeight.w500)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            s.biggestSpendTitle!,
+                            style: const TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                          if (s.biggestSpendNote != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              s.biggestSpendNote!,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     Text(
                       '₹${_fmt(s.biggestSpendAmount!)}',
                       style: TextStyle(

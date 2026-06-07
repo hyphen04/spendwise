@@ -46,23 +46,36 @@ class ReportsRepository {
         .toList();
 
     final topSpend = await _db.customSelect(
-      'SELECT title, amount FROM transactions '
-      'WHERE kind = \'expense\' '
-      'AND transaction_date >= ? AND transaction_date < ? '
-      'ORDER BY amount DESC LIMIT 1',
+      'SELECT t.title, t.amount, t.note, c.name AS category_name '
+      'FROM transactions t '
+      'LEFT JOIN categories c ON t.category_id = c.id '
+      'WHERE t.kind = \'expense\' '
+      'AND t.transaction_date >= ? AND t.transaction_date < ? '
+      'ORDER BY t.amount DESC LIMIT 1',
       variables: [Variable.withString(from), Variable.withString(to)],
     ).get();
+
+    String? biggestTitle;
+    double? biggestAmount;
+    String? biggestNote;
+    if (topSpend.isNotEmpty) {
+      final row = topSpend.first.data;
+      final rawTitle = row['title'] as String? ?? '';
+      biggestTitle = rawTitle.isNotEmpty
+          ? rawTitle
+          : (row['category_name'] as String? ?? 'Expense');
+      biggestAmount = (row['amount'] as num?)?.toDouble();
+      final rawNote = row['note'] as String? ?? '';
+      biggestNote = rawNote.isNotEmpty ? rawNote : null;
+    }
 
     return MonthlySummary(
       income: income,
       expense: expense,
       topExpenseCategories: topCategories,
-      biggestSpendTitle: topSpend.isNotEmpty
-          ? topSpend.first.data['title'] as String?
-          : null,
-      biggestSpendAmount: topSpend.isNotEmpty
-          ? (topSpend.first.data['amount'] as num?)?.toDouble()
-          : null,
+      biggestSpendTitle: biggestTitle,
+      biggestSpendAmount: biggestAmount,
+      biggestSpendNote: biggestNote,
     );
   }
 

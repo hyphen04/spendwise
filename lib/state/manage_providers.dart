@@ -32,3 +32,24 @@ final categoriesByKindProvider =
 final modesStreamProvider = StreamProvider<List<Mode>>((ref) =>
     ref.watch(modesRepositoryProvider).watchAll());
 
+/// Net balance for a single account:
+///   openingBalance + SUM(income transactions) − SUM(expense transactions)
+/// Reacts to both account edits and transaction changes.
+final accountNetBalanceProvider =
+    StreamProvider.family<double, Account>((ref, account) {
+  final db = ref.watch(appDatabaseProvider);
+  // watchByAccount emits a new list every time a transaction for this account
+  // is added, edited or deleted — which triggers a recompute.
+  return db.transactionsDao.watchByAccount(account.id).map((txs) {
+    double income = 0, expense = 0;
+    for (final tx in txs) {
+      if (tx.kind == 'income') {
+        income += tx.amount;
+      } else if (tx.kind == 'expense') {
+        expense += tx.amount;
+      }
+    }
+    return account.openingBalance + income - expense;
+  });
+});
+

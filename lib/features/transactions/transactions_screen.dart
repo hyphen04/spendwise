@@ -227,21 +227,24 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           final filtered = _apply(rows);
           final totals = _totals(filtered);
 
-          return CustomScrollView(
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ── Fixed header: title + count + filter + search ────────
+              _Header(
+                count: filtered.length,
+                filterCount: _filters.activeCount,
+                onFilter: () => _showFilterSheet(context, rows),
+                searchCtrl: _searchCtrl,
+                onQueryChanged: (v) => setState(() {
+                  _searchQuery = v;
+                  _visibleCount = _pageSize;
+                }),
+              ).animate().fadeIn(duration: 220.ms),
+
+              // ── Scrollable content ───────────────────────────────────
+              Expanded(child: CustomScrollView(
             slivers: [
-              // ── Header: wordmark + count + filter + search ───────────
-              SliverToBoxAdapter(
-                child: _Header(
-                  count: filtered.length,
-                  filterCount: _filters.activeCount,
-                  onFilter: () => _showFilterSheet(context, rows),
-                  searchCtrl: _searchCtrl,
-                  onQueryChanged: (v) => setState(() {
-                    _searchQuery = v;
-                    _visibleCount = _pageSize;
-                  }),
-                ).animate().fadeIn(duration: 220.ms),
-              ),
 
               // ── Inline stats ─────────────────────────────────────────
               if (filtered.isNotEmpty)
@@ -278,7 +281,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 child: SizedBox(height: MediaQuery.paddingOf(context).bottom + 96),
               ),
             ],
-          );
+          )),
+          ],
+        );
         },
       ),
     );

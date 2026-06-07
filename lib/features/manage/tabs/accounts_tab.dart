@@ -50,13 +50,15 @@ class _AccountTile extends ConsumerWidget {
     final currencySymbol = _currencySymbol(account.currency);
     final defaultAccountId = ref.watch(defaultAccountIdProvider);
     final isDefault = account.id == defaultAccountId;
+    final netBalanceAsync = ref.watch(accountNetBalanceProvider(account));
+    final netBalance = netBalanceAsync.valueOrNull ?? account.openingBalance;
 
     return EntityTile(
       icon: account.icon,
       name: account.name,
       colorHex: account.color,
       subtitle:
-          '$currencySymbol ${account.openingBalance.toStringAsFixed(2)} opening · ${account.currency}',
+          '$currencySymbol ${netBalance.toStringAsFixed(2)} · ${account.currency}',
       isDefault: isDefault,
       onEdit: () => showAccountFormSheet(context, editing: account),
       onArchive: () => _confirmArchive(context, repo, account),

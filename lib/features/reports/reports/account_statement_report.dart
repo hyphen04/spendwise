@@ -105,6 +105,11 @@ class _StatementList extends ConsumerWidget {
       for (final c in ref.watch(categoriesStreamProvider).valueOrNull ?? [])
         c.id: c.name
     };
+    final accsAsync = ref.watch(accountsStreamProvider);
+    final account = (accsAsync.valueOrNull ?? <Account>[])
+        .where((a) => a.id == accountId)
+        .firstOrNull;
+    final openingBalance = account?.openingBalance ?? 0.0;
 
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -119,7 +124,7 @@ class _StatementList extends ConsumerWidget {
           );
         }
 
-        double balance = 0;
+        double balance = openingBalance;
         for (final t in txs) {
           if (t.kind == 'income') {
             balance += t.amount;

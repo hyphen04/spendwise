@@ -50,40 +50,43 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      body: CustomScrollView(
-        slivers: [
-          // ── Update banner (shown when auto-check finds a new version) ───────
-          if (pendingUpdate != null)
-            SliverToBoxAdapter(child: _UpdateBanner(pendingUpdate)),
-
-          // ── Top bar: wordmark + month nav + search ─────────────────────────
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(20, topPad + 16, 16, 8),
-              child: Row(
-                children: [
-                  Text(
-                    'spendwise',
-                    style: GoogleFonts.manrope(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: cs.onSurface,
-                      height: 1.0,
-                      letterSpacing: -0.3,
-                    ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // ── Fixed header: wordmark + month nav + search ────────────────────
+          Padding(
+            padding: EdgeInsets.fromLTRB(20, topPad + 16, 16, 8),
+            child: Row(
+              children: [
+                Text(
+                  'spendwise',
+                  style: GoogleFonts.manrope(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: cs.onSurface,
+                    height: 1.0,
+                    letterSpacing: -0.3,
                   ),
-                  const Spacer(),
-                  const MonthNav(),
-                  const SizedBox(width: 8),
-                  HeaderIconButton(
-                    icon: Icons.search_rounded,
-                    onTap: () => showSearchSheet(context),
-                    tooltip: 'Search',
-                  ),
-                ],
-              ).animate().fadeIn(duration: 250.ms),
-            ),
+                ),
+                const Spacer(),
+                const MonthNav(),
+                const SizedBox(width: 8),
+                HeaderIconButton(
+                  icon: Icons.search_rounded,
+                  onTap: () => showSearchSheet(context),
+                  tooltip: 'Search',
+                ),
+              ],
+            ).animate().fadeIn(duration: 250.ms),
           ),
+
+          // ── Scrollable content ─────────────────────────────────────────────
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                // ── Update banner (scrolls with content) ──────────────────
+                if (pendingUpdate != null)
+                  SliverToBoxAdapter(child: _UpdateBanner(pendingUpdate)),
 
           // ── Balance number + caption ───────────────────────────────────────
           SliverToBoxAdapter(
@@ -249,6 +252,9 @@ class HomeScreen extends ConsumerWidget {
 
           SliverToBoxAdapter(child: SizedBox(height: botPad + 100)),
         ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -364,9 +370,8 @@ class _UpdateBanner extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final topPad = MediaQuery.paddingOf(context).top;
     return Container(
-      margin: EdgeInsets.fromLTRB(16, topPad + 8, 16, 0),
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: cs.primaryContainer,
