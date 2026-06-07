@@ -5,6 +5,15 @@ Format: `## vX.X.X — YYYY-MM-DD` with Added / Changed / Fixed sections.
 
 ---
 
+## v2.3.1 — 2026-06-07
+
+### Fixed
+- Report cards (e.g. "Biggest Spend") now show the category name when the transaction has no title, and display the note as a subtitle when present — previously only the trophy icon appeared with no text
+- Opening balance in accounts now correctly factors into the displayed net balance (`opening balance + income − expense`); account statement report also seeds the running total from opening balance
+- All 4 main screens (Home, Transactions, Reports, Settings) now have a consistent fixed header — the header stays pinned while content scrolls
+
+---
+
 ## v2.3.0 — 2026-06-07
 
 ### Added
