@@ -449,13 +449,19 @@ class _ExportOptionsSheetState extends ConsumerState<_ExportOptionsSheet> {
                       (ExportFormat.pdf, 'PDF', Icons.picture_as_pdf_outlined),
                       (ExportFormat.json, 'JSON', Icons.data_object_outlined),
                     ])
-                      FilterChip(
-                        avatar: Icon(entry.$3, size: 16),
-                        label: Text(entry.$2),
-                        selected: _cfg.format == entry.$1,
-                        onSelected: (_) =>
-                            setState(() => _cfg.format = entry.$1),
-                      ),
+                      Builder(builder: (context) {
+                        final selected = _cfg.format == entry.$1;
+                        final iconColor = selected
+                            ? Theme.of(context).colorScheme.onPrimary
+                            : Theme.of(context).colorScheme.onSurface;
+                        return FilterChip(
+                          avatar: Icon(entry.$3, size: 16, color: iconColor),
+                          label: Text(entry.$2),
+                          selected: selected,
+                          onSelected: (_) =>
+                              setState(() => _cfg.format = entry.$1),
+                        );
+                      }),
                   ],
                 ),
 

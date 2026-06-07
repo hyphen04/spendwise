@@ -255,7 +255,19 @@ class AppTheme {
         side: BorderSide(color: cs.outline),
         backgroundColor: cs.surface,
         selectedColor: cs.primary,
-        labelStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
+        // Unselected: dark text on light background
+        labelStyle: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: cs.onSurface,
+        ),
+        // Selected: light text on primary (dark) background
+        secondaryLabelStyle: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: cs.onPrimary,
+        ),
+        checkmarkColor: cs.onPrimary,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       ),
       dividerTheme: DividerThemeData(
