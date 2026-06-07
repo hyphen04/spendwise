@@ -207,6 +207,30 @@ class _ExportOptionsSheetState extends ConsumerState<_ExportOptionsSheet> {
     _cfg = widget.config;
   }
 
+  // Chip with explicit label color based on selected state — FilterChip in
+  // Flutter 3.x ignores ChipThemeData.secondaryLabelStyle, so we must pass
+  // labelStyle directly.
+  Widget _chip({
+    required String label,
+    required bool selected,
+    required VoidCallback? onSelected,
+    Widget? avatar,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    final labelColor = selected ? cs.onPrimary : cs.onSurface;
+    return FilterChip(
+      avatar: avatar,
+      label: Text(label),
+      labelStyle: TextStyle(
+        color: labelColor,
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+      ),
+      selected: selected,
+      onSelected: onSelected == null ? null : (_) => onSelected(),
+    );
+  }
+
   Future<void> _pickCustomFrom() async {
     final picked = await showDatePicker(
       context: context,
@@ -275,11 +299,10 @@ class _ExportOptionsSheetState extends ConsumerState<_ExportOptionsSheet> {
                       ExportDateRange.thisYear => 'This Year',
                       ExportDateRange.custom => 'Custom',
                     };
-                    return FilterChip(
-                      label: Text(label),
+                    return _chip(
+                      label: label,
                       selected: _cfg.dateRange == r,
-                      onSelected: (_) =>
-                          setState(() => _cfg.dateRange = r),
+                      onSelected: () => setState(() => _cfg.dateRange = r),
                     );
                   }).toList(),
                 ),
@@ -325,10 +348,10 @@ class _ExportOptionsSheetState extends ConsumerState<_ExportOptionsSheet> {
                       ('income', 'Income'),
                       ('expense', 'Expense'),
                     ])
-                      FilterChip(
-                        label: Text(entry.$2),
+                      _chip(
+                        label: entry.$2,
                         selected: _cfg.kindFilter == entry.$1,
-                        onSelected: (_) =>
+                        onSelected: () =>
                             setState(() => _cfg.kindFilter = entry.$1),
                       ),
                   ],
@@ -418,16 +441,16 @@ class _ExportOptionsSheetState extends ConsumerState<_ExportOptionsSheet> {
                     };
                     final selected = _cfg.columns.contains(col);
                     final isOnlyOne = _cfg.columns.length == 1 && selected;
-                    return FilterChip(
-                      label: Text(label),
+                    return _chip(
+                      label: label,
                       selected: selected,
                       onSelected: isOnlyOne
                           ? null
-                          : (v) => setState(() {
-                                if (v) {
-                                  _cfg.columns.add(col);
-                                } else {
+                          : () => setState(() {
+                                if (selected) {
                                   _cfg.columns.remove(col);
+                                } else {
+                                  _cfg.columns.add(col);
                                 }
                               }),
                     );
@@ -449,19 +472,19 @@ class _ExportOptionsSheetState extends ConsumerState<_ExportOptionsSheet> {
                       (ExportFormat.pdf, 'PDF', Icons.picture_as_pdf_outlined),
                       (ExportFormat.json, 'JSON', Icons.data_object_outlined),
                     ])
-                      Builder(builder: (context) {
-                        final selected = _cfg.format == entry.$1;
-                        final iconColor = selected
-                            ? Theme.of(context).colorScheme.onPrimary
-                            : Theme.of(context).colorScheme.onSurface;
-                        return FilterChip(
-                          avatar: Icon(entry.$3, size: 16, color: iconColor),
-                          label: Text(entry.$2),
-                          selected: selected,
-                          onSelected: (_) =>
-                              setState(() => _cfg.format = entry.$1),
-                        );
-                      }),
+                      _chip(
+                        label: entry.$2,
+                        selected: _cfg.format == entry.$1,
+                        onSelected: () =>
+                            setState(() => _cfg.format = entry.$1),
+                        avatar: Icon(
+                          entry.$3,
+                          size: 16,
+                          color: _cfg.format == entry.$1
+                              ? cs.onPrimary
+                              : cs.onSurface,
+                        ),
+                      ),
                   ],
                 ),
 
