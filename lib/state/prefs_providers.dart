@@ -102,3 +102,19 @@ class DefaultModeIdNotifier extends StateNotifier<String?> {
   }
 }
 
+// ── Auto-check for updates ────────────────────────────────────────────────────
+
+final autoCheckUpdatesProvider =
+    StateNotifierProvider<AutoCheckUpdatesNotifier, bool>(
+        (ref) => AutoCheckUpdatesNotifier(ref.watch(prefsServiceProvider)));
+
+class AutoCheckUpdatesNotifier extends StateNotifier<bool> {
+  AutoCheckUpdatesNotifier(this._prefs) : super(_prefs.autoCheckUpdates);
+  final PrefsService _prefs;
+
+  Future<void> set(bool v) async {
+    await _prefs.setAutoCheckUpdates(v);
+    state = v;
+  }
+}
+

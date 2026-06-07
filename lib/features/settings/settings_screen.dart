@@ -10,9 +10,9 @@ import '../../app/widgets/mono_numpad.dart';
 import '../../app/widgets/screen_header.dart';
 import '../../services/biometric_service.dart';
 import '../../services/secure_storage_service.dart';
-import '../../services/update_service.dart';
 import '../../state/database_provider.dart';
 import '../../state/prefs_providers.dart';
+import 'update_check_dialog.dart';
 import '../reports/export/export_service.dart';
 
 class SettingsScreenV2 extends ConsumerStatefulWidget {
@@ -363,6 +363,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                 ),
                 if (Platform.isAndroid) ...[
                   const Divider(height: 1),
+                  SwitchListTile(
+                    secondary: const Icon(Icons.update_outlined),
+                    title: const Text('Auto-check for updates'),
+                    subtitle: const Text('Check on startup when connected'),
+                    value: ref.watch(autoCheckUpdatesProvider),
+                    onChanged: (v) =>
+                        ref.read(autoCheckUpdatesProvider.notifier).set(v),
+                  ),
+                  const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.system_update_outlined),
                     title: const Text('Check for Update'),
@@ -370,7 +379,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                     onTap: () => showDialog<void>(
                       context: context,
                       barrierDismissible: false,
-                      builder: (_) => _UpdateCheckDialog(
+                      builder: (_) => UpdateCheckDialog(
                         currentVersion: _appVersion,
                       ),
                     ),
@@ -413,305 +422,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
             ),
       ),
     );
-  }
-}
-
-// ── Update check dialog ───────────────────────────────────────────────────────
-
-enum _UpdateState {
-  checking,
-  upToDate,
-  updateAvailable,
-  downloading,
-  readyToInstall,
-  error,
-}
-
-class _UpdateCheckDialog extends StatefulWidget {
-  const _UpdateCheckDialog({required this.currentVersion});
-  final String currentVersion;
-
-  @override
-  State<_UpdateCheckDialog> createState() => _UpdateCheckDialogState();
-}
-
-class _UpdateCheckDialogState extends State<_UpdateCheckDialog> {
-  _UpdateState _state = _UpdateState.checking;
-  UpdateInfo? _info;
-  double _progress = 0;
-  String? _downloadedPath;
-  String? _errorMessage;
-  // When true, Retry goes back to readyToInstall instead of re-checking GitHub.
-  bool _canRetryInstall = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _check();
-  }
-
-  Future<void> _check() async {
-    setState(() {
-      _state = _UpdateState.checking;
-      _canRetryInstall = false;
-    });
-    try {
-      final info = await UpdateService.checkForUpdate();
-      if (!mounted) return;
-      setState(() {
-        _state = info == null ? _UpdateState.upToDate : _UpdateState.updateAvailable;
-        _info = info;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _state = _UpdateState.error;
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
-      });
-    }
-  }
-
-  Future<void> _download() async {
-    setState(() {
-      _state = _UpdateState.downloading;
-      _progress = 0;
-      _downloadedPath = null;
-    });
-    try {
-      await for (final event in UpdateService.downloadApk(_info!)) {
-        if (!mounted) return;
-        setState(() => _progress = event.progress);
-        if (event.filePath != null) _downloadedPath = event.filePath;
-      }
-      if (!mounted) return;
-      setState(() => _state = _UpdateState.readyToInstall);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _state = _UpdateState.error;
-        _errorMessage = 'Download failed: ${e.toString().replaceFirst('Exception: ', '')}';
-      });
-    }
-  }
-
-  Future<void> _install() async {
-    if (_downloadedPath == null) return;
-    final result = await UpdateService.installApk(_downloadedPath!);
-    if (!mounted) return;
-
-    switch (result) {
-      case InstallResult.launched:
-        // System installer is open — close the dialog.
-        Navigator.of(context).pop();
-        break;
-      case InstallResult.permissionDenied:
-        // Settings screen was opened so user can grant the permission.
-        // Keep the dialog open in error state with a retry path back to install.
-        setState(() {
-          _state = _UpdateState.error;
-          _canRetryInstall = true;
-          _errorMessage =
-              'SpendWise needs permission to install apps.\n\n'
-              'The Settings screen was just opened — find SpendWise and enable '
-              '"Allow from this source", then come back and tap Retry.';
-        });
-        break;
-      case InstallResult.fileNotFound:
-        // APK was deleted (e.g. by cleanup) — send user back to download.
-        setState(() {
-          _state = _UpdateState.updateAvailable;
-          _downloadedPath = null;
-          _errorMessage = null;
-        });
-        break;
-      case InstallResult.error:
-        setState(() {
-          _state = _UpdateState.error;
-          _canRetryInstall = false;
-          _errorMessage =
-              'The installer could not open the file. '
-              'Try downloading again.';
-        });
-        break;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final canDismiss = _state != _UpdateState.downloading;
-
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Row(
-        children: [
-          Icon(_titleIcon, size: 20, color: _titleColor(cs)),
-          const SizedBox(width: 10),
-          Text(_titleText, style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-        ],
-      ),
-      content: _buildContent(cs, tt),
-      actions: _buildActions(cs, canDismiss),
-    );
-  }
-
-  IconData get _titleIcon => switch (_state) {
-        _UpdateState.checking => Icons.search_rounded,
-        _UpdateState.upToDate => Icons.check_circle_outline_rounded,
-        _UpdateState.updateAvailable => Icons.system_update_outlined,
-        _UpdateState.downloading => Icons.download_rounded,
-        _UpdateState.readyToInstall => Icons.install_mobile_outlined,
-        _UpdateState.error => Icons.error_outline_rounded,
-      };
-
-  String get _titleText => switch (_state) {
-        _UpdateState.checking => 'Checking…',
-        _UpdateState.upToDate => 'Up to date',
-        _UpdateState.updateAvailable => 'Update available',
-        _UpdateState.downloading => 'Downloading…',
-        _UpdateState.readyToInstall => 'Ready to install',
-        _UpdateState.error => 'Check failed',
-      };
-
-  Color _titleColor(ColorScheme cs) => switch (_state) {
-        _UpdateState.upToDate => const Color(0xFF16A34A),
-        _UpdateState.error => cs.error,
-        _ => cs.onSurface,
-      };
-
-  Widget _buildContent(ColorScheme cs, TextTheme tt) {
-    return switch (_state) {
-      _UpdateState.checking => const SizedBox(
-          height: 48,
-          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        ),
-      _UpdateState.upToDate => Text(
-          'You\'re on the latest version${widget.currentVersion.isNotEmpty ? ' (v${widget.currentVersion})' : ''}.',
-          style: tt.bodyMedium,
-        ),
-      _UpdateState.updateAvailable => SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'SpendWise v${_info!.version} is available.',
-                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              if (_info!.releaseNotes.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Container(
-                  constraints: const BoxConstraints(maxHeight: 180),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainer,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: SingleChildScrollView(
-                    child: Text(
-                      _info!.releaseNotes,
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      _UpdateState.downloading => Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${(_progress * 100).toInt()}%',
-              style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 10),
-            LinearProgressIndicator(
-              value: _progress,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Do not close the app…',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
-        ),
-      _UpdateState.readyToInstall => Text(
-          'SpendWise v${_info!.version} downloaded. Tap Install to continue.',
-          style: tt.bodyMedium,
-        ),
-      _UpdateState.error => Text(
-          _errorMessage ?? 'Something went wrong.',
-          style: tt.bodyMedium?.copyWith(color: cs.error),
-        ),
-    };
-  }
-
-  List<Widget> _buildActions(ColorScheme cs, bool canDismiss) {
-    return switch (_state) {
-      _UpdateState.checking => [
-          if (canDismiss)
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-        ],
-      _UpdateState.upToDate => [
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Great'),
-          ),
-        ],
-      _UpdateState.updateAvailable => [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Later'),
-          ),
-          FilledButton(
-            onPressed: _download,
-            child: const Text('Download & Install'),
-          ),
-        ],
-      _UpdateState.downloading => [
-          TextButton(
-            onPressed: null, // disabled during download
-            child: const Text('Cancel'),
-          ),
-        ],
-      _UpdateState.readyToInstall => [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Later'),
-          ),
-          FilledButton(
-            onPressed: _install,
-            child: const Text('Install Now'),
-          ),
-        ],
-      _UpdateState.error => [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-          TextButton(
-            onPressed: _canRetryInstall
-                ? () => setState(() {
-                      _state = _UpdateState.readyToInstall;
-                      _canRetryInstall = false;
-                      _errorMessage = null;
-                    })
-                : _check,
-            child: const Text('Retry'),
-          ),
-        ],
-    };
   }
 }
 

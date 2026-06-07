@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spendwise/app/app.dart';
 import 'package:spendwise/data/db/app_database.dart';
-import 'package:spendwise/services/prefs_service.dart';
 import 'package:spendwise/state/database_provider.dart';
 import 'package:spendwise/state/prefs_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';

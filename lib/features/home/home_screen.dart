@@ -10,7 +10,10 @@ import '../../state/home_providers.dart';
 import '../../state/period_providers.dart';
 import '../../state/reports_providers.dart';
 import '../../state/transactions_providers.dart';
+import '../../services/update_service.dart';
+import '../../state/update_provider.dart';
 import '../search/search_sheet.dart';
+import '../settings/update_check_dialog.dart';
 import '../transactions/sheets/add_edit_transaction_sheet.dart';
 import '../transactions/sheets/transaction_detail_sheet.dart';
 import '../transactions/widgets/transaction_tile.dart';
@@ -43,10 +46,16 @@ class HomeScreen extends ConsumerWidget {
     // Month label for the caption
     final captionMonth = _monthCaption(period.month, period.year);
 
+    final pendingUpdate = ref.watch(pendingUpdateProvider);
+
     return Scaffold(
       backgroundColor: cs.surface,
       body: CustomScrollView(
         slivers: [
+          // ── Update banner (shown when auto-check finds a new version) ───────
+          if (pendingUpdate != null)
+            SliverToBoxAdapter(child: _UpdateBanner(pendingUpdate)),
+
           // ── Top bar: wordmark + month nav + search ─────────────────────────
           SliverToBoxAdapter(
             child: Padding(
@@ -343,4 +352,65 @@ String _fmt(double v) {
   if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
   if (v == v.truncateToDouble()) return v.toInt().toString();
   return v.toStringAsFixed(2);
+}
+
+// ── Update banner ─────────────────────────────────────────────────────────────
+
+class _UpdateBanner extends ConsumerWidget {
+  const _UpdateBanner(this.info);
+  final UpdateInfo info;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final topPad = MediaQuery.paddingOf(context).top;
+    return Container(
+      margin: EdgeInsets.fromLTRB(16, topPad + 8, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.system_update_outlined,
+              size: 18, color: cs.onPrimaryContainer),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'SpendWise v${info.version} available',
+              style: tt.bodySmall?.copyWith(
+                color: cs.onPrimaryContainer,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: cs.onPrimaryContainer,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            onPressed: () => showDialog<void>(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) =>
+                  UpdateCheckDialog(currentVersion: info.version),
+            ),
+            child: const Text('Update'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 16),
+            color: cs.onPrimaryContainer,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: () =>
+                ref.read(pendingUpdateProvider.notifier).state = null,
+          ),
+        ],
+      ),
+    );
+  }
 }

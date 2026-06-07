@@ -47,4 +47,12 @@ class PrefsService {
     }
   }
 
+  bool get autoCheckUpdates => _prefs.getBool('auto_check_updates') ?? true;
+  Future<void> setAutoCheckUpdates(bool v) =>
+      _prefs.setBool('auto_check_updates', v);
+
+  int get lastUpdateCheckMs => _prefs.getInt('last_update_check_ms') ?? 0;
+  Future<void> setLastUpdateCheckMs(int v) =>
+      _prefs.setInt('last_update_check_ms', v);
+
 }

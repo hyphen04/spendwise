@@ -55,7 +55,7 @@ dependencies:
 
   # --- Updates ---
   http: ^1.2.0
-  open_file: ^3.3.2
+  connectivity_plus: ^6.0.0
   package_info_plus: ^8.0.0
 
   # --- Kept (used by new code too) ---

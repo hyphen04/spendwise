@@ -1,12 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'prefs_service.dart';
 
 enum InstallResult {
   /// System package installer launched successfully.
@@ -15,7 +19,7 @@ enum InstallResult {
   permissionDenied,
   /// The APK file was not found on disk.
   fileNotFound,
-  /// OpenFile returned an error (wrong MIME, corrupt file, etc.).
+  /// Install channel returned an error.
   error,
 }
 
@@ -48,6 +52,7 @@ class UpdateService {
   static const _prefKey = 'pending_apk_cleanup';
   static const _apiUrl =
       'https://api.github.com/repos/$_owner/$_repo/releases/latest';
+  static const _installChannel = MethodChannel('dev.kunj.spendwise/install');
 
   // ── Public API ──────────────────────────────────────────────────────────────
 
@@ -94,6 +99,28 @@ class UpdateService {
     );
   }
 
+  /// Returns [UpdateInfo] if an update is available and a check is due,
+  /// null otherwise. Never throws — all failures are swallowed.
+  static Future<UpdateInfo?> checkForUpdateIfDue(PrefsService prefs) async {
+    try {
+      if (!prefs.autoCheckUpdates) return null;
+      final last = prefs.lastUpdateCheckMs;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (now - last < const Duration(hours: 24).inMilliseconds) return null;
+
+      final connectivity = await Connectivity().checkConnectivity();
+      final isOnline = connectivity.isNotEmpty &&
+          !connectivity.contains(ConnectivityResult.none);
+      if (!isOnline) return null;
+
+      final info = await checkForUpdate();
+      await prefs.setLastUpdateCheckMs(now);
+      return info;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Downloads the APK from [info], streaming progress events.
   /// The final event has [DownloadProgress.filePath] set.
   static Stream<DownloadProgress> downloadApk(UpdateInfo info) async* {
@@ -135,19 +162,13 @@ class UpdateService {
   }
 
   /// Requests install permission if needed, then launches the system package
-  /// installer. Returns an [InstallResult] describing what happened.
-  ///
-  /// On Android 8+, REQUEST_INSTALL_PACKAGES is a special runtime permission —
-  /// the manifest entry is not enough. Calling `.request()` opens the
-  /// "Allow from this source" Settings screen; the user must enable it and
-  /// return to the app before tapping Install again.
+  /// installer via a native MethodChannel using ACTION_INSTALL_PACKAGE.
   static Future<InstallResult> installApk(String filePath) async {
     if (!await File(filePath).exists()) return InstallResult.fileNotFound;
 
     if (Platform.isAndroid) {
       var status = await Permission.requestInstallPackages.status;
       if (!status.isGranted) {
-        // Opens "Install unknown apps" settings for this app.
         status = await Permission.requestInstallPackages.request();
         if (!status.isGranted) {
           return InstallResult.permissionDenied;
@@ -155,24 +176,18 @@ class UpdateService {
       }
     }
 
-    final result = await OpenFile.open(
-      filePath,
-      type: 'application/vnd.android.package-archive',
-    );
-
-    switch (result.type) {
-      case ResultType.done:
-        return InstallResult.launched;
-      case ResultType.permissionDenied:
-        return InstallResult.permissionDenied;
-      default:
-        return InstallResult.error;
+    try {
+      final r = await _installChannel.invokeMethod<String>(
+          'installApk', {'filePath': filePath});
+      if (r == 'launched') return InstallResult.launched;
+      return InstallResult.error;
+    } on PlatformException catch (e) {
+      debugPrint('installApk channel error: ${e.message}');
+      return InstallResult.error;
     }
   }
 
   /// Call at app startup to delete any leftover APK from a previous update.
-  /// The new version's first launch handles cleanup because the old process
-  /// is replaced by the installer before it can clean up itself.
   static Future<void> cleanupPendingApk() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -188,11 +203,8 @@ class UpdateService {
 
   // ── Private helpers ─────────────────────────────────────────────────────────
 
-  /// Returns true if [tagName] (e.g. "v2.1.0") is newer than [currentVersion]
-  /// (e.g. "2.0.0" from pubspec, may include build number like "2.0.0+2").
   static bool _isNewer(String tagName, String currentVersion) {
     final tag = tagName.startsWith('v') ? tagName.substring(1) : tagName;
-    // Strip build number from current version
     final cur = currentVersion.split('+').first;
 
     final tagParts = tag.split('.').map(_toInt).toList();
@@ -204,7 +216,7 @@ class UpdateService {
       if (t > c) return true;
       if (t < c) return false;
     }
-    return false; // equal
+    return false;
   }
 
   static int _toInt(String s) => int.tryParse(s.trim()) ?? 0;
