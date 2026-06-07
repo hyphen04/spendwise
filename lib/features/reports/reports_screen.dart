@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../app/widgets/screen_header.dart';
 import '../../state/database_provider.dart';
+import '../../state/period_providers.dart';
 import '../../state/reports_providers.dart';
+import '../home/widgets/month_nav.dart';
 import 'export/export_service.dart';
 import 'reports/account_statement_report.dart';
 import 'reports/budget_performance_report.dart';
@@ -16,66 +18,28 @@ import 'reports/top_spends_report.dart';
 import 'reports/yearly_summary_report.dart';
 import 'widgets/report_card.dart';
 
-class ReportsScreen extends ConsumerStatefulWidget {
+class ReportsScreen extends ConsumerWidget {
   const ReportsScreen({super.key});
 
-  @override
-  ConsumerState<ReportsScreen> createState() => _ReportsScreenState();
-}
-
-class _ReportsScreenState extends ConsumerState<ReportsScreen> {
-  late int _year;
-  late int _month;
-
-  @override
-  void initState() {
-    super.initState();
-    final now = DateTime.now();
-    _year = now.year;
-    _month = now.month;
-  }
-
-  String get _fromIso => DateTime(_year, _month).toIso8601String();
-  String get _toIso => DateTime(_year, _month + 1).toIso8601String();
-  String get _monthLabel => '${_months[_month - 1]} $_year';
-
-  void _prevMonth() => setState(() {
-        if (_month == 1) {
-          _month = 12;
-          _year--;
-        } else {
-          _month--;
-        }
-      });
-
-  void _nextMonth() {
-    if (!_canGoNext) return;
-    setState(() {
-      if (_month == 12) {
-        _month = 1;
-        _year++;
-      } else {
-        _month++;
-      }
-    });
-  }
-
-  bool get _canGoNext {
-    final now = DateTime.now();
-    return _year < now.year || (_year == now.year && _month < now.month);
-  }
-
-  void _push(Widget screen) =>
+  void _push(BuildContext context, Widget screen) =>
       Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
     final db = ref.read(appDatabaseProvider);
 
+    final period = ref.watch(selectedPeriodProvider);
+    final year = period.year;
+    final month = period.month;
+
     final summary =
-        ref.watch(monthlySummaryProvider((_year, _month))).valueOrNull;
+        ref.watch(monthlySummaryProvider((year, month))).valueOrNull;
     final cashFlow = ref.watch(cashFlowProvider).valueOrNull ?? [];
+
+    final fromIso = DateTime(year, month).toIso8601String();
+    final toIso = DateTime(year, month + 1).toIso8601String();
+    final monthLabel = '${_months[month - 1]} $year';
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -85,13 +49,15 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           ScreenHeader(
             title: 'reports',
             actions: [
+              const MonthNav(),
+              const SizedBox(width: 4),
               HeaderIconButton(
                 icon: Icons.ios_share_outlined,
                 onTap: () => ExportService.showExportSheet(
                   context,
                   db,
-                  defaultFrom: _fromIso,
-                  defaultTo: _toIso,
+                  defaultFrom: fromIso,
+                  defaultTo: toIso,
                 ),
                 tooltip: 'Export',
               ),
@@ -130,43 +96,6 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     ],
                   ),
                 ),
-                // Period chip with nav
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    GestureDetector(
-                      onTap: _prevMonth,
-                      child: Icon(Icons.chevron_left,
-                          size: 20, color: cs.onSurfaceVariant),
-                    ),
-                    const SizedBox(width: 2),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: cs.surfaceContainer,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        _monthLabel,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: cs.onSurface,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    GestureDetector(
-                      onTap: _canGoNext ? _nextMonth : null,
-                      child: Icon(Icons.chevron_right,
-                          size: 20,
-                          color: _canGoNext
-                              ? cs.onSurfaceVariant
-                              : cs.onSurfaceVariant.withValues(alpha: 0.3)),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
@@ -196,68 +125,68 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   title: 'Monthly Summary',
                   description: 'Income, expenses & top categories',
                   color: cs.onSurface,
-                  onTap: () => _push(
-                      MonthlySummaryReport(year: _year, month: _month)),
+                  onTap: () => _push(context,
+                      MonthlySummaryReport(year: year, month: month)),
                 ),
                 ReportCard(
                   emoji: '📅',
                   title: 'Yearly Overview',
                   description: '12-month income vs. expense',
                   color: const Color(0xFF0284C7),
-                  onTap: () => _push(YearlySummaryReport(year: _year)),
+                  onTap: () => _push(context,YearlySummaryReport(year: year)),
                 ),
                 ReportCard(
                   emoji: '🔍',
                   title: 'Category Drilldown',
                   description: 'Spending breakdown by category',
                   color: const Color(0xFF7C3AED),
-                  onTap: () => _push(CategoryDrilldownReport(
-                      from: _fromIso,
-                      to: _toIso,
-                      monthLabel: _monthLabel)),
+                  onTap: () => _push(context,CategoryDrilldownReport(
+                      from: fromIso,
+                      to: toIso,
+                      monthLabel: monthLabel)),
                 ),
                 ReportCard(
                   emoji: '💳',
                   title: 'Mode Breakdown',
                   description: 'Payment method analysis',
                   color: const Color(0xFFDB2777),
-                  onTap: () => _push(ModeBreakdownReport(
-                      from: _fromIso,
-                      to: _toIso,
-                      monthLabel: _monthLabel)),
+                  onTap: () => _push(context,ModeBreakdownReport(
+                      from: fromIso,
+                      to: toIso,
+                      monthLabel: monthLabel)),
                 ),
                 ReportCard(
                   emoji: '🏦',
                   title: 'Account Statement',
                   description: 'Transaction ledger by account',
                   color: const Color(0xFF0891B2),
-                  onTap: () => _push(
-                      AccountStatementReport(year: _year, month: _month)),
+                  onTap: () => _push(context,
+                      AccountStatementReport(year: year, month: month)),
                 ),
                 ReportCard(
                   emoji: '📈',
                   title: 'Cash Flow',
                   description: 'Rolling 6-month income & expense',
                   color: cs.onSurface,
-                  onTap: () => _push(const CashflowTrendReport()),
+                  onTap: () => _push(context,const CashflowTrendReport()),
                 ),
                 ReportCard(
                   emoji: '🔝',
                   title: 'Top Spends',
                   description: 'Biggest transactions this period',
                   color: cs.onSurfaceVariant,
-                  onTap: () => _push(TopSpendsReport(
-                      from: _fromIso,
-                      to: _toIso,
-                      monthLabel: _monthLabel)),
+                  onTap: () => _push(context,TopSpendsReport(
+                      from: fromIso,
+                      to: toIso,
+                      monthLabel: monthLabel)),
                 ),
                 ReportCard(
                   emoji: '🎯',
                   title: 'Budget Performance',
                   description: 'Planned vs. actual spending',
                   color: const Color(0xFFF59E0B),
-                  onTap: () => _push(
-                      BudgetPerformanceReport(year: _year, month: _month)),
+                  onTap: () => _push(context,
+                      BudgetPerformanceReport(year: year, month: month)),
                 ),
               ],
             ),
