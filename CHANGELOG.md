@@ -5,6 +5,22 @@ Format: `## vX.X.X — YYYY-MM-DD` with Added / Changed / Fixed sections.
 
 ---
 
+## v2.4.0 — 2026-06-07
+
+### Added
+- New app icon across all Android densities with full adaptive icon support (foreground, background, monochrome layers) and all iOS AppIcon sizes
+- Home screen wordmark redesigned: "spend" in regular weight + "wise" in bold primary colour — simple, typographic, and unmistakably the app
+- Settings → About section overhauled: app card now shows a version badge, a 2×1 stat grid (Offline · No Ads · Private · On-Device), and a punchy one-liner; developer card gets a cleaner KP avatar, tighter bio, and the same link chips
+
+### Fixed
+- Tapping a column chip in the Export sheet crashed with "Cannot change an unmodifiable set" — the default column set was a `const` reference; it is now always copied to a mutable set on config creation
+- "Title" column removed from the export column picker and all four exporters (CSV, XLSX, PDF, JSON) — transactions don't have a user-facing title field so this column produced empty or confusing output
+- PDF export currency symbol now renders as "Rs" instead of "₹" — the built-in Helvetica font in the pdf package lacks the Unicode rupee glyph, causing it to appear as a box on most devices
+- Currency selector removed from the Add/Edit Account form — SpendWise is INR-only for now; the currency column is retained in the database for future multi-currency support
+- Account balance subtitle in Manage no longer shows the redundant "· INR" currency code
+
+---
+
 ## v2.3.1 — 2026-06-07
 
 ### Fixed
