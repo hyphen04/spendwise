@@ -652,17 +652,13 @@ Future<(int imported, int skipped)> _performImport(
       final modeId =
           row.existingModeId ?? newModeIds[row.modeName.toLowerCase()]!;
 
-      // Extract the date-only portion (first 10 chars of ISO-8601 string)
-      final datePrefix = row.transactionDate.length >= 10
-          ? row.transactionDate.substring(0, 10)
-          : row.transactionDate;
-
       final existingId = await db.transactionsDao.findDuplicate(
-        datePrefix: datePrefix,
+        transactionDate: row.transactionDate,
         accountId: accountId,
         categoryId: categoryId,
         modeId: modeId,
         amount: row.amount,
+        note: row.note,
       );
 
       if (existingId != null) {

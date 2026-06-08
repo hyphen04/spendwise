@@ -5,6 +5,21 @@ Format: `## vX.X.X — YYYY-MM-DD` with Added / Changed / Fixed sections.
 
 ---
 
+## v2.6.0 — 2026-06-08
+
+### Added
+- **AI Dynamic Insights**: All 6 analytical charts on the Reports and Yearly Overview dashboards now feature intelligently generated, multi-sentence insight cards that summarize your positive/negative trends (e.g., peak income, biggest losses, highest expense categories, and overall average savings rates).
+- **Current Balance Preview**: When editing an Account's "Opening Balance" from the Manage tab, the app now dynamically previews your actual "Current Balance" directly beneath the text field in real-time.
+
+### Changed
+- **Stricter Import Duplicate Detection**: The 5-point composite key for skipping duplicate transactions during CSV/Excel imports has been upgraded to a strict 6-point key. The importer now checks the *exact* Time of day (not just the calendar Date) and the precise Transaction Note, allowing you to seamlessly import multiple identical transactions that occurred at different times on the same day.
+
+### Fixed
+- Fixed an overlapping layout glitch on the Yearly Overview charts.
+- Fixed a bug where the 6-Month Cash Flow chart was accidentally rendering the same month's x-axis label twice due to floating-point scaling issues.
+
+---
+
 ## v2.5.0 — 2026-06-08
 
 ### Added

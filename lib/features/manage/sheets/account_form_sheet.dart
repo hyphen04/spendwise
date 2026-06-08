@@ -164,8 +164,23 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
                           decimal: true),
                     ),
                   ),
-                    ],
+                ],
               ),
+              if (isEditing) ...[
+                const SizedBox(height: 8),
+                Consumer(
+                  builder: (context, ref, _) {
+                    final netAsync = ref.watch(accountNetBalanceProvider(widget.editing!));
+                    final curBal = netAsync.valueOrNull ?? widget.editing!.openingBalance;
+                    return Text(
+                      'Current Balance: $_currency ${curBal.toStringAsFixed(2)}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    );
+                  },
+                ),
+              ],
               const SizedBox(height: 20),
               Text('Color', style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 10),

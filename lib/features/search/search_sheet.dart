@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,11 +16,20 @@ import '../transactions/sheets/transaction_detail_sheet.dart';
 import '../transactions/widgets/transaction_tile.dart';
 
 void showSearchSheet(BuildContext context) {
-  showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    builder: (_) => const _SearchSheet(),
+  Navigator.of(context).push(
+    PageRouteBuilder<void>(
+      opaque: false,
+      barrierDismissible: true,
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 250),
+      reverseTransitionDuration: const Duration(milliseconds: 200),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return FadeTransition(
+          opacity: animation,
+          child: const _SearchSheet(),
+        );
+      },
+    ),
   );
 }
 
@@ -65,56 +75,102 @@ class _SearchSheetState extends ConsumerState<_SearchSheet> {
     final recent = ref.watch(recentTransactionsProvider);
     final isEmpty = _debouncedQuery.isEmpty && _rawQuery.isEmpty;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // ── Search field ──────────────────────────────────────────────────
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Container(
-            decoration: BoxDecoration(
-              color: cs.surfaceContainer,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: TextField(
-              controller: _ctrl,
-              autofocus: true,
-              onChanged: _onChanged,
-              style: GoogleFonts.inter(fontSize: 15),
-              decoration: InputDecoration(
-                hintText: 'Search transactions, categories, accounts…',
-                hintStyle:
-                    GoogleFonts.inter(fontSize: 15, color: cs.onSurfaceVariant),
-                prefixIcon: Icon(Icons.search_rounded,
-                    size: 20, color: cs.onSurfaceVariant),
-                suffixIcon: _rawQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 18),
-                        color: cs.onSurfaceVariant,
-                        onPressed: () {
-                          _ctrl.clear();
-                          _debounce?.cancel();
-                          setState(() {
-                            _rawQuery = '';
-                            _debouncedQuery = '';
-                          });
-                        },
-                      )
-                    : null,
-                border: InputBorder.none,
-                isCollapsed: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          // ── Glassmorphism Background ──────────────────────────────────────
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
+                  color: cs.surface.withValues(alpha: 0.65),
+                ),
               ),
             ),
           ),
-        ),
 
-        // ── Results area ──────────────────────────────────────────────────
-        Flexible(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(0, 0, 0, 32),
-            shrinkWrap: true,
-            physics: const ClampingScrollPhysics(),
+          // ── Content ───────────────────────────────────────────────────────
+          SafeArea(
+            child: Column(
+              children: [
+                // ── Search field ──────────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(50),
+                      boxShadow: [
+                        BoxShadow(
+                          color: cs.primary.withValues(alpha: 0.08),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _ctrl,
+                      autofocus: true,
+                      onChanged: _onChanged,
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: cs.onSurface,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Search SpendWise...',
+                        hintStyle: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w400,
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                        ),
+                        prefixIcon: Padding(
+                          padding: const EdgeInsets.only(left: 8, right: 4),
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_back_rounded),
+                            color: cs.onSurface,
+                            iconSize: 24,
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                        ),
+                        suffixIcon: _rawQuery.isNotEmpty
+                            ? Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: IconButton(
+                                  icon: const Icon(Icons.cancel_rounded, size: 22),
+                                  color: cs.onSurfaceVariant,
+                                  onPressed: () {
+                                    _ctrl.clear();
+                                    _debounce?.cancel();
+                                    setState(() {
+                                      _rawQuery = '';
+                                      _debouncedQuery = '';
+                                    });
+                                  },
+                                ),
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        isCollapsed: true,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ── Results area ──────────────────────────────────────────────
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(0, 8, 0, 32),
+                    physics: const BouncingScrollPhysics(),
             children: [
               if (isEmpty) ...[
                 // Recent transactions
@@ -209,6 +265,10 @@ class _SearchSheetState extends ConsumerState<_SearchSheet> {
           ),
         ),
       ],
+    ),
+  ),
+        ],
+      ),
     );
   }
 

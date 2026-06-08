@@ -7,7 +7,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../app/widgets/smooth_line_chart.dart';
 import '../../data/models/transaction_row.dart';
 import '../../state/home_providers.dart';
-import '../../state/period_providers.dart';
 import '../../state/reports_providers.dart';
 import '../../state/transactions_providers.dart';
 import '../../services/update_service.dart';
@@ -17,9 +16,6 @@ import '../settings/update_check_dialog.dart';
 import '../transactions/sheets/add_edit_transaction_sheet.dart';
 import '../transactions/sheets/transaction_detail_sheet.dart';
 import '../transactions/widgets/transaction_tile.dart';
-import 'widgets/month_nav.dart';
-
-const _kRecentLimit = 10;
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -27,12 +23,15 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
-    final period = ref.watch(selectedPeriodProvider);
-    final summary =
-        ref.watch(homeSummaryProvider((period.year, period.month)));
-    final monthRows =
-        ref.watch(monthTransactionRowsProvider((period.year, period.month)));
+    
+    final now = DateTime.now();
+    // This month's summary
+    final summary = ref.watch(homeSummaryProvider((now.year, now.month)));
     final cashflow = ref.watch(cashFlowProvider);
+    
+    // Global data
+    final netWorthAsync = ref.watch(globalNetWorthProvider);
+    final globalRecentRows = ref.watch(globalRecentTransactionsProvider);
 
     final topPad = MediaQuery.paddingOf(context).top;
     final botPad = MediaQuery.paddingOf(context).bottom;
@@ -40,13 +39,12 @@ class HomeScreen extends ConsumerWidget {
     final cashflowData = cashflow.valueOrNull ?? [];
     final chartIncomeValues = cashflowData.map((m) => m.income).toList();
     final chartExpenseValues = cashflowData.map((m) => m.expense).toList();
-    final recentRows = monthRows.take(_kRecentLimit).toList();
-    final hasMore = monthRows.length > _kRecentLimit;
 
     // Month label for the caption
-    final captionMonth = _monthCaption(period.month, period.year);
+    final captionMonth = _monthCaption(now.month, now.year);
 
     final pendingUpdate = ref.watch(pendingUpdateProvider);
+    final totalNetWorth = netWorthAsync.valueOrNull ?? 0.0;
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -100,7 +98,8 @@ class HomeScreen extends ConsumerWidget {
               ],
             ),
             const Spacer(),
-            const MonthNav(),
+            // Empty spacer instead of MonthNav
+            const SizedBox(width: 48),
           ],
             ).animate().fadeIn(duration: 250.ms),
           ),
@@ -120,18 +119,19 @@ class HomeScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Caption: "Jun 2026 · 23 transactions"
+                  // Caption: "Total Net Worth"
                   Text(
-                    '$captionMonth · ${monthRows.length} transaction${monthRows.length == 1 ? '' : 's'}',
+                    'total net worth',
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      fontWeight: FontWeight.w400,
+                      fontWeight: FontWeight.w600,
                       color: cs.onSurfaceVariant,
+                      letterSpacing: 0.5,
                     ),
                   ).animate().fadeIn(delay: 40.ms),
                   const SizedBox(height: 6),
                   Text(
-                    '${summary.net >= 0 ? '' : '−'}₹${_fmt(summary.net.abs())}',
+                    '${totalNetWorth >= 0 ? '' : '−'}₹${_fmt(totalNetWorth.abs())}',
                     style: GoogleFonts.manrope(
                       fontSize: 52,
                       fontWeight: FontWeight.w800,
@@ -141,27 +141,40 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ).animate().fadeIn(delay: 60.ms).slideY(
                       begin: 0.08, end: 0, duration: 300.ms),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 24),
+                  
+                  // This month's summary
                   Row(
                     children: [
                       Text(
-                        'net balance',
+                        'THIS MONTH ($captionMonth)',
                         style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
                           color: cs.onSurfaceVariant,
+                          letterSpacing: 0.5,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        '↑ ₹${_fmt(summary.income)}  ↓ ₹${_fmt(summary.expense)}',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: cs.onSurfaceVariant,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                      const Spacer(),
+                      if (summary.income > 0 || summary.expense > 0)
+                        Text(
+                          '↑ ₹${_fmt(summary.income)}   ↓ ₹${_fmt(summary.expense)}',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: cs.onSurfaceVariant,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        )
+                      else
+                        Text(
+                          'No activity yet',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                          ),
                         ),
-                      ),
                     ],
                   ).animate().fadeIn(delay: 100.ms),
                 ],
@@ -196,7 +209,7 @@ class HomeScreen extends ConsumerWidget {
               child: Row(
                 children: [
                   Text(
-                    'recent transactions',
+                    'recent activity',
                     style: GoogleFonts.manrope(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -204,21 +217,13 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
                   const Spacer(),
-                  Text(
-                    '${monthRows.length} this month',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: cs.onSurfaceVariant,
-                    ),
-                  ),
                 ],
               ),
             ),
           ),
 
           // ── Transaction list (capped at 10) ────────────────────────────────
-          if (monthRows.isEmpty)
+          if (globalRecentRows.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
               child: Padding(
@@ -227,44 +232,36 @@ class HomeScreen extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'No transactions',
+                      'Welcome to SpendWise!',
                       style: GoogleFonts.manrope(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
                           color: cs.onSurface),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Text(
-                      'Tap + to add one',
+                      'Tap + to add your first transaction.',
                       style: GoogleFonts.inter(
-                          fontSize: 13, color: cs.onSurfaceVariant),
+                          fontSize: 14, color: cs.onSurfaceVariant),
                     ),
                   ],
                 ),
               ),
             )
           else
-            ..._buildDateGroups(recentRows, cs, ref),
+            ..._buildDateGroups(globalRecentRows, cs, ref),
 
           // ── "View all" button ──────────────────────────────────────────────
-          if (hasMore || monthRows.isNotEmpty)
+          if (globalRecentRows.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                 child: TextButton(
                   onPressed: () {
-                    final p = ref.read(selectedPeriodProvider);
-                    final from = DateTime(p.year, p.month, 1);
-                    final to = DateTime(p.year, p.month + 1, 0);
-                    ref
-                        .read(pendingTransactionsFilterProvider.notifier)
-                        .state = (from: from, to: to);
                     context.go('/transactions');
                   },
                   child: Text(
-                    hasMore
-                        ? 'View all ${monthRows.length} transactions →'
-                        : 'View transactions →',
+                    'View all history →',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
