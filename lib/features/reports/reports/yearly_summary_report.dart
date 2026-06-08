@@ -43,12 +43,17 @@ class _YearlySummaryReportState extends ConsumerState<YearlySummaryReport> {
               icon: const Icon(Icons.chevron_left_rounded),
               onPressed: () => setState(() => _currentYear--),
             ),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Yearly Overview', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                Text('$_currentYear', style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
-              ],
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Yearly Overview', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    Text('$_currentYear', style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+                  ],
+                ),
+              ),
             ),
             IconButton(
               icon: const Icon(Icons.chevron_right_rounded),
@@ -81,6 +86,8 @@ class _YearlySummaryReportState extends ConsumerState<YearlySummaryReport> {
                         _YearCard(label: 'Total Expense', amount: totalExpense, color: const Color(0xFFDC2626)),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    _NetGainCard(net: totalIncome - totalExpense),
                     const SizedBox(height: 48),
 
                     _SectionHeader('INCOME VS EXPENSE', cs),
@@ -130,6 +137,44 @@ class _SectionHeader extends StatelessWidget {
           color: cs.onSurfaceVariant,
           letterSpacing: 0.5,
         ),
+      ),
+    );
+  }
+}
+
+class _NetGainCard extends StatelessWidget {
+  const _NetGainCard({required this.net});
+  final double net;
+
+  @override
+  Widget build(BuildContext context) {
+    final isPositive = net >= 0;
+    final color = isPositive ? const Color(0xFF10B981) : const Color(0xFFEF4444);
+    final prefix = net > 0 ? '+' : (net < 0 ? '−' : '');
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(isPositive ? Icons.trending_up_rounded : Icons.trending_down_rounded, 
+               size: 20, 
+               color: color),
+          const SizedBox(width: 8),
+          Text(
+            'Net Gain: $prefix₹${_fmt(net.abs())}', 
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.w700, 
+              fontSize: 15, 
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

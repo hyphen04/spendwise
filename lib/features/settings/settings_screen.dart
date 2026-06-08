@@ -184,6 +184,71 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
     }
   }
 
+
+
+  void _showColorPicker(BuildContext context, WidgetRef ref) {
+    final currentColor = ref.read(themeSeedColorProvider);
+    final colors = [
+      0xFF0A0A0A, // Monochrome (Black)
+      0xFF4F46E5, // Indigo
+      0xFF10B981, // Emerald
+      0xFFF43F5E, // Rose
+      0xFFF59E0B, // Amber
+      0xFF06B6D4, // Cyan
+      0xFF8B5CF6, // Violet
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      useSafeArea: true,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Select Primary Color', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: colors.map((color) {
+                  final isSelected = color == currentColor;
+                  // Handle contrast for the check icon
+                  final isMonochrome = color == 0xFF0A0A0A;
+                  final iconColor = isMonochrome && Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.black 
+                      : Colors.white;
+
+                  return GestureDetector(
+                    onTap: () {
+                      ref.read(themeSeedColorProvider.notifier).set(color);
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Color(color),
+                        shape: BoxShape.circle,
+                        border: isSelected 
+                            ? Border.all(color: Theme.of(context).colorScheme.primary, width: 3) 
+                            : null,
+                      ),
+                      child: isSelected ? Icon(Icons.check, color: iconColor) : null,
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   // ── Clear data ───────────────────────────────────────────────────────────────
 
   Future<void> _clearAllData() async {
@@ -306,6 +371,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                         ref.read(oledDarkProvider.notifier).set(v),
                   ),
                 ],
+                const Divider(height: 1),
+                ListTile(
+                  title: const Text('Primary Color'),
+                  subtitle: const Text('Choose your app theme color'),
+                  leading: const Icon(Icons.palette_outlined),
+                  trailing: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: Color(ref.watch(themeSeedColorProvider)),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  onTap: () => _showColorPicker(context, ref),
+                ),
               ],
             ),
           ),

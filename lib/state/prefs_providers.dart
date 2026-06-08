@@ -40,6 +40,22 @@ class OledDarkNotifier extends StateNotifier<bool> {
   }
 }
 
+// ── Theme Seed Color ────────────────────────────────────────────────────────
+
+final themeSeedColorProvider =
+    StateNotifierProvider<ThemeSeedColorNotifier, int>(
+        (ref) => ThemeSeedColorNotifier(ref.watch(prefsServiceProvider)));
+
+class ThemeSeedColorNotifier extends StateNotifier<int> {
+  ThemeSeedColorNotifier(this._prefs) : super(_prefs.themeSeedColor);
+  final PrefsService _prefs;
+
+  Future<void> set(int v) async {
+    await _prefs.setThemeSeedColor(v);
+    state = v;
+  }
+}
+
 // ── App Lock ─────────────────────────────────────────────────────────────────
 
 final lockEnabledProvider =

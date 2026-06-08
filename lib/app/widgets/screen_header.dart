@@ -134,16 +134,17 @@ class HeaderIconButton extends StatelessWidget {
               width: 17,
               height: 17,
               decoration: BoxDecoration(
-                color: cs.onSurface,
+                color: cs.primary,
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
               child: Text(
-                '$badge',
+                badge.toString(),
                 style: GoogleFonts.inter(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
-                  color: cs.surface,
+                  color: cs.onPrimary,
+                  height: 1.0,
                 ),
               ),
             ),

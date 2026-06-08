@@ -67,12 +67,13 @@ class _AppContentState extends ConsumerState<_AppContent>
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
     final oledDark = ref.watch(oledDarkProvider);
+    final seedColor = Color(ref.watch(themeSeedColorProvider));
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'SpendWise',
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(oled: oledDark),
+      theme: AppTheme.light(seedColor: seedColor),
+      darkTheme: AppTheme.dark(seedColor: seedColor, oled: oledDark),
       themeMode: themeMode,
       routerConfig: AppRouter.config,
       builder: (context, child) {

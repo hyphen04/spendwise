@@ -604,7 +604,7 @@ class _ActiveFilterChips extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: cs.onSurface.withValues(alpha: 0.08),
+                      color: cs.primary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -612,7 +612,7 @@ class _ActiveFilterChips extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: cs.onSurface,
+                        color: cs.primary,
                       ),
                     ),
                   );
@@ -1055,7 +1055,7 @@ class _KindRow extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 3),
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: active ? cs.onSurface : cs.surfaceContainer,
+                color: active ? cs.primary : cs.surfaceContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -1063,14 +1063,14 @@ class _KindRow extends StatelessWidget {
                 children: [
                   Icon(icon,
                       size: 18,
-                      color: active ? cs.surface : cs.onSurfaceVariant),
+                      color: active ? cs.onPrimary : cs.onSurfaceVariant),
                   const SizedBox(height: 4),
                   Text(
                     label,
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: active ? cs.surface : cs.onSurfaceVariant,
+                      color: active ? cs.onPrimary : cs.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -1123,7 +1123,7 @@ class _DateRangeGrid extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: active ? cs.onSurface : cs.surfaceContainer,
+                color: active ? cs.primary : cs.surfaceContainer,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -1131,7 +1131,7 @@ class _DateRangeGrid extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: active ? cs.surface : cs.onSurface,
+                  color: active ? cs.onPrimary : cs.onSurface,
                 ),
               ),
             ),
@@ -1144,7 +1144,7 @@ class _DateRangeGrid extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: selected == _DateRange.custom
-                  ? cs.onSurface
+                  ? cs.primary
                   : cs.surfaceContainer,
               borderRadius: BorderRadius.circular(10),
             ),
@@ -1154,7 +1154,7 @@ class _DateRangeGrid extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: selected == _DateRange.custom
-                    ? cs.surface
+                    ? cs.onPrimary
                     : cs.onSurface,
               ),
             ),
@@ -1206,7 +1206,7 @@ class _MultiSelect<T> extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(
-              color: active ? cs.onSurface : cs.surfaceContainer,
+              color: active ? cs.primary : cs.surfaceContainer,
               borderRadius: BorderRadius.circular(10),
               border: active
                   ? null
@@ -1223,7 +1223,7 @@ class _MultiSelect<T> extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: active ? cs.surface : cs.onSurface,
+                    color: active ? cs.onPrimary : cs.onSurface,
                   ),
                 ),
               ],

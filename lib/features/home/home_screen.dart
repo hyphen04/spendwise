@@ -281,8 +281,6 @@ class HomeScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () => showSearchSheet(context),
         tooltip: 'Search',
-        backgroundColor: cs.primaryContainer,
-        foregroundColor: cs.onPrimaryContainer,
         child: const Icon(Icons.search_rounded),
       ),
     );

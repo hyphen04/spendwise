@@ -171,7 +171,7 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final color = active ? cs.onSurface : cs.onSurfaceVariant;
+    final color = active ? cs.primary : cs.onSurfaceVariant;
 
     return Expanded(
       child: InkWell(
@@ -216,10 +216,10 @@ class _CenterAddButton extends StatelessWidget {
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: cs.onSurface,
+              color: cs.primary,
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.add_rounded, color: cs.surface, size: 28),
+            child: Icon(Icons.add_rounded, color: cs.onPrimary, size: 28),
           ),
         ),
       ),

@@ -3,20 +3,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTheme {
-  // Monochrome seeds — the scheme is fully overridden below; seeds only feed
-  // the few tonal slots we don't set explicitly.
-  static const _seedLight = Color(0xFF0A0A0A);
-  static const _seedDark = Color(0xFFF5F5F5);
-
-  static ThemeData light() {
+  // Vibrant Indigo seeds for a modern, cool branding
+  static ThemeData light({required Color seedColor}) {
     final base = ColorScheme.fromSeed(
-      seedColor: _seedLight,
+      seedColor: seedColor,
       brightness: Brightness.light,
     );
     final cs = base.copyWith(
-      primary: const Color(0xFF0A0A0A),
+      primary: seedColor,
       onPrimary: const Color(0xFFFFFFFF),
-      primaryContainer: const Color(0xFF0A0A0A),
+      primaryContainer: seedColor,
       onPrimaryContainer: const Color(0xFFFFFFFF),
       secondary: const Color(0xFF0A0A0A),
       onSecondary: const Color(0xFFFFFFFF),
@@ -47,17 +43,17 @@ class AppTheme {
     return _buildTheme(cs: cs, appColors: AppColors.light());
   }
 
-  static ThemeData dark({bool oled = false}) {
-    final bg = oled ? const Color(0xFF000000) : const Color(0xFF0A0A0A);
+  static ThemeData dark({required Color seedColor, bool oled = false}) {
+    final bg = oled ? const Color(0xFF000000) : const Color(0xFF0F172A);
     final base = ColorScheme.fromSeed(
-      seedColor: _seedDark,
+      seedColor: seedColor,
       brightness: Brightness.dark,
     );
     final cs = base.copyWith(
-      primary: const Color(0xFFF5F5F5),
-      onPrimary: const Color(0xFF0A0A0A),
-      primaryContainer: const Color(0xFFF5F5F5),
-      onPrimaryContainer: const Color(0xFF0A0A0A),
+      primary: seedColor,
+      onPrimary: const Color(0xFF0F172A),
+      primaryContainer: seedColor,
+      onPrimaryContainer: const Color(0xFFFFFFFF),
       secondary: const Color(0xFFF5F5F5),
       onSecondary: const Color(0xFF0A0A0A),
       secondaryContainer: const Color(0xFF1C1C1E),
@@ -82,7 +78,7 @@ class AppTheme {
       outlineVariant: const Color(0xFF1F1F21),
       inverseSurface: const Color(0xFFF5F5F5),
       onInverseSurface: const Color(0xFF0A0A0A),
-      inversePrimary: const Color(0xFF0A0A0A),
+      inversePrimary: seedColor,
     );
     return _buildTheme(cs: cs, appColors: AppColors.dark());
   }
@@ -131,6 +127,12 @@ class AppTheme {
         labelTextStyle: WidgetStatePropertyAll(
           GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500),
         ),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return IconThemeData(color: cs.primary, size: 24);
+          }
+          return IconThemeData(color: cs.onSurfaceVariant, size: 24);
+        }),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -167,13 +169,13 @@ class AppTheme {
             if (states.contains(WidgetState.disabled)) {
               return cs.onSurface.withValues(alpha: 0.12);
             }
-            return cs.onSurface;
+            return cs.primary;
           }),
           foregroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.disabled)) {
               return cs.onSurface.withValues(alpha: 0.38);
             }
-            return cs.surface;
+            return cs.onPrimary;
           }),
           minimumSize: const WidgetStatePropertyAll(Size(0, 52)),
           shape: WidgetStatePropertyAll(
@@ -211,8 +213,8 @@ class AppTheme {
         focusElevation: 0,
         hoverElevation: 0,
         highlightElevation: 0,
-        backgroundColor: cs.onSurface,
-        foregroundColor: cs.surface,
+        backgroundColor: cs.primary,
+        foregroundColor: cs.onPrimary,
         shape: const CircleBorder(),
         extendedTextStyle: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600),
       ),

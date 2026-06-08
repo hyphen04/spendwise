@@ -5,6 +5,19 @@ Format: `## vX.X.X — YYYY-MM-DD` with Added / Changed / Fixed sections.
 
 ---
 
+## v2.6.1 — 2026-06-08
+
+### Added
+- **Dynamic Brand Coloring**: Choose your own primary brand accent color from the Settings tab! This customized color intelligently tints all active navigation icons, filled buttons, search floating action buttons, and active filter pills.
+- **Default Black Theme**: The default primary color out-of-the-box has been shifted to `0xFF0A0A0A` (Monochrome Black) for a stunningly clean and high-contrast minimal aesthetic.
+
+### Changed
+- **Report Summary Layout**: We relocated the "Net Gain" pill from the cramped top AppBar into its own beautifully centered, full-width card positioned intuitively right below the Total Income and Total Expense cards.
+- **Filter Sheet Readability**: Upgraded the internal selectable filter chips (e.g., Dates, Categories) within the transactions filter sheet to dynamically illuminate with your active brand color rather than just fading to grey.
+
+### Fixed
+- Fixed an annoying `RenderFlex` layout overflow constraint on the Yearly Overview title bar that occasionally triggered on narrower displays.
+
 ## v2.6.0 — 2026-06-08
 
 ### Added
