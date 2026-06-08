@@ -480,15 +480,13 @@ class _AboutCardState extends State<_AboutCard> {
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: cs.primaryContainer,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Center(
-                      child: Text('💸', style: TextStyle(fontSize: 22)),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      'assets/logo/logo.png',
+                      width: 44,
+                      height: 44,
+                      fit: BoxFit.cover,
                     ),
                   ),
                   const SizedBox(width: 14),
