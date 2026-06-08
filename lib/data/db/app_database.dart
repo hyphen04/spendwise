@@ -51,7 +51,7 @@ class AppDatabase extends _$AppDatabase {
   static const kTransferCategoryId = 'system-transfer-cat-0000-000000000001';
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -72,9 +72,12 @@ class AppDatabase extends _$AppDatabase {
             await customStatement('DROP TABLE IF EXISTS recurring_rules');
           }
           if (from < 5) {
-            await customStatement(
-              'ALTER TABLE transactions DROP COLUMN IF EXISTS recurring_rule_id',
-            );
+            // ignore: experimental_member_use
+            await m.alterTable(TableMigration(transactions));
+          }
+          if (from == 5) {
+            // ignore: experimental_member_use
+            await m.alterTable(TableMigration(transactions));
           }
         },
       );
@@ -204,7 +207,6 @@ class AppDatabase extends _$AppDatabase {
 
       await into(transactions).insert(TransactionsCompanion.insert(
         id: uuidGen.v4(),
-        title: row.data['title'] as String? ?? 'Unnamed',
         amount: (row.data['amount'] as num?)?.toDouble() ?? 0.0,
         transactionDate: row.data['date'] as String? ?? DateTime.now().toIso8601String(),
         accountId: cashId,

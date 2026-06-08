@@ -132,6 +132,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
               ),
               const SizedBox(height: 24),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _categoryId,
                 decoration:
                     const InputDecoration(labelText: 'Category *'),
@@ -139,7 +140,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
                 items: expenseCategories
                     .map((c) => DropdownMenuItem(
                           value: c.id,
-                          child: Text('${c.icon} ${c.name}'),
+                          child: Text('${c.icon} ${c.name}', overflow: TextOverflow.ellipsis),
                         ))
                     .toList(),
                 onChanged:
@@ -177,6 +178,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String?>(
+                isExpanded: true,
                 initialValue: _accountId,
                 decoration: const InputDecoration(
                   labelText: 'Account (optional)',
@@ -188,7 +190,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
                       value: null, child: Text('All accounts')),
                   ...accounts.map((a) => DropdownMenuItem<String?>(
                         value: a.id,
-                        child: Text('${a.icon} ${a.name}'),
+                        child: Text('${a.icon} ${a.name}', overflow: TextOverflow.ellipsis),
                       )),
                 ],
                 onChanged: (v) => setState(() => _accountId = v),

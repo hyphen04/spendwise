@@ -24,7 +24,7 @@ class TemplateGenerator {
     // ── Sheet 1: Transactions ─────────────────────────────────────────────
     final txSheet = excel['Transactions'];
     txSheet.appendRow([
-      'date', 'time', 'title', 'amount', 'kind', 'account', 'category', 'mode', 'note',
+      'date', 'time', 'amount', 'kind', 'account', 'category', 'mode', 'note',
     ].map(TextCellValue.new).toList());
 
     final firstAccount = accounts.isNotEmpty ? accounts.first.name : 'Cash';
@@ -41,7 +41,6 @@ class TemplateGenerator {
     txSheet.appendRow([
       TextCellValue('2026-06-01'),
       TextCellValue('14:30'),
-      TextCellValue('Lunch'),
       TextCellValue('250'),
       TextCellValue('expense'),
       TextCellValue(firstAccount),
@@ -52,7 +51,6 @@ class TemplateGenerator {
     txSheet.appendRow([
       TextCellValue('2026-06-01'),
       TextCellValue('09:00'),
-      TextCellValue('Salary'),
       TextCellValue('50000'),
       TextCellValue('income'),
       TextCellValue(firstAccount),
@@ -103,8 +101,8 @@ class TemplateGenerator {
     }
 
     // Column widths for the Transactions sheet
-    for (var i = 0; i < 9; i++) {
-      txSheet.setColumnWidth(i, i == 2 || i == 8 ? 28.0 : 16.0);
+    for (var i = 0; i < 8; i++) {
+      txSheet.setColumnWidth(i, i == 7 ? 28.0 : 16.0);
     }
 
     final bytes = excel.encode();
@@ -135,9 +133,9 @@ class TemplateGenerator {
     final firstMode = modes.isNotEmpty ? modes.first.name : 'Cash';
 
     final rows = <List<dynamic>>[
-      ['date', 'time', 'title', 'amount', 'kind', 'account', 'category', 'mode', 'note'],
-      ['2026-06-01', '14:30', 'Lunch', 250, 'expense', firstAccount, firstExpenseCat, firstMode, _exampleNote],
-      ['2026-06-01', '09:00', 'Salary', 50000, 'income', firstAccount, firstIncomeCat, firstMode, _exampleNote],
+      ['date', 'time', 'amount', 'kind', 'account', 'category', 'mode', 'note'],
+      ['2026-06-01', '14:30', 250, 'expense', firstAccount, firstExpenseCat, firstMode, _exampleNote],
+      ['2026-06-01', '09:00', 50000, 'income', firstAccount, firstIncomeCat, firstMode, _exampleNote],
     ];
 
     final csv = const ListToCsvConverter().convert(rows);
@@ -198,7 +196,6 @@ class TemplateGenerator {
         {
           'date': '2026-06-01',
           'time': '14:30',
-          'title': 'Lunch',
           'amount': 250,
           'kind': 'expense',
           'account': firstAccount,

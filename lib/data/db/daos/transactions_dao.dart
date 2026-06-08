@@ -60,9 +60,7 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase>
     final q = '%${query.toLowerCase()}%';
     return (select(transactions)
           ..where(
-            (t) =>
-                t.title.lower().like(q) |
-                t.note.lower().like(q),
+            (t) => t.note.lower().like(q),
           )
           ..orderBy([
             (t) => OrderingTerm.desc(t.transactionDate),
@@ -83,6 +81,35 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase>
 
   Future<int> deleteById(String id) =>
       (delete(transactions)..where((t) => t.id.equals(id))).go();
+
+  /// Returns the ID of an existing transaction that matches the import
+  /// duplicate-key: same date (date portion only), accountId, categoryId,
+  /// modeId, and amount. Returns null if no duplicate exists.
+  Future<String?> findDuplicate({
+    required String datePrefix, // e.g. '2026-06-01'
+    required String accountId,
+    required String categoryId,
+    required String modeId,
+    required double amount,
+  }) async {
+    final result = await customSelect(
+      'SELECT id FROM transactions '
+      'WHERE substr(transaction_date, 1, 10) = ? '
+      '  AND account_id = ? '
+      '  AND category_id = ? '
+      '  AND mode_id = ? '
+      '  AND amount = ? '
+      'LIMIT 1',
+      variables: [
+        Variable.withString(datePrefix),
+        Variable.withString(accountId),
+        Variable.withString(categoryId),
+        Variable.withString(modeId),
+        Variable.withReal(amount),
+      ],
+    ).getSingleOrNull();
+    return result?.data['id'] as String?;
+  }
 
   // --- Tags ---
 

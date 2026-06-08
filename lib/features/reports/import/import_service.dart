@@ -144,6 +144,9 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
             'Missing required columns. Expected: date, amount, kind, account, category, mode.',
           '__NO_TRANSACTIONS_SHEET__' =>
             'No "Transactions" sheet found. Download the template and fill that sheet.',
+          '__ONLY_EXAMPLE_ROWS__' =>
+            'The file only contains the example rows from the template. '
+                'Delete those rows, add your transactions, then import again.',
           '__JSON_PARSE_ERROR__' => 'Invalid JSON file.',
           '__JSON_NOT_OBJECT__' => 'JSON must be an object with a "transactions" array.',
           '__NO_TRANSACTIONS_KEY__' =>
@@ -191,9 +194,9 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
       _loadingMessage = 'Importing…';
     });
 
-    int count = 0;
+    (int imported, int skipped) counts = (0, 0);
     try {
-      count = await _performImport(widget.db, preview);
+      counts = await _performImport(widget.db, preview);
     } catch (e) {
       if (mounted) {
         setState(() => _step = _Step.options);
@@ -209,13 +212,14 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
 
     if (mounted) {
       Navigator.of(context).pop();
+      final imported = counts.$1;
+      final skipped = counts.$2;
+      final msg = skipped == 0
+          ? 'Imported $imported transaction${imported == 1 ? '' : 's'} successfully.'
+          : 'Imported $imported transaction${imported == 1 ? '' : 's'}. '
+              'Skipped $skipped duplicate${skipped == 1 ? '' : 's'} already in the app.';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Imported $count transaction${count == 1 ? '' : 's'} successfully.',
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
+        SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
       );
     }
   }
@@ -270,15 +274,17 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
       maxChildSize: 0.75,
       builder: (_, controller) {
         if (_step == _Step.loading) {
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 16),
-              Text(_loadingMessage,
-                  style: tt.bodyMedium
-                      ?.copyWith(color: cs.onSurfaceVariant)),
-            ],
+          return SizedBox.expand(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(_loadingMessage,
+                    style: tt.bodyMedium
+                        ?.copyWith(color: cs.onSurfaceVariant)),
+              ],
+            ),
           );
         }
 
@@ -518,11 +524,6 @@ ImportPreview _resolveAndValidate(
     final modeId = modeMap[mode.toLowerCase()];
     if (modeId == null) newModeNames.add(mode);
 
-    // title falls back to category name when blank
-    final title = (row.title?.trim().isNotEmpty == true)
-        ? row.title!.trim()
-        : category;
-
     validRows.add(ResolvedRow(
       rowIndex: row.rowIndex,
       existingAccountId: accountId,
@@ -531,7 +532,6 @@ ImportPreview _resolveAndValidate(
       categoryName: category,
       existingModeId: modeId,
       modeName: mode,
-      title: title,
       amount: amount,
       kind: kind,
       transactionDate: parsedDate.toIso8601String(),
@@ -581,9 +581,12 @@ const _categoryColors = [
   '#DC2626', '#D97706', '#059669', '#0284C7', '#7C3AED', '#EC4899'
 ];
 
-Future<int> _performImport(AppDatabase db, ImportPreview preview) async {
+Future<(int imported, int skipped)> _performImport(
+    AppDatabase db, ImportPreview preview) async {
   const uuid = Uuid();
   final now = DateTime.now().millisecondsSinceEpoch;
+  var imported = 0;
+  var skipped = 0;
 
   await db.transaction(() async {
     // Create new accounts
@@ -639,7 +642,8 @@ Future<int> _performImport(AppDatabase db, ImportPreview preview) async {
       newModeIds[name.toLowerCase()] = id;
     }
 
-    // Insert transactions
+    // Insert transactions — skip duplicates matched by the composite key:
+    // (date, accountId, categoryId, modeId, amount)
     for (final row in preview.validRows) {
       final accountId = row.existingAccountId ??
           newAccountIds[row.accountName.toLowerCase()]!;
@@ -648,9 +652,26 @@ Future<int> _performImport(AppDatabase db, ImportPreview preview) async {
       final modeId =
           row.existingModeId ?? newModeIds[row.modeName.toLowerCase()]!;
 
+      // Extract the date-only portion (first 10 chars of ISO-8601 string)
+      final datePrefix = row.transactionDate.length >= 10
+          ? row.transactionDate.substring(0, 10)
+          : row.transactionDate;
+
+      final existingId = await db.transactionsDao.findDuplicate(
+        datePrefix: datePrefix,
+        accountId: accountId,
+        categoryId: categoryId,
+        modeId: modeId,
+        amount: row.amount,
+      );
+
+      if (existingId != null) {
+        skipped++;
+        continue;
+      }
+
       await db.transactionsDao.upsert(TransactionsCompanion.insert(
         id: uuid.v4(),
-        title: row.title,
         amount: row.amount,
         transactionDate: row.transactionDate,
         accountId: accountId,
@@ -661,8 +682,9 @@ Future<int> _performImport(AppDatabase db, ImportPreview preview) async {
         createdAt: now,
         updatedAt: now,
       ));
+      imported++;
     }
   });
 
-  return preview.validRows.length;
+  return (imported, skipped);
 }

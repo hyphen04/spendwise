@@ -49,7 +49,6 @@ class _AddEditSheet extends ConsumerStatefulWidget {
 
 class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _titleCtrl;
   late final TextEditingController _amountCtrl;
   late final TextEditingController _noteCtrl;
   late String _kind;
@@ -65,7 +64,6 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
     super.initState();
     final e = widget.editing;
     _kind = e?.kind ?? widget.initialKind;
-    _titleCtrl = TextEditingController(text: e?.title ?? '');
     _amountCtrl = TextEditingController(
         text: e != null ? _fmtAmt(e.amount) : '');
     _noteCtrl = TextEditingController(text: e?.note ?? '');
@@ -81,7 +79,6 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
 
   @override
   void dispose() {
-    _titleCtrl.dispose();
     _amountCtrl.dispose();
     _noteCtrl.dispose();
     super.dispose();
@@ -125,7 +122,6 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
         if (_isEditing) {
           await repo.updateTransfer(
             widget.editing!,
-            title: _titleCtrl.text.trim(),
             amount: amount,
             transactionDate: date,
             fromAccountId: _accountId!,
@@ -135,7 +131,6 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
           );
         } else {
           await repo.createTransfer(
-            title: _titleCtrl.text.trim(),
             amount: amount,
             transactionDate: date,
             fromAccountId: _accountId!,
@@ -160,7 +155,6 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
         if (_isEditing) {
           await repo.update(
             widget.editing!,
-            title: _titleCtrl.text.trim(),
             amount: amount,
             transactionDate: date,
             accountId: _accountId!,
@@ -171,7 +165,6 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
           );
         } else {
           await repo.create(
-            title: _titleCtrl.text.trim(),
             amount: amount,
             transactionDate: date,
             accountId: _accountId!,
@@ -300,13 +293,14 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
               if (_isTransfer) ...[
                 // From account
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: _accountId,
                   decoration:
                       const InputDecoration(labelText: 'From Account *'),
                   items: accounts
                       .map((a) => DropdownMenuItem(
                             value: a.id,
-                            child: Text('${a.icon} ${a.name}'),
+                            child: Text('${a.icon} ${a.name}', overflow: TextOverflow.ellipsis),
                           ))
                       .toList(),
                   onChanged: (v) => setState(() => _accountId = v),
@@ -315,13 +309,14 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: _toAccountId,
                   decoration:
                       const InputDecoration(labelText: 'To Account *'),
                   items: accounts
                       .map((a) => DropdownMenuItem(
                             value: a.id,
-                            child: Text('${a.icon} ${a.name}'),
+                            child: Text('${a.icon} ${a.name}', overflow: TextOverflow.ellipsis),
                           ))
                       .toList(),
                   onChanged: (v) => setState(() => _toAccountId = v),
@@ -331,13 +326,14 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
               ] else ...[
                 // Account
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: _accountId,
                   decoration:
                       const InputDecoration(labelText: 'Account *'),
                   items: accounts
                       .map((a) => DropdownMenuItem(
                             value: a.id,
-                            child: Text('${a.icon} ${a.name}'),
+                            child: Text('${a.icon} ${a.name}', overflow: TextOverflow.ellipsis),
                           ))
                       .toList(),
                   onChanged: (v) => setState(() {
@@ -350,13 +346,14 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
                 const SizedBox(height: 16),
                 // Category
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: _categoryId,
                   decoration:
                       const InputDecoration(labelText: 'Category *'),
                   items: categories
                       .map((c) => DropdownMenuItem(
                             value: c.id,
-                            child: Text('${c.icon} ${c.name}'),
+                            child: Text('${c.icon} ${c.name}', overflow: TextOverflow.ellipsis),
                           ))
                       .toList(),
                   onChanged: (v) => setState(() => _categoryId = v),
@@ -371,13 +368,14 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
                 _ReadOnlyModeRow(cashMode: cashM)
               else
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: _modeId,
                   decoration: const InputDecoration(labelText: 'Payment Mode *'),
                   hint: const Text('How was this paid?'),
                   items: visibleModes
                       .map((m) => DropdownMenuItem(
                             value: m.id,
-                            child: Text('${m.icon} ${m.name}'),
+                            child: Text('${m.icon} ${m.name}', overflow: TextOverflow.ellipsis),
                           ))
                       .toList(),
                   onChanged: (v) => setState(() => _modeId = v),

@@ -74,7 +74,6 @@ class MonthlySummary {
 class ExportRow {
   const ExportRow({
     required this.id,
-    required this.title,
     required this.amount,
     required this.date,
     required this.kind,
@@ -85,7 +84,6 @@ class ExportRow {
     this.note,
   });
   final String id;
-  final String title;
   final double amount;
   final String date;      // ISO 8601 transaction date
   final String kind;

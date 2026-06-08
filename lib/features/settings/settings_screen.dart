@@ -1,11 +1,14 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 import '../../app/widgets/mono_numpad.dart';
 import '../../app/widgets/screen_header.dart';
 import '../../services/biometric_service.dart';
@@ -15,6 +18,8 @@ import '../../state/prefs_providers.dart';
 import 'update_check_dialog.dart';
 import '../reports/export/export_service.dart';
 import '../reports/import/import_service.dart';
+import '../../services/database_backup_service.dart';
+import 'manage_backups_screen.dart';
 
 class SettingsScreenV2 extends ConsumerStatefulWidget {
   const SettingsScreenV2({super.key});
@@ -137,6 +142,48 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
     }
   }
 
+  // ── Backup Quota Picker ──────────────────────────────────────────────────────
+
+  static const _quotaOptions = [
+    (10, '10 MB'),
+    (20, '20 MB'),
+    (50, '50 MB'),
+    (100, '100 MB'),
+    (500, '500 MB'),
+    (-1, 'Unlimited'),
+  ];
+
+  String _quotaLabel(int mb) {
+    for (final q in _quotaOptions) {
+      if (q.$1 == mb) return q.$2;
+    }
+    return '$mb MB';
+  }
+
+  Future<void> _pickBackupQuota() async {
+    final current = ref.read(prefsServiceProvider).backupQuotaMb;
+    final choice = await showDialog<int>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Backup Storage Quota'),
+        children: _quotaOptions
+            .map((q) => ListTile(
+                  title: Text(q.$2),
+                  trailing: q.$1 == current
+                      ? Icon(Icons.check_rounded,
+                          color: Theme.of(ctx).colorScheme.primary)
+                      : null,
+                  onTap: () => Navigator.pop(ctx, q.$1),
+                ))
+            .toList(),
+      ),
+    );
+    if (choice != null) {
+      await ref.read(prefsServiceProvider).setBackupQuotaMb(choice);
+      if (mounted) setState(() {});
+    }
+  }
+
   // ── Clear data ───────────────────────────────────────────────────────────────
 
   Future<void> _clearAllData() async {
@@ -187,7 +234,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // ── Header (outside ListView so MediaQuery.padding.top is intact) ───
-          const ScreenHeader(title: 'settings'),
+          const ScreenHeader(
+            title: 'settings',
+            subtitle: 'Preferences & app control',
+          ),
 
           Expanded(
             child: ListView(
@@ -323,6 +373,57 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
             child: Column(
               children: [
                 ListTile(
+                  leading: const Icon(Icons.sd_storage_outlined),
+                  title: const Text('Backup Storage Quota'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _quotaLabel(
+                            ref.read(prefsServiceProvider).backupQuotaMb),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(color: cs.onSurfaceVariant),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.chevron_right_rounded),
+                    ],
+                  ),
+                  onTap: _pickBackupQuota,
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.backup_rounded),
+                  title: const Text('Manage Backups'),
+                  subtitle: const Text('View and restore database replicas'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ManageBackupsScreen()),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.archive_outlined),
+                  title: const Text('Download Raw DB (ZIP)'),
+                  subtitle: const Text('Export expenses.db and the latest replica'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () {
+                    // Show a quick loading indicator while zipping
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Zipping databases...'),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                    DatabaseBackupService.exportRawDatabaseZip();
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
                   leading: const Icon(Icons.upload_outlined),
                   title: const Text('Export Data'),
                   trailing: const Icon(Icons.chevron_right_rounded),
@@ -353,6 +454,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: _clearAllData,
                 ),
+                if (kDebugMode) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: Icon(Icons.bug_report_rounded, color: cs.error),
+                    title: Text('DEBUG: Corrupt Database', style: TextStyle(color: cs.error)),
+                    subtitle: const Text('Intentionally overwrite the DB with garbage to test Recovery flow. You must restart the app after.'),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Corrupt DB?'),
+                          content: const Text('This will destroy expenses.db!'),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Destroy')),
+                          ],
+                        ),
+                      );
+                      if (confirmed != true) return;
+                      final dbFolder = await getApplicationDocumentsDirectory();
+                      final dbFile = File(p.join(dbFolder.path, 'expenses.db'));
+                      await dbFile.writeAsString('I AM A CORRUPTED GARBAGE FILE AND NOT A SQLITE DATABASE!!');
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Database Corrupted! Restart the app.')));
+                      }
+                    },
+                  ),
+                ],
               ],
             ),
           ),

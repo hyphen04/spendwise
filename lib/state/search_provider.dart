@@ -35,11 +35,10 @@ final globalSearchProvider =
   if (query.isEmpty) return const GlobalSearchResults.empty();
   final q = query.toLowerCase();
 
-  // Transactions — enriched rows (title, note, amount, category/account/mode name)
+  // Transactions — enriched rows (note, amount, category/account/mode name)
   final txRows = ref.watch(transactionRowsProvider).valueOrNull ?? [];
   final matchedTx = txRows.where((row) {
     final tx = row.transaction;
-    if (tx.title.toLowerCase().contains(q)) return true;
     if (tx.note.toLowerCase().contains(q)) return true;
     if (tx.amount.toString().contains(q)) return true;
     if (tx.amount.toInt().toString().contains(q)) return true;

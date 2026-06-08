@@ -19,7 +19,16 @@ class ModeBreakdownReport extends ConsumerWidget {
     final async = ref.watch(modeBreakdownProvider((from, to)));
 
     return Scaffold(
-      appBar: AppBar(title: Text('Mode Breakdown — $monthLabel')),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Mode Breakdown', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            Text(monthLabel, style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+          ],
+        ),
+      ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),

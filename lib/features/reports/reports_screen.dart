@@ -1,13 +1,12 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../app/widgets/screen_header.dart';
-import '../../state/database_provider.dart';
+
 import '../../state/period_providers.dart';
 import '../../state/reports_providers.dart';
 import '../home/widgets/month_nav.dart';
-import 'export/export_service.dart';
+
 import 'reports/account_statement_report.dart';
 import 'reports/budget_performance_report.dart';
 import 'reports/cashflow_trend_report.dart';
@@ -16,7 +15,6 @@ import 'reports/mode_breakdown_report.dart';
 import 'reports/monthly_summary_report.dart';
 import 'reports/top_spends_report.dart';
 import 'reports/yearly_summary_report.dart';
-import 'widgets/report_card.dart';
 
 class ReportsScreen extends ConsumerWidget {
   const ReportsScreen({super.key});
@@ -27,7 +25,6 @@ class ReportsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
-    final db = ref.read(appDatabaseProvider);
 
     final period = ref.watch(selectedPeriodProvider);
     final year = period.year;
@@ -35,7 +32,6 @@ class ReportsScreen extends ConsumerWidget {
 
     final summary =
         ref.watch(monthlySummaryProvider((year, month))).valueOrNull;
-    final cashFlow = ref.watch(cashFlowProvider).valueOrNull ?? [];
 
     final fromIso = DateTime(year, month).toIso8601String();
     final toIso = DateTime(year, month + 1).toIso8601String();
@@ -46,147 +42,107 @@ class ReportsScreen extends ConsumerWidget {
       body: Column(
         children: [
           // ── Header ───────────────────────────────────────────────────
-          ScreenHeader(
+          const ScreenHeader(
             title: 'reports',
+            subtitle: 'Insights & summaries',
             actions: [
-              const MonthNav(),
-              const SizedBox(width: 4),
-              HeaderIconButton(
-                icon: Icons.ios_share_outlined,
-                onTap: () => ExportService.showExportSheet(
-                  context,
-                  db,
-                  defaultFrom: fromIso,
-                  defaultTo: toIso,
-                ),
-                tooltip: 'Export',
-              ),
+              MonthNav(),
             ],
           ),
 
-          // ── Period hero ───────────────────────────────────────────────
+          // ── Period hero (At a Glance) ────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        summary != null
-                            ? '₹${_fmtAmt(summary.expense)}'
-                            : '₹—',
-                        style: GoogleFonts.manrope(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w800,
-                          color: cs.onSurface,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                          height: 1.0,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Total spending',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
-                      ),
-                    ],
+                  child: _FlatStatCard(
+                    label: 'Income',
+                    amount: summary?.income ?? 0,
+                    color: const Color(0xFF16A34A),
+                    icon: Icons.arrow_downward_rounded,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _FlatStatCard(
+                    label: 'Expense',
+                    amount: summary?.expense ?? 0,
+                    color: const Color(0xFFDC2626),
+                    icon: Icons.arrow_upward_rounded,
                   ),
                 ),
               ],
             ),
           ),
 
-          // Mini cashflow line chart
-          if (cashFlow.length >= 2)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 12, 8, 0),
-              child: SizedBox(
-                height: 80,
-                child: _MiniLineChart(data: cashFlow),
-              ),
-            ),
-
-          const SizedBox(height: 4),
-          const Divider(height: 16),
+          // ── Categorized List ─────────────────────────────────────────
           Expanded(
-            child: GridView.count(
-              crossAxisCount: 2,
-              padding: const EdgeInsets.all(16),
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.05,
+            child: ListView(
+              padding: const EdgeInsets.only(bottom: 32),
               children: [
-                ReportCard(
+                _SectionHeader('OVERVIEWS', cs),
+                _ReportListItem(
                   emoji: '📊',
                   title: 'Monthly Summary',
                   description: 'Income, expenses & top categories',
-                  color: cs.onSurface,
-                  onTap: () => _push(context,
-                      MonthlySummaryReport(year: year, month: month)),
+                  color: const Color(0xFF3B82F6),
+                  onTap: () => _push(context, MonthlySummaryReport(year: year, month: month)),
                 ),
-                ReportCard(
+                _ReportListItem(
                   emoji: '📅',
                   title: 'Yearly Overview',
-                  description: '12-month income vs. expense',
+                  description: '12-month income vs. expense trend',
                   color: const Color(0xFF0284C7),
-                  onTap: () => _push(context,YearlySummaryReport(year: year)),
+                  onTap: () => _push(context, YearlySummaryReport(year: year)),
                 ),
-                ReportCard(
+                _ReportListItem(
+                  emoji: '📈',
+                  title: 'Cash Flow Trend',
+                  description: 'Rolling 6-month visual analysis',
+                  color: const Color(0xFF10B981),
+                  onTap: () => _push(context, const CashflowTrendReport()),
+                ),
+
+                const SizedBox(height: 24),
+                _SectionHeader('DEEP DIVES', cs),
+                _ReportListItem(
                   emoji: '🔍',
                   title: 'Category Drilldown',
-                  description: 'Spending breakdown by category',
+                  description: 'Detailed spending by category',
                   color: const Color(0xFF7C3AED),
-                  onTap: () => _push(context,CategoryDrilldownReport(
-                      from: fromIso,
-                      to: toIso,
-                      monthLabel: monthLabel)),
+                  onTap: () => _push(context, CategoryDrilldownReport(from: fromIso, to: toIso, monthLabel: monthLabel)),
                 ),
-                ReportCard(
+                _ReportListItem(
                   emoji: '💳',
                   title: 'Mode Breakdown',
-                  description: 'Payment method analysis',
+                  description: 'Payment method utilization',
                   color: const Color(0xFFDB2777),
-                  onTap: () => _push(context,ModeBreakdownReport(
-                      from: fromIso,
-                      to: toIso,
-                      monthLabel: monthLabel)),
+                  onTap: () => _push(context, ModeBreakdownReport(from: fromIso, to: toIso, monthLabel: monthLabel)),
                 ),
-                ReportCard(
+                _ReportListItem(
+                  emoji: '🔝',
+                  title: 'Top Spends',
+                  description: 'Largest transactions this period',
+                  color: const Color(0xFFF59E0B),
+                  onTap: () => _push(context, TopSpendsReport(from: fromIso, to: toIso, monthLabel: monthLabel)),
+                ),
+
+                const SizedBox(height: 24),
+                _SectionHeader('STATEMENTS', cs),
+                _ReportListItem(
                   emoji: '🏦',
                   title: 'Account Statement',
                   description: 'Transaction ledger by account',
                   color: const Color(0xFF0891B2),
-                  onTap: () => _push(context,
-                      AccountStatementReport(year: year, month: month)),
+                  onTap: () => _push(context, AccountStatementReport(year: year, month: month)),
                 ),
-                ReportCard(
-                  emoji: '📈',
-                  title: 'Cash Flow',
-                  description: 'Rolling 6-month income & expense',
-                  color: cs.onSurface,
-                  onTap: () => _push(context,const CashflowTrendReport()),
-                ),
-                ReportCard(
-                  emoji: '🔝',
-                  title: 'Top Spends',
-                  description: 'Biggest transactions this period',
-                  color: cs.onSurfaceVariant,
-                  onTap: () => _push(context,TopSpendsReport(
-                      from: fromIso,
-                      to: toIso,
-                      monthLabel: monthLabel)),
-                ),
-                ReportCard(
+                _ReportListItem(
                   emoji: '🎯',
                   title: 'Budget Performance',
                   description: 'Planned vs. actual spending',
-                  color: const Color(0xFFF59E0B),
-                  onTap: () => _push(context,
-                      BudgetPerformanceReport(year: year, month: month)),
+                  color: const Color(0xFFD97706),
+                  onTap: () => _push(context, BudgetPerformanceReport(year: year, month: month)),
                 ),
               ],
             ),
@@ -210,60 +166,156 @@ String _fmtAmt(double v) {
   return v.toStringAsFixed(2);
 }
 
-class _MiniLineChart extends StatelessWidget {
-  const _MiniLineChart({required this.data});
-  final List<dynamic> data; // List<MonthTotal>
-
-  static const _green = Color(0xFF16A34A);
-  static const _red = Color(0xFFDC2626);
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader(this.title, this.cs);
+  final String title;
+  final ColorScheme cs;
 
   @override
   Widget build(BuildContext context) {
-    final incomeSpots = <FlSpot>[];
-    final expenseSpots = <FlSpot>[];
-    for (var i = 0; i < data.length; i++) {
-      incomeSpots.add(FlSpot(i.toDouble(), data[i].income));
-      expenseSpots.add(FlSpot(i.toDouble(), data[i].expense));
-    }
-    final allValues = data
-        .expand((d) => [d.income as double, d.expense as double])
-        .toList();
-    final maxY = allValues.isEmpty
-        ? 1.0
-        : (allValues.reduce((a, b) => a > b ? a : b) * 1.1).clamp(1.0, double.infinity);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Text(
+        title,
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: cs.onSurfaceVariant,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
 
-    return LineChart(
-      LineChartData(
-        minY: 0,
-        maxY: maxY,
-        gridData: const FlGridData(show: false),
-        borderData: FlBorderData(show: false),
-        titlesData: const FlTitlesData(show: false),
-        lineTouchData: const LineTouchData(enabled: false),
-        lineBarsData: [
-          LineChartBarData(
-            spots: incomeSpots,
-            isCurved: true,
-            color: _green,
-            barWidth: 2,
-            dotData: const FlDotData(show: false),
-            belowBarData: BarAreaData(
-              show: true,
-              color: _green.withValues(alpha: 0.08),
-            ),
+class _FlatStatCard extends StatelessWidget {
+  const _FlatStatCard({
+    required this.label,
+    required this.amount,
+    required this.color,
+    required this.icon,
+  });
+
+  final String label;
+  final double amount;
+  final Color color;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 14, color: color),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ],
           ),
-          LineChartBarData(
-            spots: expenseSpots,
-            isCurved: true,
-            color: _red,
-            barWidth: 2,
-            dotData: const FlDotData(show: false),
-            belowBarData: BarAreaData(
-              show: true,
-              color: _red.withValues(alpha: 0.08),
+          const SizedBox(height: 12),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '₹${_fmtAmt(amount)}',
+              style: GoogleFonts.manrope(
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+                color: color,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                height: 1.0,
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ReportListItem extends StatelessWidget {
+  const _ReportListItem({
+    required this.emoji,
+    required this.title,
+    required this.description,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String emoji;
+  final String title;
+  final String description;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Text(emoji, style: const TextStyle(fontSize: 20)),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.manrope(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    description,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, size: 20, color: cs.outline),
+          ],
+        ),
       ),
     );
   }

@@ -132,7 +132,6 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
     try {
       if (_isTransfer) {
         await repo.createTransfer(
-          title: '',
           amount: _amount,
           transactionDate: date,
           fromAccountId: _fromAccountId!,
@@ -142,7 +141,6 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
         );
       } else {
         await repo.create(
-          title: '',
           amount: _amount,
           transactionDate: date,
           accountId: _accountId!,
@@ -295,11 +293,12 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
+                    isExpanded: true,
                     isDense: true,
                     initialValue: _fromAccountId,
                     decoration: const InputDecoration(labelText: 'From', isDense: true),
                     items: accounts.map((a) => DropdownMenuItem(
-                      value: a.id, child: Text('${a.icon} ${a.name}'))).toList(),
+                      value: a.id, child: Text('${a.icon} ${a.name}', overflow: TextOverflow.ellipsis))).toList(),
                     onChanged: (v) => setState(() => _fromAccountId = v),
                   ),
                 ),
@@ -309,11 +308,12 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
                 ),
                 Expanded(
                   child: DropdownButtonFormField<String>(
+                    isExpanded: true,
                     isDense: true,
                     initialValue: _toAccountId,
                     decoration: const InputDecoration(labelText: 'To', isDense: true),
                     items: accounts.map((a) => DropdownMenuItem(
-                      value: a.id, child: Text('${a.icon} ${a.name}'))).toList(),
+                      value: a.id, child: Text('${a.icon} ${a.name}', overflow: TextOverflow.ellipsis))).toList(),
                     onChanged: (v) => setState(() => _toAccountId = v),
                   ),
                 ),
@@ -471,9 +471,10 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
             // ── Account + Category (or From/To) ────────────────────────────
             if (_isTransfer) ...[
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _fromAccountId,
                 decoration: const InputDecoration(labelText: 'From Account *'),
-                items: accounts.map((a) => DropdownMenuItem(value: a.id, child: Text('${a.icon} ${a.name}'))).toList(),
+                items: accounts.map((a) => DropdownMenuItem(value: a.id, child: Text('${a.icon} ${a.name}', overflow: TextOverflow.ellipsis))).toList(),
                 onChanged: (v) => setState(() {
                   _fromAccountId = v;
                   _autoSetMode(v, accounts, cashMode, modes);
@@ -481,16 +482,18 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _toAccountId,
                 decoration: const InputDecoration(labelText: 'To Account *'),
-                items: accounts.map((a) => DropdownMenuItem(value: a.id, child: Text('${a.icon} ${a.name}'))).toList(),
+                items: accounts.map((a) => DropdownMenuItem(value: a.id, child: Text('${a.icon} ${a.name}', overflow: TextOverflow.ellipsis))).toList(),
                 onChanged: (v) => setState(() => _toAccountId = v),
               ),
             ] else ...[
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _accountId,
                 decoration: const InputDecoration(labelText: 'Account *'),
-                items: accounts.map((a) => DropdownMenuItem(value: a.id, child: Text('${a.icon} ${a.name}'))).toList(),
+                items: accounts.map((a) => DropdownMenuItem(value: a.id, child: Text('${a.icon} ${a.name}', overflow: TextOverflow.ellipsis))).toList(),
                 onChanged: (v) => setState(() {
                   _accountId = v;
                   _autoSetMode(v, accounts, cashMode, modes);
@@ -498,9 +501,10 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _categoryId,
                 decoration: const InputDecoration(labelText: 'Category *'),
-                items: categories.map((c) => DropdownMenuItem(value: c.id, child: Text('${c.icon} ${c.name}'))).toList(),
+                items: categories.map((c) => DropdownMenuItem(value: c.id, child: Text('${c.icon} ${c.name}', overflow: TextOverflow.ellipsis))).toList(),
                 onChanged: (v) => setState(() => _categoryId = v),
               ),
             ],
@@ -596,6 +600,7 @@ class _ModeField extends StatelessWidget {
     }
 
     return DropdownButtonFormField<String>(
+      isExpanded: true,
       initialValue: modeId,
       decoration: const InputDecoration(labelText: 'Payment Mode *'),
       hint: const Text('How was this paid?'),

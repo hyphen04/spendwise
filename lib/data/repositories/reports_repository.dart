@@ -46,7 +46,7 @@ class ReportsRepository {
         .toList();
 
     final topSpend = await _db.customSelect(
-      'SELECT t.title, t.amount, t.note, c.name AS category_name '
+      'SELECT t.amount, t.note, c.name AS category_name '
       'FROM transactions t '
       'LEFT JOIN categories c ON t.category_id = c.id '
       'WHERE t.kind = \'expense\' '
@@ -60,10 +60,7 @@ class ReportsRepository {
     String? biggestNote;
     if (topSpend.isNotEmpty) {
       final row = topSpend.first.data;
-      final rawTitle = row['title'] as String? ?? '';
-      biggestTitle = rawTitle.isNotEmpty
-          ? rawTitle
-          : (row['category_name'] as String? ?? 'Expense');
+      biggestTitle = row['category_name'] as String? ?? 'Expense';
       biggestAmount = (row['amount'] as num?)?.toDouble();
       final rawNote = row['note'] as String? ?? '';
       biggestNote = rawNote.isNotEmpty ? rawNote : null;
@@ -269,7 +266,7 @@ class ReportsRepository {
     }
 
     final rows = await _db.customSelect(
-      'SELECT t.id, t.title, t.amount, t.transaction_date, t.kind, t.note, '
+      'SELECT t.id, t.amount, t.transaction_date, t.kind, t.note, '
       't.created_at, '
       'a.name AS account_name, c.name AS category_name, m.name AS mode_name '
       'FROM transactions t '
@@ -285,7 +282,6 @@ class ReportsRepository {
     return rows
         .map((r) => ExportRow(
               id: r.data['id'] as String,
-              title: r.data['title'] as String,
               amount: (r.data['amount'] as num).toDouble(),
               date: r.data['transaction_date'] as String,
               kind: r.data['kind'] as String,

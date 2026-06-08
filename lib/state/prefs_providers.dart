@@ -118,3 +118,18 @@ class AutoCheckUpdatesNotifier extends StateNotifier<bool> {
   }
 }
 
+// ── Database Backup ──────────────────────────────────────────────────────────
+
+final backupQuotaMbProvider =
+    StateNotifierProvider<BackupQuotaMbNotifier, int>(
+        (ref) => BackupQuotaMbNotifier(ref.watch(prefsServiceProvider)));
+
+class BackupQuotaMbNotifier extends StateNotifier<int> {
+  BackupQuotaMbNotifier(this._prefs) : super(_prefs.backupQuotaMb);
+  final PrefsService _prefs;
+
+  Future<void> set(int v) async {
+    await _prefs.setBackupQuotaMb(v);
+    state = v;
+  }
+}

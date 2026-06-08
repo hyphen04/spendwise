@@ -4,7 +4,6 @@ import 'categories_table.dart';
 import 'modes_table.dart';
 class Transactions extends Table {
   TextColumn get id => text()();
-  TextColumn get title => text()();
   RealColumn get amount => real()();
   TextColumn get transactionDate => text()(); // ISO 8601
 

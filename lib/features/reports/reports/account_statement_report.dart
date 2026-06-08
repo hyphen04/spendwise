@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/db/app_database.dart';
-import '../../../state/database_provider.dart';
+
 import '../../../state/manage_providers.dart';
 import '../../../state/reports_providers.dart';
-import '../export/export_service.dart';
+
 
 class AccountStatementReport extends ConsumerStatefulWidget {
   const AccountStatementReport({
@@ -40,29 +40,16 @@ class _AccountStatementReportState
       _accountId = accounts.first.id;
     }
 
-    final db = ref.read(appDatabaseProvider);
-    final selectedAccount = accounts
-        .where((a) => a.id == _accountId)
-        .firstOrNull;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Statement — $monthLabel'),
-        actions: [
-          if (_accountId != null)
-            IconButton(
-              icon: const Icon(Icons.ios_share_outlined),
-              tooltip: 'Export',
-              onPressed: () => ExportService.showExportSheet(
-                context,
-                db,
-                defaultFrom: from,
-                defaultTo: to,
-                presetAccountId: _accountId,
-                presetAccountName: selectedAccount?.name,
-              ),
-            ),
-        ],
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Account Statement', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            Text(monthLabel, style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+          ],
+        ),
       ),
       body: Column(
         children: [
@@ -205,9 +192,7 @@ class _StatementList extends ConsumerWidget {
                       ),
                     ),
                     title: Text(
-                        tx.title.isNotEmpty
-                            ? tx.title
-                            : catMap[tx.categoryId] ?? tx.kind,
+                        catMap[tx.categoryId] ?? tx.kind,
                         style: const TextStyle(fontSize: 14)),
                     subtitle: tx.note.isNotEmpty
                         ? Column(

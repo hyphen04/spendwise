@@ -29,7 +29,6 @@ class CsvImporter {
 
     final dateIdx = colIdx('date');
     final timeIdx = colIdx('time');
-    final titleIdx = colIdx('title');
     final amountIdx = colIdx('amount');
     final kindIdx = colIdx('kind');
     final accountIdx = colIdx('account');
@@ -72,7 +71,6 @@ class CsvImporter {
         rowIndex: i,
         rawDate: cellStr(row, dateIdx),
         rawTime: cellStr(row, timeIdx),
-        title: cellStr(row, titleIdx),
         rawAmount: cellStr(row, amountIdx),
         kind: cellStr(row, kindIdx),
         account: cellStr(row, accountIdx),

@@ -38,7 +38,6 @@ class JsonImporter {
         rowIndex: i + 1,
         rawDate: toStr(tx['date']),
         rawTime: toStr(tx['time']),
-        title: toStr(tx['title']),
         rawAmount: toStr(tx['amount']),
         kind: toStr(tx['kind']),
         account: toStr(tx['account']),

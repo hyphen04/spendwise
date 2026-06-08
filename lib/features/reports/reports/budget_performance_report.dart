@@ -18,7 +18,16 @@ class BudgetPerformanceReport extends ConsumerWidget {
     final monthLabel = '${_months[month - 1]} $year';
 
     return Scaffold(
-      appBar: AppBar(title: Text('Budget Performance — $monthLabel')),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Budget Performance', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            Text(monthLabel, style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+          ],
+        ),
+      ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),

@@ -62,11 +62,7 @@ class TransactionTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _HighlightText(
-                    text: tx.title.isNotEmpty
-                        ? tx.title
-                        : isTransfer
-                            ? 'Transfer'
-                            : row.categoryName,
+                    text: isTransfer ? 'Transfer' : row.categoryName,
                     highlight: highlight,
                     baseStyle: GoogleFonts.manrope(
                       fontSize: 15,

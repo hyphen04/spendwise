@@ -31,7 +31,6 @@ class TransactionsRepository {
   // ── Write ops ──────────────────────────────────────────────────────────────
 
   Future<String> create({
-    required String title,
     required double amount,
     required String transactionDate,
     required String accountId,
@@ -45,7 +44,6 @@ class TransactionsRepository {
     final id = _uuid.v4();
     await _db.transactionsDao.upsert(TransactionsCompanion.insert(
       id: id,
-      title: title,
       amount: amount,
       transactionDate: transactionDate,
       accountId: accountId,
@@ -64,7 +62,6 @@ class TransactionsRepository {
 
   Future<void> update(
     Transaction existing, {
-    required String title,
     required double amount,
     required String transactionDate,
     required String accountId,
@@ -77,7 +74,6 @@ class TransactionsRepository {
     final now = DateTime.now().millisecondsSinceEpoch;
     await _db.transactionsDao.upsert(TransactionsCompanion(
       id: Value(existing.id),
-      title: Value(title),
       amount: Value(amount),
       transactionDate: Value(transactionDate),
       accountId: Value(accountId),
@@ -96,7 +92,6 @@ class TransactionsRepository {
   /// Creates a transfer pair: expense leg from [fromAccountId] and income
   /// leg to [toAccountId], linked via [transferPairId].
   Future<void> createTransfer({
-    required String title,
     required double amount,
     required String transactionDate,
     required String fromAccountId,
@@ -112,7 +107,6 @@ class TransactionsRepository {
     await _db.transaction(() async {
       await _db.transactionsDao.upsert(TransactionsCompanion.insert(
         id: expenseId,
-        title: title,
         amount: amount,
         transactionDate: transactionDate,
         accountId: fromAccountId,
@@ -126,7 +120,6 @@ class TransactionsRepository {
       ));
       await _db.transactionsDao.upsert(TransactionsCompanion.insert(
         id: incomeId,
-        title: title,
         amount: amount,
         transactionDate: transactionDate,
         accountId: toAccountId,
@@ -143,7 +136,6 @@ class TransactionsRepository {
 
   Future<void> updateTransfer(
     Transaction existing, {
-    required String title,
     required double amount,
     required String transactionDate,
     required String fromAccountId,
@@ -159,7 +151,6 @@ class TransactionsRepository {
       // Update the expense leg (the one we opened for editing)
       await _db.transactionsDao.upsert(TransactionsCompanion(
         id: Value(existing.id),
-        title: Value(title),
         amount: Value(amount),
         transactionDate: Value(transactionDate),
         accountId: Value(fromAccountId),
@@ -172,7 +163,6 @@ class TransactionsRepository {
       if (pair != null) {
         await _db.transactionsDao.upsert(TransactionsCompanion(
           id: Value(pair.id),
-          title: Value(title),
           amount: Value(amount),
           transactionDate: Value(transactionDate),
           accountId: Value(toAccountId),
@@ -189,7 +179,6 @@ class TransactionsRepository {
     final now = DateTime.now().millisecondsSinceEpoch;
     await _db.transactionsDao.upsert(TransactionsCompanion.insert(
       id: _uuid.v4(),
-      title: tx.title,
       amount: tx.amount,
       transactionDate: DateTime.now().toIso8601String(),
       accountId: tx.accountId,

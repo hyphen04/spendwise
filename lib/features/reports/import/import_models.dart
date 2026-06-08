@@ -4,7 +4,6 @@ class ParsedRow {
   final int rowIndex;
   final String? rawDate;
   final String? rawTime;
-  final String? title;
   final String? rawAmount;
   final String? kind;
   final String? account;
@@ -16,7 +15,6 @@ class ParsedRow {
     required this.rowIndex,
     this.rawDate,
     this.rawTime,
-    this.title,
     this.rawAmount,
     this.kind,
     this.account,
@@ -34,7 +32,6 @@ class ResolvedRow {
   final String categoryName;
   final String? existingModeId;
   final String modeName;
-  final String title;
   final double amount;
   final String kind;
   final String transactionDate; // ISO-8601
@@ -48,7 +45,6 @@ class ResolvedRow {
     required this.categoryName,
     this.existingModeId,
     required this.modeName,
-    required this.title,
     required this.amount,
     required this.kind,
     required this.transactionDate,

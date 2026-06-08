@@ -14,7 +14,16 @@ class MonthlySummaryReport extends ConsumerWidget {
     final monthLabel = '${_months[month - 1]} $year';
 
     return Scaffold(
-      appBar: AppBar(title: Text('Summary — $monthLabel')),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Monthly Summary', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            Text(monthLabel, style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+          ],
+        ),
+      ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),

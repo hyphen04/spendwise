@@ -185,7 +185,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       final q = _searchQuery.toLowerCase();
       out = out
           .where((r) =>
-              r.transaction.title.toLowerCase().contains(q) ||
               r.transaction.note.toLowerCase().contains(q) ||
               r.categoryName.toLowerCase().contains(q) ||
               r.accountName.toLowerCase().contains(q))
@@ -421,44 +420,44 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    // Search bar passed as ScreenHeader.bottom
-    final searchBar = Container(
-      height: 44,
-      decoration: BoxDecoration(
-        color: cs.surfaceContainer,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: TextField(
-        controller: searchCtrl,
-        onChanged: onQueryChanged,
-        style: GoogleFonts.inter(fontSize: 14),
-        decoration: InputDecoration(
-          hintText: 'Search transactions…',
-          hintStyle:
-              GoogleFonts.inter(fontSize: 14, color: cs.onSurfaceVariant),
-          prefixIcon: Icon(Icons.search_rounded,
-              size: 18, color: cs.onSurfaceVariant),
-          border: InputBorder.none,
-          isCollapsed: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 13),
-        ),
-      ),
-    );
-
     return ScreenHeader(
       title: 'transactions',
       subtitle: count == 0
           ? 'No transactions'
           : '$count transaction${count == 1 ? '' : 's'}',
-      actions: [
-        HeaderIconButton(
-          icon: Icons.tune_rounded,
-          onTap: onFilter,
-          tooltip: 'Filters',
-          badge: filterCount,
-        ),
-      ],
-      bottom: searchBar,
+      bottom: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 44,
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: TextField(
+                controller: searchCtrl,
+                onChanged: onQueryChanged,
+                style: GoogleFonts.inter(fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'Search transactions…',
+                  hintStyle: GoogleFonts.inter(fontSize: 14, color: cs.onSurfaceVariant),
+                  prefixIcon: Icon(Icons.search_rounded, size: 18, color: cs.onSurfaceVariant),
+                  border: InputBorder.none,
+                  isCollapsed: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 13),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          HeaderIconButton(
+            icon: Icons.tune_rounded,
+            onTap: onFilter,
+            tooltip: 'Filters',
+            badge: filterCount,
+          ),
+        ],
+      ),
     );
   }
 }

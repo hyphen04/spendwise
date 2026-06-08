@@ -13,7 +13,16 @@ class CashflowTrendReport extends ConsumerWidget {
     final async = ref.watch(cashFlowProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Cash Flow Trend')),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Cash Flow Trend', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            Text('Last 6 Months', style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+          ],
+        ),
+      ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),

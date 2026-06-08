@@ -87,20 +87,6 @@ class _DetailSheetState extends ConsumerState<_DetailSheet> {
                   ),
                   const SizedBox(height: 6),
 
-                  // Title (only shown if explicitly set — new entries omit it)
-                  if (tx.title.isNotEmpty) ...[
-                    Text(
-                      tx.title,
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: cs.onSurface,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 4),
-                  ],
-
                   // Kind badge
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),

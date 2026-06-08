@@ -1,7 +1,7 @@
 name: spendwise
 description: SpendWise — smart expense tracker.
 publish_to: 'none'
-version: 2.4.0+7
+version: 2.5.0+8
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
@@ -34,8 +34,10 @@ dependencies:
   flutter_animate: ^4.5.0
   phosphor_flutter: ^2.1.0
 
-  # --- Export (new) ---
+  # --- Export / Import (new) ---
   excel: ^4.0.0
+  archive: ^3.6.1
+  xml: ^6.6.1
   csv: ^6.0.0
   pdf: ^3.10.0
   printing: ^5.13.0

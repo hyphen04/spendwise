@@ -42,31 +42,36 @@ class ScreenHeader extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                title,
-                style: GoogleFonts.manrope(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: cs.onSurface,
-                  height: 1.0,
-                  letterSpacing: -0.3,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.manrope(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: cs.onSurface,
+                      height: 1.0,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle!,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: cs.onSurfaceVariant,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ],
               ),
               const Spacer(),
               ...actions,
             ],
           ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 3),
-            Text(
-              subtitle!,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: cs.onSurfaceVariant,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ],
           if (bottom != null) ...[
             const SizedBox(height: 14),
             bottom!,

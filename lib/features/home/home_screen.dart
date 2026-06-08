@@ -3,7 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../app/widgets/screen_header.dart';
+
 import '../../app/widgets/smooth_line_chart.dart';
 import '../../data/models/transaction_row.dart';
 import '../../state/home_providers.dart';
@@ -57,9 +57,13 @@ class HomeScreen extends ConsumerWidget {
           Padding(
             padding: EdgeInsets.fromLTRB(20, topPad + 16, 16, 8),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                RichText(
-                  text: TextSpan(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    RichText(
+                      text: TextSpan(
                     children: [
                       TextSpan(
                         text: 'spend',
@@ -84,15 +88,20 @@ class HomeScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const Spacer(),
-                const MonthNav(),
-                const SizedBox(width: 8),
-                HeaderIconButton(
-                  icon: Icons.search_rounded,
-                  onTap: () => showSearchSheet(context),
-                  tooltip: 'Search',
+                const SizedBox(height: 3),
+                Text(
+                  _greeting(),
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
               ],
+            ),
+            const Spacer(),
+            const MonthNav(),
+          ],
             ).animate().fadeIn(duration: 250.ms),
           ),
 
@@ -272,6 +281,13 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => showSearchSheet(context),
+        tooltip: 'Search',
+        backgroundColor: cs.primaryContainer,
+        foregroundColor: cs.onPrimaryContainer,
+        child: const Icon(Icons.search_rounded),
+      ),
     );
   }
 
@@ -339,6 +355,13 @@ class HomeScreen extends ConsumerWidget {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
+
+String _greeting() {
+  final hour = DateTime.now().hour;
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
 String _monthCaption(int month, int year) {
   const names = [
