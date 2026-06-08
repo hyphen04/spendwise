@@ -14,6 +14,7 @@ import '../../state/database_provider.dart';
 import '../../state/prefs_providers.dart';
 import 'update_check_dialog.dart';
 import '../reports/export/export_service.dart';
+import '../reports/import/import_service.dart';
 
 class SettingsScreenV2 extends ConsumerStatefulWidget {
   const SettingsScreenV2({super.key});
@@ -331,6 +332,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                     ExportService.showExportSheet(context, db,
                         defaultFrom: DateTime(now.year, now.month).toIso8601String(),
                         defaultTo: DateTime(now.year, now.month + 1).toIso8601String());
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.download_outlined),
+                  title: const Text('Import Data'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () {
+                    final db = ref.read(appDatabaseProvider);
+                    ImportService.showImportSheet(context, db);
                   },
                 ),
                 const Divider(height: 1),
