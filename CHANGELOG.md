@@ -5,6 +5,18 @@ Format: `## vX.X.X — YYYY-MM-DD` with Added / Changed / Fixed sections.
 
 ---
 
+## v2.7.0 — 2026-07-02
+
+### Added
+- **Dues & Tabs Module**: A complete new feature to track IOUs with friends and contacts. Features a dedicated Dues tab with an overview of your net receivables and payables.
+- **Settlement Management**: Intelligently settle multiple dues at once with a beautiful "Swipe to Settle" UI.
+- **Settlement History**: Full history of past settlements with the ability to safely delete incorrect settlements, cleanly unlinking entries and removing linked transactions.
+
+### Changed
+- Refined the Dues and Tabs screens to follow the app's standard layout principles (SliverAppBars, Manrope/Inter typography, and consistent padding).
+
+---
+
 ## v2.6.1 — 2026-06-08
 
 ### Added
