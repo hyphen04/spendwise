@@ -33,7 +33,10 @@ class MonoNumpad extends StatelessWidget {
   final bool showDecimal;
 
   /// What the bottom-right key does. When [NumpadAction.confirm], the
-  /// bottom-left becomes backspace and the bottom-right is a black check key.
+  /// bottom-right is a black check key and the bottom-left stays as the
+  /// decimal point; the amount-entry sheet surfaces a separate backspace
+  /// button next to the amount display in that mode. Otherwise the
+  /// bottom-right is the backspace.
   final NumpadAction bottomRightAction;
 
   final bool confirmEnabled;
@@ -42,19 +45,16 @@ class MonoNumpad extends StatelessWidget {
   Widget build(BuildContext context) {
     final confirmMode = bottomRightAction == NumpadAction.confirm;
 
-    // Bottom-left key:
-    //  - confirm mode → backspace
-    //  - otherwise → decimal point (or blank if disabled)
-    final Widget bottomLeft = confirmMode
-        ? _ActionKey(
-            icon: Icons.backspace_outlined,
-            onTap: onBackspace,
-          )
-        : (showDecimal
-            ? _DigitKey(label: '.', onTap: () => onDigit('.'))
-            : const _BlankKey());
+    // 3-column grid. Bottom row layout depends on mode:
+    //  - confirm mode (amount entry): `.` / `0` / ✓
+    //  - non-confirm mode (PIN):     blank / `0` / ⌫
+    // The backspace still has to be reachable when entering an amount — the
+    // amount-entry sheet surfaces it as a small icon next to the big
+    // amount display, so the numpad itself stays a clean 3×4 grid.
+    final Widget bottomLeft = showDecimal
+        ? _DigitKey(label: '.', onTap: () => onDigit('.'))
+        : const _BlankKey();
 
-    // Bottom-right key:
     final Widget bottomRight = confirmMode
         ? _ConfirmKey(
             enabled: confirmEnabled,
@@ -71,20 +71,7 @@ class MonoNumpad extends StatelessWidget {
         _row(['1', '2', '3']),
         _row(['4', '5', '6']),
         _row(['7', '8', '9']),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Row(
-            children: [
-              Expanded(child: Center(child: bottomLeft)),
-              Expanded(
-                child: Center(
-                  child: _DigitKey(label: '0', onTap: () => onDigit('0')),
-                ),
-              ),
-              Expanded(child: Center(child: bottomRight)),
-            ],
-          ),
-        ),
+        _row3(bottomLeft, bottomRight),
       ],
     );
   }
@@ -100,6 +87,23 @@ class MonoNumpad extends StatelessWidget {
                   ),
                 ))
             .toList(),
+      ),
+    );
+  }
+
+  Widget _row3(Widget left, Widget right) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Expanded(child: Center(child: left)),
+          Expanded(
+            child: Center(
+              child: _DigitKey(label: '0', onTap: () => onDigit('0')),
+            ),
+          ),
+          Expanded(child: Center(child: right)),
+        ],
       ),
     );
   }

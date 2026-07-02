@@ -201,20 +201,23 @@ class _DetailSheetState extends ConsumerState<_DetailSheet> {
     final tx = widget.row.transaction;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      // Use the dialog's own context to pop — using the parent sheet's
+      // context races with the dialog being torn down and throws a
+      // "Null check operator used on a null value" on the Navigator.pop.
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Transaction'),
         content: Text(tx.kind == 'transfer'
             ? 'Delete both legs of this transfer?'
             : 'Permanently delete this transaction?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Cancel'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error),
-            onPressed: () => Navigator.pop(context, true),
+                backgroundColor: Theme.of(dialogContext).colorScheme.error),
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text('Delete'),
           ),
         ],
@@ -222,7 +225,7 @@ class _DetailSheetState extends ConsumerState<_DetailSheet> {
     );
     if (confirmed == true && mounted) {
       await ref.read(transactionsRepositoryProvider).delete(tx.id);
-      if (mounted) Navigator.pop(this.context);
+      if (mounted) Navigator.pop(context);
     }
   }
 }

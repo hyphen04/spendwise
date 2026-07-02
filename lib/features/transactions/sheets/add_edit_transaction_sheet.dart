@@ -4,6 +4,7 @@ import '../../../data/db/app_database.dart';
 import '../../../data/validators.dart';
 import '../../../state/manage_providers.dart';
 import '../../../state/transactions_providers.dart';
+import '../../../utils/amount_input_formatter.dart';
 import 'amount_entry_sheet.dart';
 
 // ── Mode filtering helpers ────────────────────────────────────────────────────
@@ -266,6 +267,7 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
                   prefixText: '₹ ',
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: amountInputFormatters,
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,

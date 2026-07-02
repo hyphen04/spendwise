@@ -250,7 +250,9 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
         ),
         const SizedBox(height: 20),
 
-        // Big amount
+        // Big amount + backspace (the numpad itself doesn't have a ⌫ in
+        // confirm mode — that slot is the decimal point. The ⌫ lives here
+        // next to the amount for one-tap correction.)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Row(
@@ -280,6 +282,14 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
+              if (_raw.isNotEmpty)
+                IconButton(
+                  onPressed: _onBackspace,
+                  icon: const Icon(Icons.backspace_outlined),
+                  color: cs.onSurfaceVariant,
+                  tooltip: 'Delete last digit',
+                ),
             ],
           ),
         ),

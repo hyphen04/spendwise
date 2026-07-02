@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/db/app_database.dart';
 import '../../../state/home_providers.dart';
 import '../../../state/manage_providers.dart';
+import '../../../utils/amount_input_formatter.dart';
 
 Future<void> showBudgetFormSheet(
   BuildContext context, {
@@ -156,6 +157,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
                 ),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: amountInputFormatters,
                 validator: (v) {
                   final n =
                       double.tryParse(v?.replaceAll(',', '') ?? '');
