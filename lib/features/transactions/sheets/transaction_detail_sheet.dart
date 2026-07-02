@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../data/models/transaction_row.dart';
+import '../../../state/dues_providers.dart';
 import '../../../state/transactions_providers.dart';
 import 'add_edit_transaction_sheet.dart';
 
@@ -199,33 +200,44 @@ class _DetailSheetState extends ConsumerState<_DetailSheet> {
 
   Future<void> _delete(BuildContext context) async {
     final tx = widget.row.transaction;
-    final confirmed = await showDialog<bool>(
+    final settlement = await ref.read(duesRepositoryProvider).getSettlementForTransaction(tx.id);
+    if (!mounted || !context.mounted) return;
+    
+    final result = await showDialog<String>(
       context: context,
-      // Use the dialog's own context to pop — using the parent sheet's
-      // context races with the dialog being torn down and throws a
-      // "Null check operator used on a null value" on the Navigator.pop.
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Transaction'),
-        content: Text(tx.kind == 'transfer'
-            ? 'Delete both legs of this transfer?'
-            : 'Permanently delete this transaction?'),
+        content: Text(settlement != null
+            ? 'This transaction is linked to a Dues settlement.\n\nDo you also want to undo the Dues settlement? (This will mark the tiffin/dues entries as unsettled again)'
+            : (tx.kind == 'transfer'
+                ? 'Delete both legs of this transfer?'
+                : 'Permanently delete this transaction?')),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
+            onPressed: () => Navigator.pop(dialogContext, 'cancel'),
             child: const Text('Cancel'),
           ),
+          if (settlement != null)
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'delete_tx_only'),
+              child: const Text('Delete Tx Only'),
+            ),
           FilledButton(
             style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(dialogContext).colorScheme.error),
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Delete'),
+            onPressed: () => Navigator.pop(dialogContext, settlement != null ? 'delete_and_undo' : 'delete'),
+            child: Text(settlement != null ? 'Undo & Delete' : 'Delete'),
           ),
         ],
       ),
     );
-    if (confirmed == true && mounted) {
+    
+    if (result != null && result != 'cancel' && mounted) {
+      if (result == 'delete_and_undo' && settlement != null) {
+        await ref.read(duesRepositoryProvider).undoSettlement(settlement.id);
+      }
       await ref.read(transactionsRepositoryProvider).delete(tx.id);
-      if (mounted) Navigator.pop(context);
+      if (mounted && context.mounted) Navigator.pop(context);
     }
   }
 }

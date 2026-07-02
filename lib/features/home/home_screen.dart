@@ -13,6 +13,7 @@ import '../../services/update_service.dart';
 import '../../state/update_provider.dart';
 import '../search/search_sheet.dart';
 import '../settings/update_check_dialog.dart';
+import '../transactions/sheets/amount_entry_sheet.dart';
 import '../transactions/sheets/add_edit_transaction_sheet.dart';
 import '../transactions/sheets/transaction_detail_sheet.dart';
 import '../transactions/widgets/transaction_tile.dart';
@@ -98,8 +99,12 @@ class HomeScreen extends ConsumerWidget {
               ],
             ),
             const Spacer(),
-            // Empty spacer instead of MonthNav
-            const SizedBox(width: 48),
+            // Search Button in Header
+            IconButton(
+              icon: const Icon(Icons.search_rounded),
+              color: cs.onSurfaceVariant,
+              onPressed: () => showSearchSheet(context),
+            ),
           ],
             ).animate().fadeIn(duration: 250.ms),
           ),
@@ -274,14 +279,14 @@ class HomeScreen extends ConsumerWidget {
 
           SliverToBoxAdapter(child: SizedBox(height: botPad + 100)),
         ],
-            ),
-          ),
-        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showSearchSheet(context),
-        tooltip: 'Search',
-        child: const Icon(Icons.search_rounded),
+    ),
+  ],
+),
+floatingActionButton: FloatingActionButton(
+        onPressed: () => showAmountEntrySheet(context),
+        tooltip: 'Add Transaction',
+        child: const Icon(Icons.add_rounded),
       ),
     );
   }

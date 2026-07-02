@@ -148,10 +148,10 @@ class DatabaseBackupService {
       }
       encoder.close();
 
-      await Share.shareXFiles(
-        [XFile(zipPath)],
+      await SharePlus.instance.share(ShareParams(
+        files: [XFile(zipPath)],
         text: 'SpendWise Raw Database Backup',
-      );
+      ));
     } catch (e, st) {
       debugPrint('Error exporting raw database: $e\n$st');
     }

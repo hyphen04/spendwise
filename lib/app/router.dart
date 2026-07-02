@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../features/dues/dues_screen.dart';
+import '../features/dues/contact_detail_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/manage/manage_screen.dart';
 import '../features/reports/reports_screen.dart';
 import '../features/settings/settings_screen.dart';
-import '../features/transactions/sheets/amount_entry_sheet.dart';
 import '../features/transactions/transactions_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -29,6 +30,20 @@ class AppRouter {
             GoRoute(
               path: '/transactions',
               builder: (context, state) => const TransactionsScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/dues',
+              builder: (context, state) => const DuesScreen(),
+              routes: [
+                GoRoute(
+                  path: ':contactId',
+                  builder: (context, state) => ContactDetailScreen(
+                    contactId: state.pathParameters['contactId']!,
+                  ),
+                ),
+              ],
             ),
           ]),
           StatefulShellBranch(routes: [
@@ -76,6 +91,11 @@ const _destinations = [
     label: 'Transactions',
   ),
   _Dest(
+    icon: Icons.book_outlined,
+    activeIcon: Icons.book_rounded,
+    label: 'Dues',
+  ),
+  _Dest(
     icon: Icons.bar_chart_outlined,
     activeIcon: Icons.bar_chart_rounded,
     label: 'Reports',
@@ -103,7 +123,6 @@ class _AppShell extends StatelessWidget {
           i,
           initialLocation: i == navigationShell.currentIndex,
         ),
-        onAddTap: () => showAmountEntrySheet(context),
       ),
     );
   }
@@ -115,12 +134,10 @@ class _MonoBottomBar extends StatelessWidget {
   const _MonoBottomBar({
     required this.selectedIndex,
     required this.onTabTap,
-    required this.onAddTap,
   });
 
   final int selectedIndex;
   final ValueChanged<int> onTabTap;
-  final VoidCallback onAddTap;
 
   @override
   Widget build(BuildContext context) {
@@ -137,19 +154,13 @@ class _MonoBottomBar extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.only(bottom: bottom),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              // Left two tabs
-              _NavItem(dest: _destinations[0], active: selectedIndex == 0,
-                  onTap: () => onTabTap(0)),
-              _NavItem(dest: _destinations[1], active: selectedIndex == 1,
-                  onTap: () => onTabTap(1)),
-              // Centre + button
-              _CenterAddButton(onTap: onAddTap),
-              // Right two tabs
-              _NavItem(dest: _destinations[2], active: selectedIndex == 2,
-                  onTap: () => onTabTap(2)),
-              _NavItem(dest: _destinations[3], active: selectedIndex == 3,
-                  onTap: () => onTabTap(3)),
+              _NavItem(dest: _destinations[0], active: selectedIndex == 0, onTap: () => onTabTap(0)),
+              _NavItem(dest: _destinations[1], active: selectedIndex == 1, onTap: () => onTabTap(1)),
+              _NavItem(dest: _destinations[2], active: selectedIndex == 2, onTap: () => onTabTap(2)),
+              _NavItem(dest: _destinations[3], active: selectedIndex == 3, onTap: () => onTabTap(3)),
+              _NavItem(dest: _destinations[4], active: selectedIndex == 4, onTap: () => onTabTap(4)),
             ],
           ),
         ),
@@ -200,29 +211,3 @@ class _NavItem extends StatelessWidget {
   }
 }
 
-class _CenterAddButton extends StatelessWidget {
-  const _CenterAddButton({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: 72,
-      child: Center(
-        child: GestureDetector(
-          onTap: onTap,
-          child: Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: cs.primary,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.add_rounded, color: cs.onPrimary, size: 28),
-          ),
-        ),
-      ),
-    );
-  }
-}

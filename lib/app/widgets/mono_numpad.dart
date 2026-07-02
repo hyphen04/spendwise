@@ -19,6 +19,8 @@ class MonoNumpad extends StatelessWidget {
     this.showDecimal = true,
     this.bottomRightAction = NumpadAction.backspace,
     this.confirmEnabled = true,
+    this.keySize = 72,
+    this.verticalSpacing = 6,
   });
 
   /// Called with the tapped digit character ('0'–'9').
@@ -40,6 +42,8 @@ class MonoNumpad extends StatelessWidget {
   final NumpadAction bottomRightAction;
 
   final bool confirmEnabled;
+  final double keySize;
+  final double verticalSpacing;
 
   @override
   Widget build(BuildContext context) {
@@ -52,17 +56,19 @@ class MonoNumpad extends StatelessWidget {
     // amount-entry sheet surfaces it as a small icon next to the big
     // amount display, so the numpad itself stays a clean 3×4 grid.
     final Widget bottomLeft = showDecimal
-        ? _DigitKey(label: '.', onTap: () => onDigit('.'))
-        : const _BlankKey();
+        ? _DigitKey(label: '.', onTap: () => onDigit('.'), keySize: keySize)
+        : _BlankKey(keySize: keySize);
 
     final Widget bottomRight = confirmMode
         ? _ConfirmKey(
             enabled: confirmEnabled,
             onTap: confirmEnabled ? onConfirm : null,
+            keySize: keySize,
           )
         : _ActionKey(
             icon: Icons.backspace_outlined,
             onTap: onBackspace,
+            keySize: keySize,
           );
 
     return Column(
@@ -78,12 +84,12 @@ class MonoNumpad extends StatelessWidget {
 
   Widget _row(List<String> digits) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: verticalSpacing),
       child: Row(
         children: digits
             .map((d) => Expanded(
                   child: Center(
-                    child: _DigitKey(label: d, onTap: () => onDigit(d)),
+                    child: _DigitKey(label: d, onTap: () => onDigit(d), keySize: keySize),
                   ),
                 ))
             .toList(),
@@ -93,13 +99,13 @@ class MonoNumpad extends StatelessWidget {
 
   Widget _row3(Widget left, Widget right) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: verticalSpacing),
       child: Row(
         children: [
           Expanded(child: Center(child: left)),
           Expanded(
             child: Center(
-              child: _DigitKey(label: '0', onTap: () => onDigit('0')),
+              child: _DigitKey(label: '0', onTap: () => onDigit('0'), keySize: keySize),
             ),
           ),
           Expanded(child: Center(child: right)),
@@ -109,12 +115,11 @@ class MonoNumpad extends StatelessWidget {
   }
 }
 
-const double _keySize = 72;
-
 class _DigitKey extends StatelessWidget {
-  const _DigitKey({required this.label, required this.onTap});
+  const _DigitKey({required this.label, required this.onTap, required this.keySize});
   final String label;
   final VoidCallback onTap;
+  final double keySize;
 
   @override
   Widget build(BuildContext context) {
@@ -122,10 +127,11 @@ class _DigitKey extends StatelessWidget {
     return _KeyShell(
       onTap: onTap,
       color: cs.surfaceContainer,
+      keySize: keySize,
       child: Text(
         label,
         style: GoogleFonts.manrope(
-          fontSize: 26,
+          fontSize: keySize * 0.36,
           fontWeight: FontWeight.w600,
           color: cs.onSurface,
         ),
@@ -135,9 +141,10 @@ class _DigitKey extends StatelessWidget {
 }
 
 class _ActionKey extends StatelessWidget {
-  const _ActionKey({required this.icon, required this.onTap});
+  const _ActionKey({required this.icon, required this.onTap, required this.keySize});
   final IconData icon;
   final VoidCallback onTap;
+  final double keySize;
 
   @override
   Widget build(BuildContext context) {
@@ -145,15 +152,17 @@ class _ActionKey extends StatelessWidget {
     return _KeyShell(
       onTap: onTap,
       color: Colors.transparent,
-      child: Icon(icon, size: 24, color: cs.onSurface),
+      keySize: keySize,
+      child: Icon(icon, size: keySize * 0.33, color: cs.onSurface),
     );
   }
 }
 
 class _ConfirmKey extends StatelessWidget {
-  const _ConfirmKey({required this.enabled, required this.onTap});
+  const _ConfirmKey({required this.enabled, required this.onTap, required this.keySize});
   final bool enabled;
   final VoidCallback? onTap;
+  final double keySize;
 
   @override
   Widget build(BuildContext context) {
@@ -161,9 +170,10 @@ class _ConfirmKey extends StatelessWidget {
     return _KeyShell(
       onTap: onTap,
       color: enabled ? cs.primary : cs.surfaceContainerHigh,
+      keySize: keySize,
       child: Icon(
         Icons.check_rounded,
-        size: 28,
+        size: keySize * 0.38,
         color: enabled ? cs.onPrimary : cs.onSurfaceVariant,
       ),
     );
@@ -171,10 +181,12 @@ class _ConfirmKey extends StatelessWidget {
 }
 
 class _BlankKey extends StatelessWidget {
-  const _BlankKey();
+  const _BlankKey({required this.keySize});
+  final double keySize;
+  
   @override
   Widget build(BuildContext context) =>
-      const SizedBox(width: _keySize, height: _keySize);
+      SizedBox(width: keySize, height: keySize);
 }
 
 class _KeyShell extends StatelessWidget {
@@ -182,16 +194,18 @@ class _KeyShell extends StatelessWidget {
     required this.child,
     required this.color,
     required this.onTap,
+    required this.keySize,
   });
   final Widget child;
   final Color color;
   final VoidCallback? onTap;
+  final double keySize;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: _keySize,
-      height: _keySize,
+      width: keySize,
+      height: keySize,
       child: Material(
         color: color,
         shape: const CircleBorder(),

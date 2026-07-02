@@ -222,7 +222,7 @@ class _ManageBackupsScreenState extends ConsumerState<ManageBackupsScreen> {
                               children: [
                                 OutlinedButton.icon(
                                   onPressed: () {
-                                    Share.shareXFiles([XFile(backup.path)]);
+                                    SharePlus.instance.share(ShareParams(files: [XFile(backup.path)]));
                                   },
                                   icon: const Icon(Icons.ios_share_outlined, size: 18),
                                   label: const Text('Export File'),

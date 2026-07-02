@@ -11,12 +11,16 @@ import 'package:uuid/uuid.dart';
 import 'daos/accounts_dao.dart';
 import 'daos/budgets_dao.dart';
 import 'daos/categories_dao.dart';
+import 'daos/dues_dao.dart';
 import 'daos/modes_dao.dart';
 import 'daos/tags_dao.dart';
 import 'daos/transactions_dao.dart';
 import 'tables/accounts_table.dart';
 import 'tables/budgets_table.dart';
 import 'tables/categories_table.dart';
+import 'tables/due_contacts_table.dart';
+import 'tables/due_entries_table.dart';
+import 'tables/due_settlements_table.dart';
 import 'tables/modes_table.dart';
 import 'tables/tags_table.dart';
 import 'tables/transaction_tags_table.dart';
@@ -33,6 +37,9 @@ part 'app_database.g.dart';
     Transactions,
     TransactionTags,
     Budgets,
+    DueContacts,
+    DueEntries,
+    DueSettlements,
   ],
   daos: [
     AccountsDao,
@@ -41,6 +48,7 @@ part 'app_database.g.dart';
     TagsDao,
     TransactionsDao,
     BudgetsDao,
+    DuesDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -51,7 +59,7 @@ class AppDatabase extends _$AppDatabase {
   static const kTransferCategoryId = 'system-transfer-cat-0000-000000000001';
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -78,6 +86,13 @@ class AppDatabase extends _$AppDatabase {
           if (from == 5) {
             // ignore: experimental_member_use
             await m.alterTable(TableMigration(transactions));
+          }
+          if (from < 7) {
+            // Safely create the 3 new Dues tables
+            await m.createAll();
+          }
+          if (from < 8) {
+            await m.addColumn(dueContacts, dueContacts.defaultCategoryId);
           }
         },
       );

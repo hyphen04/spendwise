@@ -2893,6 +2893,1577 @@ class BudgetsCompanion extends UpdateCompanion<Budget> {
   }
 }
 
+class $DueContactsTable extends DueContacts
+    with TableInfo<$DueContactsTable, DueContact> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DueContactsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+      'icon', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
+  @override
+  late final GeneratedColumn<String> color = GeneratedColumn<String>(
+      'color', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('vendor'));
+  static const VerificationMeta _defaultAmountMeta =
+      const VerificationMeta('defaultAmount');
+  @override
+  late final GeneratedColumn<double> defaultAmount = GeneratedColumn<double>(
+      'default_amount', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _defaultNoteMeta =
+      const VerificationMeta('defaultNote');
+  @override
+  late final GeneratedColumn<String> defaultNote = GeneratedColumn<String>(
+      'default_note', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _defaultCategoryIdMeta =
+      const VerificationMeta('defaultCategoryId');
+  @override
+  late final GeneratedColumn<String> defaultCategoryId =
+      GeneratedColumn<String>('default_category_id', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _isArchivedMeta =
+      const VerificationMeta('isArchived');
+  @override
+  late final GeneratedColumn<bool> isArchived = GeneratedColumn<bool>(
+      'is_archived', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_archived" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        icon,
+        color,
+        type,
+        defaultAmount,
+        defaultNote,
+        defaultCategoryId,
+        isArchived,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'due_contacts';
+  @override
+  VerificationContext validateIntegrity(Insertable<DueContact> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+          _iconMeta, icon.isAcceptableOrUnknown(data['icon']!, _iconMeta));
+    } else if (isInserting) {
+      context.missing(_iconMeta);
+    }
+    if (data.containsKey('color')) {
+      context.handle(
+          _colorMeta, color.isAcceptableOrUnknown(data['color']!, _colorMeta));
+    } else if (isInserting) {
+      context.missing(_colorMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    }
+    if (data.containsKey('default_amount')) {
+      context.handle(
+          _defaultAmountMeta,
+          defaultAmount.isAcceptableOrUnknown(
+              data['default_amount']!, _defaultAmountMeta));
+    }
+    if (data.containsKey('default_note')) {
+      context.handle(
+          _defaultNoteMeta,
+          defaultNote.isAcceptableOrUnknown(
+              data['default_note']!, _defaultNoteMeta));
+    }
+    if (data.containsKey('default_category_id')) {
+      context.handle(
+          _defaultCategoryIdMeta,
+          defaultCategoryId.isAcceptableOrUnknown(
+              data['default_category_id']!, _defaultCategoryIdMeta));
+    }
+    if (data.containsKey('is_archived')) {
+      context.handle(
+          _isArchivedMeta,
+          isArchived.isAcceptableOrUnknown(
+              data['is_archived']!, _isArchivedMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DueContact map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DueContact(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      icon: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}icon'])!,
+      color: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}color'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      defaultAmount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}default_amount']),
+      defaultNote: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}default_note']),
+      defaultCategoryId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}default_category_id']),
+      isArchived: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_archived'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $DueContactsTable createAlias(String alias) {
+    return $DueContactsTable(attachedDatabase, alias);
+  }
+}
+
+class DueContact extends DataClass implements Insertable<DueContact> {
+  final String id;
+  final String name;
+  final String icon;
+  final String color;
+  final String type;
+  final double? defaultAmount;
+  final String? defaultNote;
+  final String? defaultCategoryId;
+  final bool isArchived;
+  final int createdAt;
+  final int updatedAt;
+  const DueContact(
+      {required this.id,
+      required this.name,
+      required this.icon,
+      required this.color,
+      required this.type,
+      this.defaultAmount,
+      this.defaultNote,
+      this.defaultCategoryId,
+      required this.isArchived,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['icon'] = Variable<String>(icon);
+    map['color'] = Variable<String>(color);
+    map['type'] = Variable<String>(type);
+    if (!nullToAbsent || defaultAmount != null) {
+      map['default_amount'] = Variable<double>(defaultAmount);
+    }
+    if (!nullToAbsent || defaultNote != null) {
+      map['default_note'] = Variable<String>(defaultNote);
+    }
+    if (!nullToAbsent || defaultCategoryId != null) {
+      map['default_category_id'] = Variable<String>(defaultCategoryId);
+    }
+    map['is_archived'] = Variable<bool>(isArchived);
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  DueContactsCompanion toCompanion(bool nullToAbsent) {
+    return DueContactsCompanion(
+      id: Value(id),
+      name: Value(name),
+      icon: Value(icon),
+      color: Value(color),
+      type: Value(type),
+      defaultAmount: defaultAmount == null && nullToAbsent
+          ? const Value.absent()
+          : Value(defaultAmount),
+      defaultNote: defaultNote == null && nullToAbsent
+          ? const Value.absent()
+          : Value(defaultNote),
+      defaultCategoryId: defaultCategoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(defaultCategoryId),
+      isArchived: Value(isArchived),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory DueContact.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DueContact(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      icon: serializer.fromJson<String>(json['icon']),
+      color: serializer.fromJson<String>(json['color']),
+      type: serializer.fromJson<String>(json['type']),
+      defaultAmount: serializer.fromJson<double?>(json['defaultAmount']),
+      defaultNote: serializer.fromJson<String?>(json['defaultNote']),
+      defaultCategoryId:
+          serializer.fromJson<String?>(json['defaultCategoryId']),
+      isArchived: serializer.fromJson<bool>(json['isArchived']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'icon': serializer.toJson<String>(icon),
+      'color': serializer.toJson<String>(color),
+      'type': serializer.toJson<String>(type),
+      'defaultAmount': serializer.toJson<double?>(defaultAmount),
+      'defaultNote': serializer.toJson<String?>(defaultNote),
+      'defaultCategoryId': serializer.toJson<String?>(defaultCategoryId),
+      'isArchived': serializer.toJson<bool>(isArchived),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  DueContact copyWith(
+          {String? id,
+          String? name,
+          String? icon,
+          String? color,
+          String? type,
+          Value<double?> defaultAmount = const Value.absent(),
+          Value<String?> defaultNote = const Value.absent(),
+          Value<String?> defaultCategoryId = const Value.absent(),
+          bool? isArchived,
+          int? createdAt,
+          int? updatedAt}) =>
+      DueContact(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        icon: icon ?? this.icon,
+        color: color ?? this.color,
+        type: type ?? this.type,
+        defaultAmount:
+            defaultAmount.present ? defaultAmount.value : this.defaultAmount,
+        defaultNote: defaultNote.present ? defaultNote.value : this.defaultNote,
+        defaultCategoryId: defaultCategoryId.present
+            ? defaultCategoryId.value
+            : this.defaultCategoryId,
+        isArchived: isArchived ?? this.isArchived,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  DueContact copyWithCompanion(DueContactsCompanion data) {
+    return DueContact(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      icon: data.icon.present ? data.icon.value : this.icon,
+      color: data.color.present ? data.color.value : this.color,
+      type: data.type.present ? data.type.value : this.type,
+      defaultAmount: data.defaultAmount.present
+          ? data.defaultAmount.value
+          : this.defaultAmount,
+      defaultNote:
+          data.defaultNote.present ? data.defaultNote.value : this.defaultNote,
+      defaultCategoryId: data.defaultCategoryId.present
+          ? data.defaultCategoryId.value
+          : this.defaultCategoryId,
+      isArchived:
+          data.isArchived.present ? data.isArchived.value : this.isArchived,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DueContact(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('icon: $icon, ')
+          ..write('color: $color, ')
+          ..write('type: $type, ')
+          ..write('defaultAmount: $defaultAmount, ')
+          ..write('defaultNote: $defaultNote, ')
+          ..write('defaultCategoryId: $defaultCategoryId, ')
+          ..write('isArchived: $isArchived, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, icon, color, type, defaultAmount,
+      defaultNote, defaultCategoryId, isArchived, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DueContact &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.icon == this.icon &&
+          other.color == this.color &&
+          other.type == this.type &&
+          other.defaultAmount == this.defaultAmount &&
+          other.defaultNote == this.defaultNote &&
+          other.defaultCategoryId == this.defaultCategoryId &&
+          other.isArchived == this.isArchived &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class DueContactsCompanion extends UpdateCompanion<DueContact> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> icon;
+  final Value<String> color;
+  final Value<String> type;
+  final Value<double?> defaultAmount;
+  final Value<String?> defaultNote;
+  final Value<String?> defaultCategoryId;
+  final Value<bool> isArchived;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  final Value<int> rowid;
+  const DueContactsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.icon = const Value.absent(),
+    this.color = const Value.absent(),
+    this.type = const Value.absent(),
+    this.defaultAmount = const Value.absent(),
+    this.defaultNote = const Value.absent(),
+    this.defaultCategoryId = const Value.absent(),
+    this.isArchived = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DueContactsCompanion.insert({
+    required String id,
+    required String name,
+    required String icon,
+    required String color,
+    this.type = const Value.absent(),
+    this.defaultAmount = const Value.absent(),
+    this.defaultNote = const Value.absent(),
+    this.defaultCategoryId = const Value.absent(),
+    this.isArchived = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        name = Value(name),
+        icon = Value(icon),
+        color = Value(color),
+        createdAt = Value(createdAt),
+        updatedAt = Value(updatedAt);
+  static Insertable<DueContact> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? icon,
+    Expression<String>? color,
+    Expression<String>? type,
+    Expression<double>? defaultAmount,
+    Expression<String>? defaultNote,
+    Expression<String>? defaultCategoryId,
+    Expression<bool>? isArchived,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (icon != null) 'icon': icon,
+      if (color != null) 'color': color,
+      if (type != null) 'type': type,
+      if (defaultAmount != null) 'default_amount': defaultAmount,
+      if (defaultNote != null) 'default_note': defaultNote,
+      if (defaultCategoryId != null) 'default_category_id': defaultCategoryId,
+      if (isArchived != null) 'is_archived': isArchived,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DueContactsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? name,
+      Value<String>? icon,
+      Value<String>? color,
+      Value<String>? type,
+      Value<double?>? defaultAmount,
+      Value<String?>? defaultNote,
+      Value<String?>? defaultCategoryId,
+      Value<bool>? isArchived,
+      Value<int>? createdAt,
+      Value<int>? updatedAt,
+      Value<int>? rowid}) {
+    return DueContactsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      icon: icon ?? this.icon,
+      color: color ?? this.color,
+      type: type ?? this.type,
+      defaultAmount: defaultAmount ?? this.defaultAmount,
+      defaultNote: defaultNote ?? this.defaultNote,
+      defaultCategoryId: defaultCategoryId ?? this.defaultCategoryId,
+      isArchived: isArchived ?? this.isArchived,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
+    }
+    if (color.present) {
+      map['color'] = Variable<String>(color.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (defaultAmount.present) {
+      map['default_amount'] = Variable<double>(defaultAmount.value);
+    }
+    if (defaultNote.present) {
+      map['default_note'] = Variable<String>(defaultNote.value);
+    }
+    if (defaultCategoryId.present) {
+      map['default_category_id'] = Variable<String>(defaultCategoryId.value);
+    }
+    if (isArchived.present) {
+      map['is_archived'] = Variable<bool>(isArchived.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DueContactsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('icon: $icon, ')
+          ..write('color: $color, ')
+          ..write('type: $type, ')
+          ..write('defaultAmount: $defaultAmount, ')
+          ..write('defaultNote: $defaultNote, ')
+          ..write('defaultCategoryId: $defaultCategoryId, ')
+          ..write('isArchived: $isArchived, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DueSettlementsTable extends DueSettlements
+    with TableInfo<$DueSettlementsTable, DueSettlement> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DueSettlementsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _contactIdMeta =
+      const VerificationMeta('contactId');
+  @override
+  late final GeneratedColumn<String> contactId = GeneratedColumn<String>(
+      'contact_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES due_contacts (id) ON DELETE RESTRICT'));
+  static const VerificationMeta _totalAmountMeta =
+      const VerificationMeta('totalAmount');
+  @override
+  late final GeneratedColumn<double> totalAmount = GeneratedColumn<double>(
+      'total_amount', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _settledDateMeta =
+      const VerificationMeta('settledDate');
+  @override
+  late final GeneratedColumn<String> settledDate = GeneratedColumn<String>(
+      'settled_date', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+      'note', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _linkedTransactionIdMeta =
+      const VerificationMeta('linkedTransactionId');
+  @override
+  late final GeneratedColumn<String> linkedTransactionId =
+      GeneratedColumn<String>('linked_transaction_id', aliasedName, true,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'REFERENCES transactions (id) ON DELETE SET NULL'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        contactId,
+        totalAmount,
+        settledDate,
+        note,
+        linkedTransactionId,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'due_settlements';
+  @override
+  VerificationContext validateIntegrity(Insertable<DueSettlement> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('contact_id')) {
+      context.handle(_contactIdMeta,
+          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
+    } else if (isInserting) {
+      context.missing(_contactIdMeta);
+    }
+    if (data.containsKey('total_amount')) {
+      context.handle(
+          _totalAmountMeta,
+          totalAmount.isAcceptableOrUnknown(
+              data['total_amount']!, _totalAmountMeta));
+    } else if (isInserting) {
+      context.missing(_totalAmountMeta);
+    }
+    if (data.containsKey('settled_date')) {
+      context.handle(
+          _settledDateMeta,
+          settledDate.isAcceptableOrUnknown(
+              data['settled_date']!, _settledDateMeta));
+    } else if (isInserting) {
+      context.missing(_settledDateMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+          _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
+    }
+    if (data.containsKey('linked_transaction_id')) {
+      context.handle(
+          _linkedTransactionIdMeta,
+          linkedTransactionId.isAcceptableOrUnknown(
+              data['linked_transaction_id']!, _linkedTransactionIdMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DueSettlement map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DueSettlement(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      contactId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}contact_id'])!,
+      totalAmount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}total_amount'])!,
+      settledDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}settled_date'])!,
+      note: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}note'])!,
+      linkedTransactionId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}linked_transaction_id']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $DueSettlementsTable createAlias(String alias) {
+    return $DueSettlementsTable(attachedDatabase, alias);
+  }
+}
+
+class DueSettlement extends DataClass implements Insertable<DueSettlement> {
+  final String id;
+
+  /// FK -> due_contacts.id
+  final String contactId;
+  final double totalAmount;
+  final String settledDate;
+  final String note;
+
+  /// FK -> transactions.id (If auto-created)
+  final String? linkedTransactionId;
+  final int createdAt;
+  final int updatedAt;
+  const DueSettlement(
+      {required this.id,
+      required this.contactId,
+      required this.totalAmount,
+      required this.settledDate,
+      required this.note,
+      this.linkedTransactionId,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['contact_id'] = Variable<String>(contactId);
+    map['total_amount'] = Variable<double>(totalAmount);
+    map['settled_date'] = Variable<String>(settledDate);
+    map['note'] = Variable<String>(note);
+    if (!nullToAbsent || linkedTransactionId != null) {
+      map['linked_transaction_id'] = Variable<String>(linkedTransactionId);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  DueSettlementsCompanion toCompanion(bool nullToAbsent) {
+    return DueSettlementsCompanion(
+      id: Value(id),
+      contactId: Value(contactId),
+      totalAmount: Value(totalAmount),
+      settledDate: Value(settledDate),
+      note: Value(note),
+      linkedTransactionId: linkedTransactionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(linkedTransactionId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory DueSettlement.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DueSettlement(
+      id: serializer.fromJson<String>(json['id']),
+      contactId: serializer.fromJson<String>(json['contactId']),
+      totalAmount: serializer.fromJson<double>(json['totalAmount']),
+      settledDate: serializer.fromJson<String>(json['settledDate']),
+      note: serializer.fromJson<String>(json['note']),
+      linkedTransactionId:
+          serializer.fromJson<String?>(json['linkedTransactionId']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'contactId': serializer.toJson<String>(contactId),
+      'totalAmount': serializer.toJson<double>(totalAmount),
+      'settledDate': serializer.toJson<String>(settledDate),
+      'note': serializer.toJson<String>(note),
+      'linkedTransactionId': serializer.toJson<String?>(linkedTransactionId),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  DueSettlement copyWith(
+          {String? id,
+          String? contactId,
+          double? totalAmount,
+          String? settledDate,
+          String? note,
+          Value<String?> linkedTransactionId = const Value.absent(),
+          int? createdAt,
+          int? updatedAt}) =>
+      DueSettlement(
+        id: id ?? this.id,
+        contactId: contactId ?? this.contactId,
+        totalAmount: totalAmount ?? this.totalAmount,
+        settledDate: settledDate ?? this.settledDate,
+        note: note ?? this.note,
+        linkedTransactionId: linkedTransactionId.present
+            ? linkedTransactionId.value
+            : this.linkedTransactionId,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  DueSettlement copyWithCompanion(DueSettlementsCompanion data) {
+    return DueSettlement(
+      id: data.id.present ? data.id.value : this.id,
+      contactId: data.contactId.present ? data.contactId.value : this.contactId,
+      totalAmount:
+          data.totalAmount.present ? data.totalAmount.value : this.totalAmount,
+      settledDate:
+          data.settledDate.present ? data.settledDate.value : this.settledDate,
+      note: data.note.present ? data.note.value : this.note,
+      linkedTransactionId: data.linkedTransactionId.present
+          ? data.linkedTransactionId.value
+          : this.linkedTransactionId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DueSettlement(')
+          ..write('id: $id, ')
+          ..write('contactId: $contactId, ')
+          ..write('totalAmount: $totalAmount, ')
+          ..write('settledDate: $settledDate, ')
+          ..write('note: $note, ')
+          ..write('linkedTransactionId: $linkedTransactionId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, contactId, totalAmount, settledDate, note,
+      linkedTransactionId, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DueSettlement &&
+          other.id == this.id &&
+          other.contactId == this.contactId &&
+          other.totalAmount == this.totalAmount &&
+          other.settledDate == this.settledDate &&
+          other.note == this.note &&
+          other.linkedTransactionId == this.linkedTransactionId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class DueSettlementsCompanion extends UpdateCompanion<DueSettlement> {
+  final Value<String> id;
+  final Value<String> contactId;
+  final Value<double> totalAmount;
+  final Value<String> settledDate;
+  final Value<String> note;
+  final Value<String?> linkedTransactionId;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  final Value<int> rowid;
+  const DueSettlementsCompanion({
+    this.id = const Value.absent(),
+    this.contactId = const Value.absent(),
+    this.totalAmount = const Value.absent(),
+    this.settledDate = const Value.absent(),
+    this.note = const Value.absent(),
+    this.linkedTransactionId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DueSettlementsCompanion.insert({
+    required String id,
+    required String contactId,
+    required double totalAmount,
+    required String settledDate,
+    this.note = const Value.absent(),
+    this.linkedTransactionId = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        contactId = Value(contactId),
+        totalAmount = Value(totalAmount),
+        settledDate = Value(settledDate),
+        createdAt = Value(createdAt),
+        updatedAt = Value(updatedAt);
+  static Insertable<DueSettlement> custom({
+    Expression<String>? id,
+    Expression<String>? contactId,
+    Expression<double>? totalAmount,
+    Expression<String>? settledDate,
+    Expression<String>? note,
+    Expression<String>? linkedTransactionId,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (contactId != null) 'contact_id': contactId,
+      if (totalAmount != null) 'total_amount': totalAmount,
+      if (settledDate != null) 'settled_date': settledDate,
+      if (note != null) 'note': note,
+      if (linkedTransactionId != null)
+        'linked_transaction_id': linkedTransactionId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DueSettlementsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? contactId,
+      Value<double>? totalAmount,
+      Value<String>? settledDate,
+      Value<String>? note,
+      Value<String?>? linkedTransactionId,
+      Value<int>? createdAt,
+      Value<int>? updatedAt,
+      Value<int>? rowid}) {
+    return DueSettlementsCompanion(
+      id: id ?? this.id,
+      contactId: contactId ?? this.contactId,
+      totalAmount: totalAmount ?? this.totalAmount,
+      settledDate: settledDate ?? this.settledDate,
+      note: note ?? this.note,
+      linkedTransactionId: linkedTransactionId ?? this.linkedTransactionId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (contactId.present) {
+      map['contact_id'] = Variable<String>(contactId.value);
+    }
+    if (totalAmount.present) {
+      map['total_amount'] = Variable<double>(totalAmount.value);
+    }
+    if (settledDate.present) {
+      map['settled_date'] = Variable<String>(settledDate.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (linkedTransactionId.present) {
+      map['linked_transaction_id'] =
+          Variable<String>(linkedTransactionId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DueSettlementsCompanion(')
+          ..write('id: $id, ')
+          ..write('contactId: $contactId, ')
+          ..write('totalAmount: $totalAmount, ')
+          ..write('settledDate: $settledDate, ')
+          ..write('note: $note, ')
+          ..write('linkedTransactionId: $linkedTransactionId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DueEntriesTable extends DueEntries
+    with TableInfo<$DueEntriesTable, DueEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DueEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _contactIdMeta =
+      const VerificationMeta('contactId');
+  @override
+  late final GeneratedColumn<String> contactId = GeneratedColumn<String>(
+      'contact_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES due_contacts (id) ON DELETE RESTRICT'));
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+      'amount', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _directionMeta =
+      const VerificationMeta('direction');
+  @override
+  late final GeneratedColumn<String> direction = GeneratedColumn<String>(
+      'direction', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _entryDateMeta =
+      const VerificationMeta('entryDate');
+  @override
+  late final GeneratedColumn<String> entryDate = GeneratedColumn<String>(
+      'entry_date', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _mealSlotMeta =
+      const VerificationMeta('mealSlot');
+  @override
+  late final GeneratedColumn<String> mealSlot = GeneratedColumn<String>(
+      'meal_slot', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+      'note', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _isSettledMeta =
+      const VerificationMeta('isSettled');
+  @override
+  late final GeneratedColumn<bool> isSettled = GeneratedColumn<bool>(
+      'is_settled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_settled" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _settlementIdMeta =
+      const VerificationMeta('settlementId');
+  @override
+  late final GeneratedColumn<String> settlementId = GeneratedColumn<String>(
+      'settlement_id', aliasedName, true,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES due_settlements (id) ON DELETE SET NULL'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        contactId,
+        amount,
+        direction,
+        entryDate,
+        mealSlot,
+        note,
+        isSettled,
+        settlementId,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'due_entries';
+  @override
+  VerificationContext validateIntegrity(Insertable<DueEntry> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('contact_id')) {
+      context.handle(_contactIdMeta,
+          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
+    } else if (isInserting) {
+      context.missing(_contactIdMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(_amountMeta,
+          amount.isAcceptableOrUnknown(data['amount']!, _amountMeta));
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('direction')) {
+      context.handle(_directionMeta,
+          direction.isAcceptableOrUnknown(data['direction']!, _directionMeta));
+    } else if (isInserting) {
+      context.missing(_directionMeta);
+    }
+    if (data.containsKey('entry_date')) {
+      context.handle(_entryDateMeta,
+          entryDate.isAcceptableOrUnknown(data['entry_date']!, _entryDateMeta));
+    } else if (isInserting) {
+      context.missing(_entryDateMeta);
+    }
+    if (data.containsKey('meal_slot')) {
+      context.handle(_mealSlotMeta,
+          mealSlot.isAcceptableOrUnknown(data['meal_slot']!, _mealSlotMeta));
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+          _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
+    }
+    if (data.containsKey('is_settled')) {
+      context.handle(_isSettledMeta,
+          isSettled.isAcceptableOrUnknown(data['is_settled']!, _isSettledMeta));
+    }
+    if (data.containsKey('settlement_id')) {
+      context.handle(
+          _settlementIdMeta,
+          settlementId.isAcceptableOrUnknown(
+              data['settlement_id']!, _settlementIdMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DueEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DueEntry(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      contactId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}contact_id'])!,
+      amount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}amount'])!,
+      direction: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}direction'])!,
+      entryDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}entry_date'])!,
+      mealSlot: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}meal_slot']),
+      note: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}note'])!,
+      isSettled: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_settled'])!,
+      settlementId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}settlement_id']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $DueEntriesTable createAlias(String alias) {
+    return $DueEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class DueEntry extends DataClass implements Insertable<DueEntry> {
+  final String id;
+
+  /// FK -> due_contacts.id
+  final String contactId;
+  final double amount;
+  final String direction;
+  final String entryDate;
+  final String? mealSlot;
+  final String note;
+  final bool isSettled;
+
+  /// FK -> due_settlements.id (Set when settled)
+  final String? settlementId;
+  final int createdAt;
+  final int updatedAt;
+  const DueEntry(
+      {required this.id,
+      required this.contactId,
+      required this.amount,
+      required this.direction,
+      required this.entryDate,
+      this.mealSlot,
+      required this.note,
+      required this.isSettled,
+      this.settlementId,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['contact_id'] = Variable<String>(contactId);
+    map['amount'] = Variable<double>(amount);
+    map['direction'] = Variable<String>(direction);
+    map['entry_date'] = Variable<String>(entryDate);
+    if (!nullToAbsent || mealSlot != null) {
+      map['meal_slot'] = Variable<String>(mealSlot);
+    }
+    map['note'] = Variable<String>(note);
+    map['is_settled'] = Variable<bool>(isSettled);
+    if (!nullToAbsent || settlementId != null) {
+      map['settlement_id'] = Variable<String>(settlementId);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  DueEntriesCompanion toCompanion(bool nullToAbsent) {
+    return DueEntriesCompanion(
+      id: Value(id),
+      contactId: Value(contactId),
+      amount: Value(amount),
+      direction: Value(direction),
+      entryDate: Value(entryDate),
+      mealSlot: mealSlot == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mealSlot),
+      note: Value(note),
+      isSettled: Value(isSettled),
+      settlementId: settlementId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(settlementId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory DueEntry.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DueEntry(
+      id: serializer.fromJson<String>(json['id']),
+      contactId: serializer.fromJson<String>(json['contactId']),
+      amount: serializer.fromJson<double>(json['amount']),
+      direction: serializer.fromJson<String>(json['direction']),
+      entryDate: serializer.fromJson<String>(json['entryDate']),
+      mealSlot: serializer.fromJson<String?>(json['mealSlot']),
+      note: serializer.fromJson<String>(json['note']),
+      isSettled: serializer.fromJson<bool>(json['isSettled']),
+      settlementId: serializer.fromJson<String?>(json['settlementId']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'contactId': serializer.toJson<String>(contactId),
+      'amount': serializer.toJson<double>(amount),
+      'direction': serializer.toJson<String>(direction),
+      'entryDate': serializer.toJson<String>(entryDate),
+      'mealSlot': serializer.toJson<String?>(mealSlot),
+      'note': serializer.toJson<String>(note),
+      'isSettled': serializer.toJson<bool>(isSettled),
+      'settlementId': serializer.toJson<String?>(settlementId),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  DueEntry copyWith(
+          {String? id,
+          String? contactId,
+          double? amount,
+          String? direction,
+          String? entryDate,
+          Value<String?> mealSlot = const Value.absent(),
+          String? note,
+          bool? isSettled,
+          Value<String?> settlementId = const Value.absent(),
+          int? createdAt,
+          int? updatedAt}) =>
+      DueEntry(
+        id: id ?? this.id,
+        contactId: contactId ?? this.contactId,
+        amount: amount ?? this.amount,
+        direction: direction ?? this.direction,
+        entryDate: entryDate ?? this.entryDate,
+        mealSlot: mealSlot.present ? mealSlot.value : this.mealSlot,
+        note: note ?? this.note,
+        isSettled: isSettled ?? this.isSettled,
+        settlementId:
+            settlementId.present ? settlementId.value : this.settlementId,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  DueEntry copyWithCompanion(DueEntriesCompanion data) {
+    return DueEntry(
+      id: data.id.present ? data.id.value : this.id,
+      contactId: data.contactId.present ? data.contactId.value : this.contactId,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      direction: data.direction.present ? data.direction.value : this.direction,
+      entryDate: data.entryDate.present ? data.entryDate.value : this.entryDate,
+      mealSlot: data.mealSlot.present ? data.mealSlot.value : this.mealSlot,
+      note: data.note.present ? data.note.value : this.note,
+      isSettled: data.isSettled.present ? data.isSettled.value : this.isSettled,
+      settlementId: data.settlementId.present
+          ? data.settlementId.value
+          : this.settlementId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DueEntry(')
+          ..write('id: $id, ')
+          ..write('contactId: $contactId, ')
+          ..write('amount: $amount, ')
+          ..write('direction: $direction, ')
+          ..write('entryDate: $entryDate, ')
+          ..write('mealSlot: $mealSlot, ')
+          ..write('note: $note, ')
+          ..write('isSettled: $isSettled, ')
+          ..write('settlementId: $settlementId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, contactId, amount, direction, entryDate,
+      mealSlot, note, isSettled, settlementId, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DueEntry &&
+          other.id == this.id &&
+          other.contactId == this.contactId &&
+          other.amount == this.amount &&
+          other.direction == this.direction &&
+          other.entryDate == this.entryDate &&
+          other.mealSlot == this.mealSlot &&
+          other.note == this.note &&
+          other.isSettled == this.isSettled &&
+          other.settlementId == this.settlementId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class DueEntriesCompanion extends UpdateCompanion<DueEntry> {
+  final Value<String> id;
+  final Value<String> contactId;
+  final Value<double> amount;
+  final Value<String> direction;
+  final Value<String> entryDate;
+  final Value<String?> mealSlot;
+  final Value<String> note;
+  final Value<bool> isSettled;
+  final Value<String?> settlementId;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  final Value<int> rowid;
+  const DueEntriesCompanion({
+    this.id = const Value.absent(),
+    this.contactId = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.direction = const Value.absent(),
+    this.entryDate = const Value.absent(),
+    this.mealSlot = const Value.absent(),
+    this.note = const Value.absent(),
+    this.isSettled = const Value.absent(),
+    this.settlementId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DueEntriesCompanion.insert({
+    required String id,
+    required String contactId,
+    required double amount,
+    required String direction,
+    required String entryDate,
+    this.mealSlot = const Value.absent(),
+    this.note = const Value.absent(),
+    this.isSettled = const Value.absent(),
+    this.settlementId = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        contactId = Value(contactId),
+        amount = Value(amount),
+        direction = Value(direction),
+        entryDate = Value(entryDate),
+        createdAt = Value(createdAt),
+        updatedAt = Value(updatedAt);
+  static Insertable<DueEntry> custom({
+    Expression<String>? id,
+    Expression<String>? contactId,
+    Expression<double>? amount,
+    Expression<String>? direction,
+    Expression<String>? entryDate,
+    Expression<String>? mealSlot,
+    Expression<String>? note,
+    Expression<bool>? isSettled,
+    Expression<String>? settlementId,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (contactId != null) 'contact_id': contactId,
+      if (amount != null) 'amount': amount,
+      if (direction != null) 'direction': direction,
+      if (entryDate != null) 'entry_date': entryDate,
+      if (mealSlot != null) 'meal_slot': mealSlot,
+      if (note != null) 'note': note,
+      if (isSettled != null) 'is_settled': isSettled,
+      if (settlementId != null) 'settlement_id': settlementId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DueEntriesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? contactId,
+      Value<double>? amount,
+      Value<String>? direction,
+      Value<String>? entryDate,
+      Value<String?>? mealSlot,
+      Value<String>? note,
+      Value<bool>? isSettled,
+      Value<String?>? settlementId,
+      Value<int>? createdAt,
+      Value<int>? updatedAt,
+      Value<int>? rowid}) {
+    return DueEntriesCompanion(
+      id: id ?? this.id,
+      contactId: contactId ?? this.contactId,
+      amount: amount ?? this.amount,
+      direction: direction ?? this.direction,
+      entryDate: entryDate ?? this.entryDate,
+      mealSlot: mealSlot ?? this.mealSlot,
+      note: note ?? this.note,
+      isSettled: isSettled ?? this.isSettled,
+      settlementId: settlementId ?? this.settlementId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (contactId.present) {
+      map['contact_id'] = Variable<String>(contactId.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (direction.present) {
+      map['direction'] = Variable<String>(direction.value);
+    }
+    if (entryDate.present) {
+      map['entry_date'] = Variable<String>(entryDate.value);
+    }
+    if (mealSlot.present) {
+      map['meal_slot'] = Variable<String>(mealSlot.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (isSettled.present) {
+      map['is_settled'] = Variable<bool>(isSettled.value);
+    }
+    if (settlementId.present) {
+      map['settlement_id'] = Variable<String>(settlementId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DueEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('contactId: $contactId, ')
+          ..write('amount: $amount, ')
+          ..write('direction: $direction, ')
+          ..write('entryDate: $entryDate, ')
+          ..write('mealSlot: $mealSlot, ')
+          ..write('note: $note, ')
+          ..write('isSettled: $isSettled, ')
+          ..write('settlementId: $settlementId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2904,6 +4475,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TransactionTagsTable transactionTags =
       $TransactionTagsTable(this);
   late final $BudgetsTable budgets = $BudgetsTable(this);
+  late final $DueContactsTable dueContacts = $DueContactsTable(this);
+  late final $DueSettlementsTable dueSettlements = $DueSettlementsTable(this);
+  late final $DueEntriesTable dueEntries = $DueEntriesTable(this);
   late final AccountsDao accountsDao = AccountsDao(this as AppDatabase);
   late final CategoriesDao categoriesDao = CategoriesDao(this as AppDatabase);
   late final ModesDao modesDao = ModesDao(this as AppDatabase);
@@ -2911,6 +4485,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final TransactionsDao transactionsDao =
       TransactionsDao(this as AppDatabase);
   late final BudgetsDao budgetsDao = BudgetsDao(this as AppDatabase);
+  late final DuesDao duesDao = DuesDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2922,7 +4497,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         tags,
         transactions,
         transactionTags,
-        budgets
+        budgets,
+        dueContacts,
+        dueSettlements,
+        dueEntries
       ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
@@ -2946,6 +4524,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
                 limitUpdateKind: UpdateKind.delete),
             result: [
               TableUpdate('budgets', kind: UpdateKind.update),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('transactions',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('due_settlements', kind: UpdateKind.update),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('due_settlements',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('due_entries', kind: UpdateKind.update),
             ],
           ),
         ],
@@ -4339,6 +5931,22 @@ final class $$TransactionsTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<$DueSettlementsTable, List<DueSettlement>>
+      _dueSettlementsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.dueSettlements,
+              aliasName: $_aliasNameGenerator(
+                  db.transactions.id, db.dueSettlements.linkedTransactionId));
+
+  $$DueSettlementsTableProcessedTableManager get dueSettlementsRefs {
+    final manager = $$DueSettlementsTableTableManager($_db, $_db.dueSettlements)
+        .filter((f) =>
+            f.linkedTransactionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_dueSettlementsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$TransactionsTableFilterComposer
@@ -4455,6 +6063,27 @@ class $$TransactionsTableFilterComposer
             $$TransactionTagsTableFilterComposer(
               $db: $db,
               $table: $db.transactionTags,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> dueSettlementsRefs(
+      Expression<bool> Function($$DueSettlementsTableFilterComposer f) f) {
+    final $$DueSettlementsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.dueSettlements,
+        getReferencedColumn: (t) => t.linkedTransactionId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueSettlementsTableFilterComposer(
+              $db: $db,
+              $table: $db.dueSettlements,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -4685,6 +6314,27 @@ class $$TransactionsTableAnnotationComposer
             ));
     return f(composer);
   }
+
+  Expression<T> dueSettlementsRefs<T extends Object>(
+      Expression<T> Function($$DueSettlementsTableAnnotationComposer a) f) {
+    final $$DueSettlementsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.dueSettlements,
+        getReferencedColumn: (t) => t.linkedTransactionId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueSettlementsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.dueSettlements,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$TransactionsTableTableManager extends RootTableManager<
@@ -4702,7 +6352,8 @@ class $$TransactionsTableTableManager extends RootTableManager<
         {bool accountId,
         bool categoryId,
         bool modeId,
-        bool transactionTagsRefs})> {
+        bool transactionTagsRefs,
+        bool dueSettlementsRefs})> {
   $$TransactionsTableTableManager(_$AppDatabase db, $TransactionsTable table)
       : super(TableManagerState(
           db: db,
@@ -4787,11 +6438,13 @@ class $$TransactionsTableTableManager extends RootTableManager<
               {accountId = false,
               categoryId = false,
               modeId = false,
-              transactionTagsRefs = false}) {
+              transactionTagsRefs = false,
+              dueSettlementsRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
-                if (transactionTagsRefs) db.transactionTags
+                if (transactionTagsRefs) db.transactionTags,
+                if (dueSettlementsRefs) db.dueSettlements
               ],
               addJoins: <
                   T extends TableManagerState<
@@ -4853,6 +6506,19 @@ class $$TransactionsTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.transactionId == item.id),
+                        typedResults: items),
+                  if (dueSettlementsRefs)
+                    await $_getPrefetchedData<Transaction, $TransactionsTable,
+                            DueSettlement>(
+                        currentTable: table,
+                        referencedTable: $$TransactionsTableReferences
+                            ._dueSettlementsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$TransactionsTableReferences(db, table, p0)
+                                .dueSettlementsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.linkedTransactionId == item.id),
                         typedResults: items)
                 ];
               },
@@ -4876,7 +6542,8 @@ typedef $$TransactionsTableProcessedTableManager = ProcessedTableManager<
         {bool accountId,
         bool categoryId,
         bool modeId,
-        bool transactionTagsRefs})>;
+        bool transactionTagsRefs,
+        bool dueSettlementsRefs})>;
 typedef $$TransactionTagsTableCreateCompanionBuilder = TransactionTagsCompanion
     Function({
   required String transactionId,
@@ -5576,6 +7243,1342 @@ typedef $$BudgetsTableProcessedTableManager = ProcessedTableManager<
     (Budget, $$BudgetsTableReferences),
     Budget,
     PrefetchHooks Function({bool categoryId, bool accountId})>;
+typedef $$DueContactsTableCreateCompanionBuilder = DueContactsCompanion
+    Function({
+  required String id,
+  required String name,
+  required String icon,
+  required String color,
+  Value<String> type,
+  Value<double?> defaultAmount,
+  Value<String?> defaultNote,
+  Value<String?> defaultCategoryId,
+  Value<bool> isArchived,
+  required int createdAt,
+  required int updatedAt,
+  Value<int> rowid,
+});
+typedef $$DueContactsTableUpdateCompanionBuilder = DueContactsCompanion
+    Function({
+  Value<String> id,
+  Value<String> name,
+  Value<String> icon,
+  Value<String> color,
+  Value<String> type,
+  Value<double?> defaultAmount,
+  Value<String?> defaultNote,
+  Value<String?> defaultCategoryId,
+  Value<bool> isArchived,
+  Value<int> createdAt,
+  Value<int> updatedAt,
+  Value<int> rowid,
+});
+
+final class $$DueContactsTableReferences
+    extends BaseReferences<_$AppDatabase, $DueContactsTable, DueContact> {
+  $$DueContactsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$DueSettlementsTable, List<DueSettlement>>
+      _dueSettlementsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.dueSettlements,
+              aliasName: $_aliasNameGenerator(
+                  db.dueContacts.id, db.dueSettlements.contactId));
+
+  $$DueSettlementsTableProcessedTableManager get dueSettlementsRefs {
+    final manager = $$DueSettlementsTableTableManager($_db, $_db.dueSettlements)
+        .filter((f) => f.contactId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_dueSettlementsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$DueEntriesTable, List<DueEntry>>
+      _dueEntriesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+          db.dueEntries,
+          aliasName:
+              $_aliasNameGenerator(db.dueContacts.id, db.dueEntries.contactId));
+
+  $$DueEntriesTableProcessedTableManager get dueEntriesRefs {
+    final manager = $$DueEntriesTableTableManager($_db, $_db.dueEntries)
+        .filter((f) => f.contactId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_dueEntriesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$DueContactsTableFilterComposer
+    extends Composer<_$AppDatabase, $DueContactsTable> {
+  $$DueContactsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get icon => $composableBuilder(
+      column: $table.icon, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get color => $composableBuilder(
+      column: $table.color, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get defaultAmount => $composableBuilder(
+      column: $table.defaultAmount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get defaultNote => $composableBuilder(
+      column: $table.defaultNote, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get defaultCategoryId => $composableBuilder(
+      column: $table.defaultCategoryId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isArchived => $composableBuilder(
+      column: $table.isArchived, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> dueSettlementsRefs(
+      Expression<bool> Function($$DueSettlementsTableFilterComposer f) f) {
+    final $$DueSettlementsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.dueSettlements,
+        getReferencedColumn: (t) => t.contactId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueSettlementsTableFilterComposer(
+              $db: $db,
+              $table: $db.dueSettlements,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> dueEntriesRefs(
+      Expression<bool> Function($$DueEntriesTableFilterComposer f) f) {
+    final $$DueEntriesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.dueEntries,
+        getReferencedColumn: (t) => t.contactId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueEntriesTableFilterComposer(
+              $db: $db,
+              $table: $db.dueEntries,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$DueContactsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DueContactsTable> {
+  $$DueContactsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get icon => $composableBuilder(
+      column: $table.icon, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get color => $composableBuilder(
+      column: $table.color, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get defaultAmount => $composableBuilder(
+      column: $table.defaultAmount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get defaultNote => $composableBuilder(
+      column: $table.defaultNote, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get defaultCategoryId => $composableBuilder(
+      column: $table.defaultCategoryId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isArchived => $composableBuilder(
+      column: $table.isArchived, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$DueContactsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DueContactsTable> {
+  $$DueContactsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
+
+  GeneratedColumn<String> get color =>
+      $composableBuilder(column: $table.color, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<double> get defaultAmount => $composableBuilder(
+      column: $table.defaultAmount, builder: (column) => column);
+
+  GeneratedColumn<String> get defaultNote => $composableBuilder(
+      column: $table.defaultNote, builder: (column) => column);
+
+  GeneratedColumn<String> get defaultCategoryId => $composableBuilder(
+      column: $table.defaultCategoryId, builder: (column) => column);
+
+  GeneratedColumn<bool> get isArchived => $composableBuilder(
+      column: $table.isArchived, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  Expression<T> dueSettlementsRefs<T extends Object>(
+      Expression<T> Function($$DueSettlementsTableAnnotationComposer a) f) {
+    final $$DueSettlementsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.dueSettlements,
+        getReferencedColumn: (t) => t.contactId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueSettlementsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.dueSettlements,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> dueEntriesRefs<T extends Object>(
+      Expression<T> Function($$DueEntriesTableAnnotationComposer a) f) {
+    final $$DueEntriesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.dueEntries,
+        getReferencedColumn: (t) => t.contactId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueEntriesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.dueEntries,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$DueContactsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $DueContactsTable,
+    DueContact,
+    $$DueContactsTableFilterComposer,
+    $$DueContactsTableOrderingComposer,
+    $$DueContactsTableAnnotationComposer,
+    $$DueContactsTableCreateCompanionBuilder,
+    $$DueContactsTableUpdateCompanionBuilder,
+    (DueContact, $$DueContactsTableReferences),
+    DueContact,
+    PrefetchHooks Function({bool dueSettlementsRefs, bool dueEntriesRefs})> {
+  $$DueContactsTableTableManager(_$AppDatabase db, $DueContactsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DueContactsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DueContactsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DueContactsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> icon = const Value.absent(),
+            Value<String> color = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<double?> defaultAmount = const Value.absent(),
+            Value<String?> defaultNote = const Value.absent(),
+            Value<String?> defaultCategoryId = const Value.absent(),
+            Value<bool> isArchived = const Value.absent(),
+            Value<int> createdAt = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              DueContactsCompanion(
+            id: id,
+            name: name,
+            icon: icon,
+            color: color,
+            type: type,
+            defaultAmount: defaultAmount,
+            defaultNote: defaultNote,
+            defaultCategoryId: defaultCategoryId,
+            isArchived: isArchived,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String name,
+            required String icon,
+            required String color,
+            Value<String> type = const Value.absent(),
+            Value<double?> defaultAmount = const Value.absent(),
+            Value<String?> defaultNote = const Value.absent(),
+            Value<String?> defaultCategoryId = const Value.absent(),
+            Value<bool> isArchived = const Value.absent(),
+            required int createdAt,
+            required int updatedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              DueContactsCompanion.insert(
+            id: id,
+            name: name,
+            icon: icon,
+            color: color,
+            type: type,
+            defaultAmount: defaultAmount,
+            defaultNote: defaultNote,
+            defaultCategoryId: defaultCategoryId,
+            isArchived: isArchived,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$DueContactsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {dueSettlementsRefs = false, dueEntriesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (dueSettlementsRefs) db.dueSettlements,
+                if (dueEntriesRefs) db.dueEntries
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (dueSettlementsRefs)
+                    await $_getPrefetchedData<DueContact, $DueContactsTable,
+                            DueSettlement>(
+                        currentTable: table,
+                        referencedTable: $$DueContactsTableReferences
+                            ._dueSettlementsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$DueContactsTableReferences(db, table, p0)
+                                .dueSettlementsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.contactId == item.id),
+                        typedResults: items),
+                  if (dueEntriesRefs)
+                    await $_getPrefetchedData<DueContact, $DueContactsTable,
+                            DueEntry>(
+                        currentTable: table,
+                        referencedTable: $$DueContactsTableReferences
+                            ._dueEntriesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$DueContactsTableReferences(db, table, p0)
+                                .dueEntriesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.contactId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$DueContactsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $DueContactsTable,
+    DueContact,
+    $$DueContactsTableFilterComposer,
+    $$DueContactsTableOrderingComposer,
+    $$DueContactsTableAnnotationComposer,
+    $$DueContactsTableCreateCompanionBuilder,
+    $$DueContactsTableUpdateCompanionBuilder,
+    (DueContact, $$DueContactsTableReferences),
+    DueContact,
+    PrefetchHooks Function({bool dueSettlementsRefs, bool dueEntriesRefs})>;
+typedef $$DueSettlementsTableCreateCompanionBuilder = DueSettlementsCompanion
+    Function({
+  required String id,
+  required String contactId,
+  required double totalAmount,
+  required String settledDate,
+  Value<String> note,
+  Value<String?> linkedTransactionId,
+  required int createdAt,
+  required int updatedAt,
+  Value<int> rowid,
+});
+typedef $$DueSettlementsTableUpdateCompanionBuilder = DueSettlementsCompanion
+    Function({
+  Value<String> id,
+  Value<String> contactId,
+  Value<double> totalAmount,
+  Value<String> settledDate,
+  Value<String> note,
+  Value<String?> linkedTransactionId,
+  Value<int> createdAt,
+  Value<int> updatedAt,
+  Value<int> rowid,
+});
+
+final class $$DueSettlementsTableReferences
+    extends BaseReferences<_$AppDatabase, $DueSettlementsTable, DueSettlement> {
+  $$DueSettlementsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $DueContactsTable _contactIdTable(_$AppDatabase db) =>
+      db.dueContacts.createAlias(
+          $_aliasNameGenerator(db.dueSettlements.contactId, db.dueContacts.id));
+
+  $$DueContactsTableProcessedTableManager get contactId {
+    final $_column = $_itemColumn<String>('contact_id')!;
+
+    final manager = $$DueContactsTableTableManager($_db, $_db.dueContacts)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $TransactionsTable _linkedTransactionIdTable(_$AppDatabase db) =>
+      db.transactions.createAlias($_aliasNameGenerator(
+          db.dueSettlements.linkedTransactionId, db.transactions.id));
+
+  $$TransactionsTableProcessedTableManager? get linkedTransactionId {
+    final $_column = $_itemColumn<String>('linked_transaction_id');
+    if ($_column == null) return null;
+    final manager = $$TransactionsTableTableManager($_db, $_db.transactions)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_linkedTransactionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$DueEntriesTable, List<DueEntry>>
+      _dueEntriesRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.dueEntries,
+              aliasName: $_aliasNameGenerator(
+                  db.dueSettlements.id, db.dueEntries.settlementId));
+
+  $$DueEntriesTableProcessedTableManager get dueEntriesRefs {
+    final manager = $$DueEntriesTableTableManager($_db, $_db.dueEntries).filter(
+        (f) => f.settlementId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_dueEntriesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$DueSettlementsTableFilterComposer
+    extends Composer<_$AppDatabase, $DueSettlementsTable> {
+  $$DueSettlementsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get totalAmount => $composableBuilder(
+      column: $table.totalAmount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get settledDate => $composableBuilder(
+      column: $table.settledDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get note => $composableBuilder(
+      column: $table.note, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  $$DueContactsTableFilterComposer get contactId {
+    final $$DueContactsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.dueContacts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueContactsTableFilterComposer(
+              $db: $db,
+              $table: $db.dueContacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$TransactionsTableFilterComposer get linkedTransactionId {
+    final $$TransactionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.linkedTransactionId,
+        referencedTable: $db.transactions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionsTableFilterComposer(
+              $db: $db,
+              $table: $db.transactions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<bool> dueEntriesRefs(
+      Expression<bool> Function($$DueEntriesTableFilterComposer f) f) {
+    final $$DueEntriesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.dueEntries,
+        getReferencedColumn: (t) => t.settlementId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueEntriesTableFilterComposer(
+              $db: $db,
+              $table: $db.dueEntries,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$DueSettlementsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DueSettlementsTable> {
+  $$DueSettlementsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get totalAmount => $composableBuilder(
+      column: $table.totalAmount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get settledDate => $composableBuilder(
+      column: $table.settledDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get note => $composableBuilder(
+      column: $table.note, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  $$DueContactsTableOrderingComposer get contactId {
+    final $$DueContactsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.dueContacts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueContactsTableOrderingComposer(
+              $db: $db,
+              $table: $db.dueContacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$TransactionsTableOrderingComposer get linkedTransactionId {
+    final $$TransactionsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.linkedTransactionId,
+        referencedTable: $db.transactions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionsTableOrderingComposer(
+              $db: $db,
+              $table: $db.transactions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$DueSettlementsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DueSettlementsTable> {
+  $$DueSettlementsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get totalAmount => $composableBuilder(
+      column: $table.totalAmount, builder: (column) => column);
+
+  GeneratedColumn<String> get settledDate => $composableBuilder(
+      column: $table.settledDate, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$DueContactsTableAnnotationComposer get contactId {
+    final $$DueContactsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.dueContacts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueContactsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.dueContacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$TransactionsTableAnnotationComposer get linkedTransactionId {
+    final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.linkedTransactionId,
+        referencedTable: $db.transactions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.transactions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<T> dueEntriesRefs<T extends Object>(
+      Expression<T> Function($$DueEntriesTableAnnotationComposer a) f) {
+    final $$DueEntriesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.dueEntries,
+        getReferencedColumn: (t) => t.settlementId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueEntriesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.dueEntries,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$DueSettlementsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $DueSettlementsTable,
+    DueSettlement,
+    $$DueSettlementsTableFilterComposer,
+    $$DueSettlementsTableOrderingComposer,
+    $$DueSettlementsTableAnnotationComposer,
+    $$DueSettlementsTableCreateCompanionBuilder,
+    $$DueSettlementsTableUpdateCompanionBuilder,
+    (DueSettlement, $$DueSettlementsTableReferences),
+    DueSettlement,
+    PrefetchHooks Function(
+        {bool contactId, bool linkedTransactionId, bool dueEntriesRefs})> {
+  $$DueSettlementsTableTableManager(
+      _$AppDatabase db, $DueSettlementsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DueSettlementsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DueSettlementsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DueSettlementsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> contactId = const Value.absent(),
+            Value<double> totalAmount = const Value.absent(),
+            Value<String> settledDate = const Value.absent(),
+            Value<String> note = const Value.absent(),
+            Value<String?> linkedTransactionId = const Value.absent(),
+            Value<int> createdAt = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              DueSettlementsCompanion(
+            id: id,
+            contactId: contactId,
+            totalAmount: totalAmount,
+            settledDate: settledDate,
+            note: note,
+            linkedTransactionId: linkedTransactionId,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String contactId,
+            required double totalAmount,
+            required String settledDate,
+            Value<String> note = const Value.absent(),
+            Value<String?> linkedTransactionId = const Value.absent(),
+            required int createdAt,
+            required int updatedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              DueSettlementsCompanion.insert(
+            id: id,
+            contactId: contactId,
+            totalAmount: totalAmount,
+            settledDate: settledDate,
+            note: note,
+            linkedTransactionId: linkedTransactionId,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$DueSettlementsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {contactId = false,
+              linkedTransactionId = false,
+              dueEntriesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (dueEntriesRefs) db.dueEntries],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (contactId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.contactId,
+                    referencedTable:
+                        $$DueSettlementsTableReferences._contactIdTable(db),
+                    referencedColumn:
+                        $$DueSettlementsTableReferences._contactIdTable(db).id,
+                  ) as T;
+                }
+                if (linkedTransactionId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.linkedTransactionId,
+                    referencedTable: $$DueSettlementsTableReferences
+                        ._linkedTransactionIdTable(db),
+                    referencedColumn: $$DueSettlementsTableReferences
+                        ._linkedTransactionIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (dueEntriesRefs)
+                    await $_getPrefetchedData<DueSettlement,
+                            $DueSettlementsTable, DueEntry>(
+                        currentTable: table,
+                        referencedTable: $$DueSettlementsTableReferences
+                            ._dueEntriesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$DueSettlementsTableReferences(db, table, p0)
+                                .dueEntriesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.settlementId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$DueSettlementsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $DueSettlementsTable,
+    DueSettlement,
+    $$DueSettlementsTableFilterComposer,
+    $$DueSettlementsTableOrderingComposer,
+    $$DueSettlementsTableAnnotationComposer,
+    $$DueSettlementsTableCreateCompanionBuilder,
+    $$DueSettlementsTableUpdateCompanionBuilder,
+    (DueSettlement, $$DueSettlementsTableReferences),
+    DueSettlement,
+    PrefetchHooks Function(
+        {bool contactId, bool linkedTransactionId, bool dueEntriesRefs})>;
+typedef $$DueEntriesTableCreateCompanionBuilder = DueEntriesCompanion Function({
+  required String id,
+  required String contactId,
+  required double amount,
+  required String direction,
+  required String entryDate,
+  Value<String?> mealSlot,
+  Value<String> note,
+  Value<bool> isSettled,
+  Value<String?> settlementId,
+  required int createdAt,
+  required int updatedAt,
+  Value<int> rowid,
+});
+typedef $$DueEntriesTableUpdateCompanionBuilder = DueEntriesCompanion Function({
+  Value<String> id,
+  Value<String> contactId,
+  Value<double> amount,
+  Value<String> direction,
+  Value<String> entryDate,
+  Value<String?> mealSlot,
+  Value<String> note,
+  Value<bool> isSettled,
+  Value<String?> settlementId,
+  Value<int> createdAt,
+  Value<int> updatedAt,
+  Value<int> rowid,
+});
+
+final class $$DueEntriesTableReferences
+    extends BaseReferences<_$AppDatabase, $DueEntriesTable, DueEntry> {
+  $$DueEntriesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $DueContactsTable _contactIdTable(_$AppDatabase db) =>
+      db.dueContacts.createAlias(
+          $_aliasNameGenerator(db.dueEntries.contactId, db.dueContacts.id));
+
+  $$DueContactsTableProcessedTableManager get contactId {
+    final $_column = $_itemColumn<String>('contact_id')!;
+
+    final manager = $$DueContactsTableTableManager($_db, $_db.dueContacts)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $DueSettlementsTable _settlementIdTable(_$AppDatabase db) =>
+      db.dueSettlements.createAlias($_aliasNameGenerator(
+          db.dueEntries.settlementId, db.dueSettlements.id));
+
+  $$DueSettlementsTableProcessedTableManager? get settlementId {
+    final $_column = $_itemColumn<String>('settlement_id');
+    if ($_column == null) return null;
+    final manager = $$DueSettlementsTableTableManager($_db, $_db.dueSettlements)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_settlementIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$DueEntriesTableFilterComposer
+    extends Composer<_$AppDatabase, $DueEntriesTable> {
+  $$DueEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get direction => $composableBuilder(
+      column: $table.direction, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get entryDate => $composableBuilder(
+      column: $table.entryDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get mealSlot => $composableBuilder(
+      column: $table.mealSlot, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get note => $composableBuilder(
+      column: $table.note, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isSettled => $composableBuilder(
+      column: $table.isSettled, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  $$DueContactsTableFilterComposer get contactId {
+    final $$DueContactsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.dueContacts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueContactsTableFilterComposer(
+              $db: $db,
+              $table: $db.dueContacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$DueSettlementsTableFilterComposer get settlementId {
+    final $$DueSettlementsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.settlementId,
+        referencedTable: $db.dueSettlements,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueSettlementsTableFilterComposer(
+              $db: $db,
+              $table: $db.dueSettlements,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$DueEntriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $DueEntriesTable> {
+  $$DueEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get direction => $composableBuilder(
+      column: $table.direction, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get entryDate => $composableBuilder(
+      column: $table.entryDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get mealSlot => $composableBuilder(
+      column: $table.mealSlot, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get note => $composableBuilder(
+      column: $table.note, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isSettled => $composableBuilder(
+      column: $table.isSettled, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  $$DueContactsTableOrderingComposer get contactId {
+    final $$DueContactsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.dueContacts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueContactsTableOrderingComposer(
+              $db: $db,
+              $table: $db.dueContacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$DueSettlementsTableOrderingComposer get settlementId {
+    final $$DueSettlementsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.settlementId,
+        referencedTable: $db.dueSettlements,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueSettlementsTableOrderingComposer(
+              $db: $db,
+              $table: $db.dueSettlements,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$DueEntriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DueEntriesTable> {
+  $$DueEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get direction =>
+      $composableBuilder(column: $table.direction, builder: (column) => column);
+
+  GeneratedColumn<String> get entryDate =>
+      $composableBuilder(column: $table.entryDate, builder: (column) => column);
+
+  GeneratedColumn<String> get mealSlot =>
+      $composableBuilder(column: $table.mealSlot, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<bool> get isSettled =>
+      $composableBuilder(column: $table.isSettled, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$DueContactsTableAnnotationComposer get contactId {
+    final $$DueContactsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.dueContacts,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueContactsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.dueContacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$DueSettlementsTableAnnotationComposer get settlementId {
+    final $$DueSettlementsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.settlementId,
+        referencedTable: $db.dueSettlements,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DueSettlementsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.dueSettlements,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$DueEntriesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $DueEntriesTable,
+    DueEntry,
+    $$DueEntriesTableFilterComposer,
+    $$DueEntriesTableOrderingComposer,
+    $$DueEntriesTableAnnotationComposer,
+    $$DueEntriesTableCreateCompanionBuilder,
+    $$DueEntriesTableUpdateCompanionBuilder,
+    (DueEntry, $$DueEntriesTableReferences),
+    DueEntry,
+    PrefetchHooks Function({bool contactId, bool settlementId})> {
+  $$DueEntriesTableTableManager(_$AppDatabase db, $DueEntriesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DueEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DueEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DueEntriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> contactId = const Value.absent(),
+            Value<double> amount = const Value.absent(),
+            Value<String> direction = const Value.absent(),
+            Value<String> entryDate = const Value.absent(),
+            Value<String?> mealSlot = const Value.absent(),
+            Value<String> note = const Value.absent(),
+            Value<bool> isSettled = const Value.absent(),
+            Value<String?> settlementId = const Value.absent(),
+            Value<int> createdAt = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              DueEntriesCompanion(
+            id: id,
+            contactId: contactId,
+            amount: amount,
+            direction: direction,
+            entryDate: entryDate,
+            mealSlot: mealSlot,
+            note: note,
+            isSettled: isSettled,
+            settlementId: settlementId,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String contactId,
+            required double amount,
+            required String direction,
+            required String entryDate,
+            Value<String?> mealSlot = const Value.absent(),
+            Value<String> note = const Value.absent(),
+            Value<bool> isSettled = const Value.absent(),
+            Value<String?> settlementId = const Value.absent(),
+            required int createdAt,
+            required int updatedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              DueEntriesCompanion.insert(
+            id: id,
+            contactId: contactId,
+            amount: amount,
+            direction: direction,
+            entryDate: entryDate,
+            mealSlot: mealSlot,
+            note: note,
+            isSettled: isSettled,
+            settlementId: settlementId,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$DueEntriesTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({contactId = false, settlementId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (contactId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.contactId,
+                    referencedTable:
+                        $$DueEntriesTableReferences._contactIdTable(db),
+                    referencedColumn:
+                        $$DueEntriesTableReferences._contactIdTable(db).id,
+                  ) as T;
+                }
+                if (settlementId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.settlementId,
+                    referencedTable:
+                        $$DueEntriesTableReferences._settlementIdTable(db),
+                    referencedColumn:
+                        $$DueEntriesTableReferences._settlementIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$DueEntriesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $DueEntriesTable,
+    DueEntry,
+    $$DueEntriesTableFilterComposer,
+    $$DueEntriesTableOrderingComposer,
+    $$DueEntriesTableAnnotationComposer,
+    $$DueEntriesTableCreateCompanionBuilder,
+    $$DueEntriesTableUpdateCompanionBuilder,
+    (DueEntry, $$DueEntriesTableReferences),
+    DueEntry,
+    PrefetchHooks Function({bool contactId, bool settlementId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5593,4 +8596,10 @@ class $AppDatabaseManager {
       $$TransactionTagsTableTableManager(_db, _db.transactionTags);
   $$BudgetsTableTableManager get budgets =>
       $$BudgetsTableTableManager(_db, _db.budgets);
+  $$DueContactsTableTableManager get dueContacts =>
+      $$DueContactsTableTableManager(_db, _db.dueContacts);
+  $$DueSettlementsTableTableManager get dueSettlements =>
+      $$DueSettlementsTableTableManager(_db, _db.dueSettlements);
+  $$DueEntriesTableTableManager get dueEntries =>
+      $$DueEntriesTableTableManager(_db, _db.dueEntries);
 }

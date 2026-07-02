@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../app/themes/app_colors.dart';
 import '../../app/widgets/screen_header.dart';
 import '../../data/db/app_database.dart';
 import '../../data/models/transaction_row.dart';
+import '../../state/dues_providers.dart';
 import '../../state/manage_providers.dart';
 import '../../state/period_providers.dart';
 import '../../state/transactions_providers.dart';
 import 'sheets/add_edit_transaction_sheet.dart';
+import 'sheets/amount_entry_sheet.dart';
 import 'sheets/transaction_detail_sheet.dart';
 import 'widgets/transaction_tile.dart';
 
@@ -285,6 +288,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => showAmountEntrySheet(context),
+        tooltip: 'Add Transaction',
+        child: const Icon(Icons.add_rounded),
+      ),
     );
   }
 
@@ -372,29 +380,41 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
   Future<void> _confirmDelete(BuildContext ctx, TransactionRow row) async {
     final cs = Theme.of(ctx).colorScheme;
-    final ok = await showDialog<bool>(
+    final settlement = await ref.read(duesRepositoryProvider).getSettlementForTransaction(row.transaction.id);
+    if (!ctx.mounted) return;
+    
+    final result = await showDialog<String>(
       context: ctx,
       builder: (_) => AlertDialog(
         title: const Text('Delete Transaction'),
-        content: Text(row.transaction.kind == 'transfer'
-            ? 'Delete both legs of this transfer?'
-            : 'Permanently delete this transaction?'),
+        content: Text(settlement != null
+            ? 'This transaction is linked to a Dues settlement.\n\nDo you also want to undo the Dues settlement? (This will mark the tiffin/dues entries as unsettled again)'
+            : (row.transaction.kind == 'transfer'
+                ? 'Delete both legs of this transfer?'
+                : 'Permanently delete this transaction?')),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
+              onPressed: () => Navigator.pop(ctx, 'cancel'),
               child: const Text('Cancel')),
+          if (settlement != null)
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, 'delete_tx_only'),
+              child: const Text('Delete Tx Only'),
+            ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: cs.error),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
+            onPressed: () => Navigator.pop(ctx, settlement != null ? 'delete_and_undo' : 'delete'),
+            child: Text(settlement != null ? 'Undo & Delete' : 'Delete'),
           ),
         ],
       ),
     );
-    if (ok == true) {
-      await ref
-          .read(transactionsRepositoryProvider)
-          .delete(row.transaction.id);
+    
+    if (result != null && result != 'cancel') {
+      if (result == 'delete_and_undo' && settlement != null) {
+        await ref.read(duesRepositoryProvider).undoSettlement(settlement.id);
+      }
+      await ref.read(transactionsRepositoryProvider).delete(row.transaction.id);
     }
   }
 }

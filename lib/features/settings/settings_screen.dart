@@ -17,6 +17,7 @@ import '../../state/database_provider.dart';
 import '../../state/prefs_providers.dart';
 import 'update_check_dialog.dart';
 import '../reports/export/export_service.dart';
+import '../reports/export/dues_export_service.dart';
 import '../reports/import/import_service.dart';
 import '../../services/database_backup_service.dart';
 import 'manage_backups_screen.dart';
@@ -524,6 +525,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                     ExportService.showExportSheet(context, db,
                         defaultFrom: DateTime(now.year, now.month).toIso8601String(),
                         defaultTo: DateTime(now.year, now.month + 1).toIso8601String());
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.import_contacts_outlined),
+                  title: const Text('Export Dues & Tabs (CSV)'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () {
+                    final db = ref.read(appDatabaseProvider);
+                    DuesExportService.exportToCsv(db);
                   },
                 ),
                 const Divider(height: 1),

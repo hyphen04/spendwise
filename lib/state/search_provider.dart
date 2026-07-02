@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/db/app_database.dart';
 import '../data/models/transaction_row.dart';
+import 'dues_providers.dart';
 import 'manage_providers.dart';
 import 'transactions_providers.dart';
 
@@ -10,24 +11,28 @@ class GlobalSearchResults {
     required this.categories,
     required this.accounts,
     required this.modes,
+    required this.dueContacts,
   });
 
   const GlobalSearchResults.empty()
       : transactions = const [],
         categories = const [],
         accounts = const [],
-        modes = const [];
+        modes = const [],
+        dueContacts = const [];
 
   final List<TransactionRow> transactions;
   final List<Category> categories;
   final List<Account> accounts;
   final List<Mode> modes;
+  final List<DueContact> dueContacts;
 
   bool get isEmpty =>
       transactions.isEmpty &&
       categories.isEmpty &&
       accounts.isEmpty &&
-      modes.isEmpty;
+      modes.isEmpty &&
+      dueContacts.isEmpty;
 }
 
 final globalSearchProvider =
@@ -63,11 +68,17 @@ final globalSearchProvider =
       .take(5)
       .toList();
 
+  final dueContacts = (ref.watch(dueContactsStreamProvider).valueOrNull ?? [])
+      .where((c) => !c.isArchived && c.name.toLowerCase().contains(q))
+      .take(5)
+      .toList();
+
   return GlobalSearchResults(
     transactions: matchedTx,
     categories: cats,
     accounts: accs,
     modes: modes,
+    dueContacts: dueContacts,
   );
 });
 

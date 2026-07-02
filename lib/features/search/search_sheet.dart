@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../data/models/transaction_row.dart';
 import '../../state/search_provider.dart';
@@ -171,100 +172,121 @@ class _SearchSheetState extends ConsumerState<_SearchSheet> {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(0, 8, 0, 32),
                     physics: const BouncingScrollPhysics(),
-            children: [
-              if (isEmpty) ...[
-                // Recent transactions
-                if (recent.isNotEmpty) ...[
-                  _SectionHeader(label: 'RECENT', cs: cs),
-                  ..._buildTxTiles(recent, cs, highlight: ''),
-                ] else
-                  _EmptyHint(
-                    cs: cs,
-                    message: 'Type to search across all transactions,\ncategories, accounts, and more.',
-                  ),
-              ] else if (_debouncedQuery.isEmpty)
-                // Still typing but debounce hasn't fired — show nothing
-                const SizedBox.shrink()
-              else if (results.isEmpty)
-                _EmptyHint(
-                  cs: cs,
-                  message: 'No results for "$_debouncedQuery".',
-                )
-              else ...[
-                // ── Transactions ────────────────────────────────────────
-                if (results.transactions.isNotEmpty) ...[
-                  _SectionHeader(
-                    label: 'TRANSACTIONS',
-                    count: results.transactions.length,
-                    cs: cs,
-                  ),
-                  ..._buildTxTiles(results.transactions, cs,
-                      highlight: _debouncedQuery),
-                ],
+                    children: [
+                      if (isEmpty) ...[
+                        // Recent transactions
+                        if (recent.isNotEmpty) ...[
+                          _SectionHeader(label: 'RECENT', cs: cs),
+                          ..._buildTxTiles(recent, cs, highlight: ''),
+                        ] else
+                          _EmptyHint(
+                            cs: cs,
+                            message: 'Type to search across all transactions,\ncategories, accounts, and more.',
+                          ),
+                      ] else if (_debouncedQuery.isEmpty)
+                        // Still typing but debounce hasn't fired — show nothing
+                        const SizedBox.shrink()
+                      else if (results.isEmpty)
+                        _EmptyHint(
+                          cs: cs,
+                          message: 'No results for "$_debouncedQuery".',
+                        )
+                      else ...[
+                        // ── Transactions ────────────────────────────────────────
+                        if (results.transactions.isNotEmpty) ...[
+                          _SectionHeader(
+                            label: 'TRANSACTIONS',
+                            count: results.transactions.length,
+                            cs: cs,
+                          ),
+                          ..._buildTxTiles(results.transactions, cs,
+                              highlight: _debouncedQuery),
+                        ],
 
-                // ── Categories ──────────────────────────────────────────
-                if (results.categories.isNotEmpty) ...[
-                  _SectionHeader(
-                    label: 'CATEGORIES',
-                    count: results.categories.length,
-                    cs: cs,
-                  ),
-                  ...results.categories.map(
-                    (cat) => _EntityTile(
-                      icon: cat.icon,
-                      label: cat.name,
-                      sublabel: cat.kind == 'both'
-                          ? 'income & expense'
-                          : cat.kind,
-                      highlight: _debouncedQuery,
-                      cs: cs,
-                      onTap: () => showCategoryFormSheet(context, editing: cat),
-                    ),
-                  ),
-                ],
+                        // ── Categories ──────────────────────────────────────────
+                        if (results.categories.isNotEmpty) ...[
+                          _SectionHeader(
+                            label: 'CATEGORIES',
+                            count: results.categories.length,
+                            cs: cs,
+                          ),
+                          ...results.categories.map(
+                            (cat) => _EntityTile(
+                              icon: cat.icon,
+                              label: cat.name,
+                              sublabel: cat.kind == 'both'
+                                  ? 'income & expense'
+                                  : cat.kind,
+                              highlight: _debouncedQuery,
+                              cs: cs,
+                              onTap: () => showCategoryFormSheet(context, editing: cat),
+                            ),
+                          ),
+                        ],
 
-                // ── Accounts ────────────────────────────────────────────
-                if (results.accounts.isNotEmpty) ...[
-                  _SectionHeader(
-                    label: 'ACCOUNTS',
-                    count: results.accounts.length,
-                    cs: cs,
-                  ),
-                  ...results.accounts.map(
-                    (acc) => _EntityTile(
-                      icon: acc.icon,
-                      label: acc.name,
-                      sublabel: acc.currency,
-                      highlight: _debouncedQuery,
-                      cs: cs,
-                      onTap: () => showAccountFormSheet(context, editing: acc),
-                    ),
-                  ),
-                ],
+                        // ── Accounts ────────────────────────────────────────────
+                        if (results.accounts.isNotEmpty) ...[
+                          _SectionHeader(
+                            label: 'ACCOUNTS',
+                            count: results.accounts.length,
+                            cs: cs,
+                          ),
+                          ...results.accounts.map(
+                            (acc) => _EntityTile(
+                              icon: acc.icon,
+                              label: acc.name,
+                              sublabel: acc.currency,
+                              highlight: _debouncedQuery,
+                              cs: cs,
+                              onTap: () => showAccountFormSheet(context, editing: acc),
+                            ),
+                          ),
+                        ],
 
-                // ── Modes ───────────────────────────────────────────────
-                if (results.modes.isNotEmpty) ...[
-                  _SectionHeader(
-                    label: 'PAYMENT MODES',
-                    count: results.modes.length,
-                    cs: cs,
-                  ),
-                  ...results.modes.map(
-                    (mode) => _EntityTile(
-                      icon: mode.icon,
-                      label: mode.name,
-                      highlight: _debouncedQuery,
-                      cs: cs,
-                      onTap: () => showModeFormSheet(context, editing: mode),
-                    ),
-                  ),
-                ],
+                        // ── Modes ───────────────────────────────────────────────
+                        if (results.modes.isNotEmpty) ...[
+                          _SectionHeader(
+                            label: 'MODES',
+                            count: results.modes.length,
+                            cs: cs,
+                          ),
+                          ...results.modes.map(
+                            (mode) => _EntityTile(
+                              icon: mode.icon,
+                              label: mode.name,
+                              highlight: _debouncedQuery,
+                              cs: cs,
+                              onTap: () => showModeFormSheet(context, editing: mode),
+                            ),
+                          ),
+                        ],
 
+                        // ── Dues & Tabs ──────────────────────────────────────────
+                        if (results.dueContacts.isNotEmpty) ...[
+                          _SectionHeader(
+                            label: 'DUES & TABS',
+                            count: results.dueContacts.length,
+                            cs: cs,
+                          ),
+                          ...results.dueContacts.map(
+                            (contact) => _EntityTile(
+                              icon: contact.icon,
+                              label: contact.name,
+                              sublabel: contact.type == 'vendor' ? 'Vendor' : 'Person',
+                              highlight: _debouncedQuery,
+                              cs: cs,
+                              onTap: () {
+                                Navigator.pop(context); // Close search
+                                context.push('/dues/${contact.id}');
+                              },
+                            ),
+                          ),
+                        ],
+                      ],
+                    ],
+                  ),
+                ),
               ],
-            ],
-          ),
-        ),
-      ],
     ),
   ),
         ],
