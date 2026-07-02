@@ -49,11 +49,28 @@ class AppTheme {
       seedColor: seedColor,
       brightness: Brightness.dark,
     );
+    // If the user picked a dark seed (e.g. Monochrome Black), using it as
+    // `primary` makes the button background blend into the dark surface and
+    // the button text (onPrimary) is set to a dark color too — the result
+    // is invisible. Invert to a light neutral in that case so primary
+    // surfaces stay readable; keep the seed for seeds that are already light
+    // (Cyan, Amber, etc.) so brand identity carries through.
+    final seedLuminance = seedColor.computeLuminance();
+    final isDarkSeed = seedLuminance < 0.4;
+    final primary = isDarkSeed ? const Color(0xFFF5F5F5) : seedColor;
+    final onPrimary = const Color(0xFF0F172A);
+    final primaryContainer = isDarkSeed
+        ? const Color(0xFF2A2A2C)
+        : seedColor;
+    final onPrimaryContainer = isDarkSeed
+        ? const Color(0xFFF5F5F5)
+        : const Color(0xFF0F172A);
+
     final cs = base.copyWith(
-      primary: seedColor,
-      onPrimary: const Color(0xFF0F172A),
-      primaryContainer: seedColor,
-      onPrimaryContainer: const Color(0xFFFFFFFF),
+      primary: primary,
+      onPrimary: onPrimary,
+      primaryContainer: primaryContainer,
+      onPrimaryContainer: onPrimaryContainer,
       secondary: const Color(0xFFF5F5F5),
       onSecondary: const Color(0xFF0A0A0A),
       secondaryContainer: const Color(0xFF1C1C1E),
@@ -78,7 +95,7 @@ class AppTheme {
       outlineVariant: const Color(0xFF1F1F21),
       inverseSurface: const Color(0xFFF5F5F5),
       onInverseSurface: const Color(0xFF0A0A0A),
-      inversePrimary: seedColor,
+      inversePrimary: isDarkSeed ? const Color(0xFF0A0A0A) : seedColor,
     );
     return _buildTheme(cs: cs, appColors: AppColors.dark());
   }

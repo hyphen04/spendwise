@@ -202,6 +202,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
       context: context,
       useSafeArea: true,
       builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -215,10 +216,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                 runSpacing: 12,
                 children: colors.map((color) {
                   final isSelected = color == currentColor;
-                  // Handle contrast for the check icon
+                  // The Monochrome swatch is black in light mode and white
+                  // in dark mode — otherwise the black dot vanishes against
+                  // the dark bottom-sheet background. (The theme itself
+                  // routes dark seeds to a light primary at runtime, so
+                  // picking "Monochrome" in dark mode still gives a
+                  // readable white-on-dark button — the swatch just needs
+                  // to preview that same color.)
                   final isMonochrome = color == 0xFF0A0A0A;
-                  final iconColor = isMonochrome && Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.black 
+                  final swatchColor = isMonochrome && isDark
+                      ? const Color(0xFFF5F5F5)
+                      : Color(color);
+                  // Check icon: white on dark swatches, black on light swatches.
+                  final iconColor = isMonochrome && isDark
+                      ? Colors.black
                       : Colors.white;
 
                   return GestureDetector(
@@ -230,10 +241,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: Color(color),
+                        color: swatchColor,
                         shape: BoxShape.circle,
-                        border: isSelected 
-                            ? Border.all(color: Theme.of(context).colorScheme.primary, width: 3) 
+                        border: isSelected
+                            ? Border.all(color: Theme.of(context).colorScheme.primary, width: 3)
                             : null,
                       ),
                       child: isSelected ? Icon(Icons.check, color: iconColor) : null,
