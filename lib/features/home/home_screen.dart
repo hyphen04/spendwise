@@ -3,7 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:intl/intl.dart';
 import '../../app/widgets/smooth_line_chart.dart';
 import '../../data/models/transaction_row.dart';
 import '../../state/home_providers.dart';
@@ -11,12 +11,15 @@ import '../../state/reports_providers.dart';
 import '../../state/transactions_providers.dart';
 import '../../services/update_service.dart';
 import '../../state/update_provider.dart';
+import '../../state/prefs_providers.dart';
 import '../search/search_sheet.dart';
 import '../settings/update_check_dialog.dart';
 import '../transactions/sheets/amount_entry_sheet.dart';
 import '../transactions/sheets/add_edit_transaction_sheet.dart';
 import '../transactions/sheets/transaction_detail_sheet.dart';
 import '../transactions/widgets/transaction_tile.dart';
+import 'widgets/home_dues_widget.dart';
+
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -135,14 +138,18 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ).animate().fadeIn(delay: 40.ms),
                   const SizedBox(height: 6),
-                  Text(
-                    '${totalNetWorth >= 0 ? '' : '−'}₹${_fmt(totalNetWorth.abs())}',
-                    style: GoogleFonts.manrope(
-                      fontSize: 52,
-                      fontWeight: FontWeight.w800,
-                      color: cs.onSurface,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                      height: 1.0,
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${totalNetWorth >= 0 ? '' : '−'}₹${NumberFormat('#,##,##0.00', 'en_IN').format(totalNetWorth.abs())}',
+                      style: GoogleFonts.outfit(
+                        fontSize: 52,
+                        fontWeight: FontWeight.w700,
+                        color: cs.onSurface,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                        height: 1.0,
+                      ),
                     ),
                   ).animate().fadeIn(delay: 60.ms).slideY(
                       begin: 0.08, end: 0, duration: 300.ms),
@@ -201,6 +208,15 @@ class HomeScreen extends ConsumerWidget {
                   : const SizedBox(height: 110),
             ),
           ),
+
+          // ── Quick Dues Widget ─────────────────────────────────────────────
+          if (ref.watch(showQuickDuesProvider))
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: HomeDuesWidget(),
+              ),
+            ),
 
           // ── Divider ────────────────────────────────────────────────────────
           SliverToBoxAdapter(

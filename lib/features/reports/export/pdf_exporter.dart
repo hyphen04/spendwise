@@ -8,6 +8,17 @@ import 'export_service.dart';
 
 class PdfExporter {
   static Future<String> export(AppDatabase db, ExportConfig config) async {
+    final entity = config.entities.first;
+    if (entity == ExportEntity.dues) {
+      return _exportDues(db, config);
+    } else if (entity == ExportEntity.transactions) {
+      return _exportTransactions(db, config);
+    } else {
+      throw Exception('PDF format is only supported for Transactions and Dues & Tabs.');
+    }
+  }
+
+  static Future<String> _exportTransactions(AppDatabase db, ExportConfig config) async {
     final repo = ReportsRepository(db);
     final rows = await repo.transactionsForExport(
       from: config.fromIso,
@@ -87,8 +98,7 @@ class PdfExporter {
           config.presetAccountName != null
               ? 'SpendWise — ${config.presetAccountName} Statement'
               : 'SpendWise — Transaction Report',
-          style:
-              pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
         ),
         pw.SizedBox(height: 4),
         pw.Text(
@@ -98,90 +108,96 @@ class PdfExporter {
         if (config.kindFilter != null)
           pw.Text(
             'Type: ${config.kindFilter}',
-            style:
-                const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+            style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey700),
           ),
-        pw.Text(
-          'Generated: ${DateTime.now().toString().substring(0, 16)}',
-          style:
-              const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+        pw.SizedBox(height: 16),
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
+            pw.Text('Income: Rs${_fmt(totalIncome)}',
+                style: pw.TextStyle(color: PdfColors.green700)),
+            pw.Text('Expense: Rs${_fmt(totalExpense)}',
+                style: pw.TextStyle(color: PdfColors.red700)),
+            pw.Text(
+              'Net: Rs${_fmt(totalIncome - totalExpense)}',
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            ),
+          ],
         ),
         pw.SizedBox(height: 16),
-
-        // Summary banner
-        pw.Container(
-          padding: const pw.EdgeInsets.all(12),
-          decoration: pw.BoxDecoration(
-            color: PdfColors.grey100,
-            borderRadius: pw.BorderRadius.circular(8),
-          ),
-          child: pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
-            children: [
-              _summaryCol('Income', 'Rs${_fmt(totalIncome)}', PdfColors.green700),
-              _summaryCol('Expense', 'Rs${_fmt(totalExpense)}', PdfColors.red700),
-              _summaryCol(
-                'Net',
-                'Rs${_fmt(totalIncome - totalExpense)}',
-                totalIncome >= totalExpense
-                    ? PdfColors.green700
-                    : PdfColors.red700,
-              ),
-            ],
-          ),
+        pw.TableHelper.fromTextArray(
+          headers: colDefs.map((d) => d.header).toList(),
+          data: rows.map((r) => colDefs.map((d) => d.value(r)).toList()).toList(),
+          headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
+          cellStyle: const pw.TextStyle(fontSize: 9),
+          cellPadding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+          headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
+          border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
         ),
-        pw.SizedBox(height: 20),
-
+        pw.SizedBox(height: 24),
         pw.Text(
-          'Transactions (${rows.length})',
-          style:
-              pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
+          'Generated on ${DateTime.now().toIso8601String().substring(0, 16).replaceAll('T', ' ')}',
+          style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
         ),
-        pw.SizedBox(height: 8),
-
-        if (colDefs.isNotEmpty)
-          pw.TableHelper.fromTextArray(
-            headers: colDefs.map((c) => c.header).toList(),
-            data: rows
-                .map((r) => colDefs.map((c) => c.value(r)).toList())
-                .toList(),
-            headerStyle:
-                pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9),
-            cellStyle: const pw.TextStyle(fontSize: 9),
-            headerDecoration:
-                const pw.BoxDecoration(color: PdfColors.grey300),
-            oddRowDecoration:
-                const pw.BoxDecoration(color: PdfColors.grey100),
-          ),
       ],
     ));
 
+    return _write(config, doc, 'transactions');
+  }
+
+  static Future<String> _exportDues(AppDatabase db, ExportConfig config) async {
+    final entries = await db.duesDao.getAllEntriesWithContact();
+
+    final doc = pw.Document();
+    doc.addPage(pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.all(32),
+      build: (pw.Context ctx) => [
+        pw.Text(
+          'SpendWise — Dues & Tabs',
+          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+        ),
+        pw.SizedBox(height: 16),
+        pw.TableHelper.fromTextArray(
+          headers: ['Contact', 'Amount', 'Type', 'Date', 'Note', 'Settled'],
+          data: entries.map((e) => [
+            e.contact.name,
+            'Rs${_fmt(e.entry.amount)}',
+            e.entry.direction == 'payable' ? 'You Owe' : 'They Owe',
+            e.entry.entryDate.substring(0, 10),
+            e.entry.note,
+            e.entry.isSettled ? 'Yes' : 'No',
+          ]).toList(),
+          headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
+          cellStyle: const pw.TextStyle(fontSize: 9),
+          cellPadding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+          headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
+          border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+        ),
+        pw.SizedBox(height: 24),
+        pw.Text(
+          'Generated on ${DateTime.now().toIso8601String().substring(0, 16).replaceAll('T', ' ')}',
+          style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
+        ),
+      ],
+    ));
+
+    return _write(config, doc, 'dues');
+  }
+
+  static Future<String> _write(ExportConfig config, pw.Document doc, String suffix) async {
     final bytes = await doc.save();
     final dir = await getTemporaryDirectory();
     final stamp = _stamp(config);
-    final file = File('${dir.path}/spendwise_$stamp.pdf');
+    final file = File('${dir.path}/spendwise_${suffix}_$stamp.pdf');
     await file.writeAsBytes(bytes);
     return file.path;
   }
 
-  static pw.Widget _summaryCol(
-          String label, String value, PdfColor color) =>
-      pw.Column(
-        children: [
-          pw.Text(value,
-              style: pw.TextStyle(
-                  fontSize: 13,
-                  fontWeight: pw.FontWeight.bold,
-                  color: color)),
-          pw.SizedBox(height: 2),
-          pw.Text(label,
-              style: const pw.TextStyle(
-                  fontSize: 10, color: PdfColors.grey700)),
-        ],
-      );
-
-  static String _fmt(double v) =>
-      v == v.truncateToDouble() ? v.toInt().toString() : v.toStringAsFixed(2);
+  static String _fmt(double v) {
+    if (v == v.truncateToDouble()) return v.toInt().toString();
+    return v.toStringAsFixed(2);
+  }
 
   static String _stamp(ExportConfig c) =>
       '${c.fromIso.substring(0, 10)}_${c.toIso.substring(0, 10)}';

@@ -7,6 +7,18 @@ import 'export_service.dart';
 
 class CsvExporter {
   static Future<String> export(AppDatabase db, ExportConfig config) async {
+    final entity = config.entities.first;
+    
+    if (entity == ExportEntity.dues) {
+      return _exportDues(db, config);
+    } else if (entity == ExportEntity.transactions) {
+      return _exportTransactions(db, config);
+    } else {
+      throw Exception('CSV format is only supported for Transactions and Dues & Tabs.');
+    }
+  }
+
+  static Future<String> _exportTransactions(AppDatabase db, ExportConfig config) async {
     final repo = ReportsRepository(db);
     final rows = await repo.transactionsForExport(
       from: config.fromIso,
@@ -52,10 +64,36 @@ class CsvExporter {
       }),
     ];
 
+    return _write(config, csvRows, 'transactions');
+  }
+
+  static Future<String> _exportDues(AppDatabase db, ExportConfig config) async {
+    final entries = await db.duesDao.getAllEntriesWithContact();
+    
+    final headers = ['Contact', 'Amount', 'Type', 'Date', 'Note', 'Settled'];
+    
+    final csvRows = <List<dynamic>>[
+      headers,
+      ...entries.map((e) {
+        final row = <dynamic>[];
+        row.add(e.contact.name);
+        row.add(e.entry.amount);
+        row.add(e.entry.direction == 'payable' ? 'You Owe' : 'They Owe');
+        row.add(e.entry.entryDate.substring(0, 10));
+        row.add(e.entry.note);
+        row.add(e.entry.isSettled ? 'Yes' : 'No');
+        return row;
+      }),
+    ];
+
+    return _write(config, csvRows, 'dues');
+  }
+
+  static Future<String> _write(ExportConfig config, List<List<dynamic>> csvRows, String suffix) async {
     final csv = const ListToCsvConverter().convert(csvRows);
     final dir = await getTemporaryDirectory();
     final stamp = _stamp(config);
-    final file = File('${dir.path}/spendwise_$stamp.csv');
+    final file = File('${dir.path}/spendwise_${suffix}_$stamp.csv');
     await file.writeAsString(csv);
     return file.path;
   }

@@ -1,4 +1,4 @@
-enum ImportFormat { csv, xlsx, json }
+enum ImportFormat { csv, xlsx, json, rawDbZip }
 
 class ParsedRow {
   final int rowIndex;

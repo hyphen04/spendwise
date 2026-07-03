@@ -92,7 +92,11 @@ class AppDatabase extends _$AppDatabase {
             await m.createAll();
           }
           if (from < 8) {
-            await m.addColumn(dueContacts, dueContacts.defaultCategoryId);
+            final result = await customSelect('PRAGMA table_info(due_contacts)').get();
+            final hasColumn = result.any((row) => row.data['name'] == 'default_category_id');
+            if (!hasColumn) {
+              await m.addColumn(dueContacts, dueContacts.defaultCategoryId);
+            }
           }
         },
       );

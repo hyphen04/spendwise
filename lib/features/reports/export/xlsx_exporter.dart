@@ -7,6 +7,18 @@ import 'export_service.dart';
 
 class XlsxExporter {
   static Future<String> export(AppDatabase db, ExportConfig config) async {
+    final entity = config.entities.first;
+    
+    if (entity == ExportEntity.dues) {
+      return _exportDues(db, config);
+    } else if (entity == ExportEntity.transactions) {
+      return _exportTransactions(db, config);
+    } else {
+      throw Exception('Excel format is only supported for Transactions and Dues & Tabs.');
+    }
+  }
+
+  static Future<String> _exportTransactions(AppDatabase db, ExportConfig config) async {
     final repo = ReportsRepository(db);
     final rows = await repo.transactionsForExport(
       from: config.fromIso,
@@ -57,17 +69,48 @@ class XlsxExporter {
       sheet.appendRow(row);
     }
 
-    for (int i = 0; i < headers.length; i++) {
-      sheet.setColumnWidth(i, 18.0);
+    return _write(config, excel, 'transactions', headers.length, sheet);
+  }
+
+  static Future<String> _exportDues(AppDatabase db, ExportConfig config) async {
+    final entries = await db.duesDao.getAllEntriesWithContact();
+    
+    final excel = Excel.createExcel();
+    final sheet = excel['Dues'];
+
+    final headers = ['Contact', 'Amount', 'Type', 'Date', 'Note', 'Settled'];
+    sheet.appendRow(headers.map((h) => TextCellValue(h)).toList());
+
+    for (final e in entries) {
+      final row = <CellValue>[
+        TextCellValue(e.contact.name),
+        DoubleCellValue(e.entry.amount),
+        TextCellValue(e.entry.direction == 'payable' ? 'You Owe' : 'They Owe'),
+        TextCellValue(e.entry.entryDate.substring(0, 10)),
+        TextCellValue(e.entry.note),
+        TextCellValue(e.entry.isSettled ? 'Yes' : 'No'),
+      ];
+      sheet.appendRow(row);
+    }
+
+    return _write(config, excel, 'dues', headers.length, sheet);
+  }
+
+  static Future<String> _write(ExportConfig config, Excel excel, String suffix, int colCount, Sheet sheet) async {
+    excel.setDefaultSheet(sheet.sheetName);
+    if (excel.sheets.containsKey('Sheet1') && sheet.sheetName != 'Sheet1') {
+      excel.delete('Sheet1');
+    }
+
+    for (int i = 0; i < colCount; i++) {
+      sheet.setColumnWidth(i, 15.0);
     }
 
     final bytes = excel.encode();
-    if (bytes == null) throw Exception('Failed to encode XLSX');
-
     final dir = await getTemporaryDirectory();
     final stamp = _stamp(config);
-    final file = File('${dir.path}/spendwise_$stamp.xlsx');
-    await file.writeAsBytes(bytes);
+    final file = File('${dir.path}/spendwise_${suffix}_$stamp.xlsx');
+    await file.writeAsBytes(bytes!);
     return file.path;
   }
 

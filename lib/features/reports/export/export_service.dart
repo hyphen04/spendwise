@@ -14,6 +14,16 @@ enum ExportFormat { pdf, xlsx, csv, json }
 
 enum ExportDateRange { thisMonth, lastMonth, last3Months, last6Months, thisYear, custom }
 
+enum ExportEntity {
+  transactions,
+  dues,
+  accounts,
+  categories,
+  modes,
+  budgets,
+  tags,
+}
+
 enum ExportColumn {
   date,
   time,
@@ -41,7 +51,9 @@ class ExportConfig {
     this.presetAccountId,
     this.presetAccountName,
     DateTime? referenceDate,
+    Set<ExportEntity>? entities,
   })  : columns = columns != null ? Set.of(columns) : Set.of(_defaultColumns),
+        entities = entities != null ? Set.of(entities) : {ExportEntity.transactions},
         _ref = referenceDate ?? DateTime.now();
 
   ExportDateRange dateRange;
@@ -50,19 +62,13 @@ class ExportConfig {
   String? kindFilter;          // null = all, 'income', 'expense'
   Set<String>? accountIds;     // null = all accounts
   Set<ExportColumn> columns;
+  Set<ExportEntity> entities;
   ExportFormat format;
   final String? presetAccountId;
   final String? presetAccountName;
   final DateTime _ref;
 
-  static const _defaultColumns = {
-    ExportColumn.date,
-    ExportColumn.amount,
-    ExportColumn.kind,
-    ExportColumn.account,
-    ExportColumn.category,
-    ExportColumn.note,
-  };
+  static final _defaultColumns = ExportColumn.values.toSet();
 
   String get fromIso {
     switch (dateRange) {
@@ -412,45 +418,49 @@ class _ExportOptionsSheetState extends ConsumerState<_ExportOptionsSheet> {
                   const SizedBox(height: 20),
                 ],
 
-                // ── Columns ─────────────────────────────────────────────
-                _sectionLabel('Columns', cs, tt),
+                const SizedBox(height: 20),
+
+                // ── Entities (JSON ONLY allows multiple) ─────────────────
+                _sectionLabel('Data to Export', cs, tt),
                 const SizedBox(height: 4),
                 Text(
-                  'Tap to toggle. At least one required.',
-                  style: tt.bodySmall
-                      ?.copyWith(color: cs.onSurfaceVariant),
+                  _cfg.format == ExportFormat.json
+                      ? 'Select multiple entities for JSON backup.'
+                      : 'CSV/Excel/PDF only support exporting one entity at a time.',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: ExportColumn.values.map((col) {
-                    final label = switch (col) {
-                      ExportColumn.date => 'Date',
-                      ExportColumn.time => 'Time',
-                      ExportColumn.amount => 'Amount',
-                      ExportColumn.kind => 'Type',
-                      ExportColumn.account => 'Account',
-                      ExportColumn.category => 'Category',
-                      ExportColumn.mode => 'Mode',
-                      ExportColumn.note => 'Note',
-                      ExportColumn.id => 'ID',
-                      ExportColumn.createdAt => 'Created At',
+                  children: ExportEntity.values.map((ent) {
+                    final label = switch (ent) {
+                      ExportEntity.transactions => 'Transactions',
+                      ExportEntity.dues => 'Dues & Tabs',
+                      ExportEntity.accounts => 'Accounts',
+                      ExportEntity.categories => 'Categories',
+                      ExportEntity.modes => 'Modes',
+                      ExportEntity.budgets => 'Budgets',
+                      ExportEntity.tags => 'Tags',
                     };
-                    final selected = _cfg.columns.contains(col);
-                    final isOnlyOne = _cfg.columns.length == 1 && selected;
+                    final selected = _cfg.entities.contains(ent);
+                    final isOnlyOne = _cfg.entities.length == 1 && selected;
                     return _chip(
                       label: label,
                       selected: selected,
-                      onSelected: isOnlyOne
-                          ? null
-                          : () => setState(() {
-                                if (selected) {
-                                  _cfg.columns.remove(col);
-                                } else {
-                                  _cfg.columns.add(col);
-                                }
-                              }),
+                      onSelected: () => setState(() {
+                        if (_cfg.format != ExportFormat.json) {
+                          // Force single selection
+                          _cfg.entities = {ent};
+                        } else {
+                          // Multi-selection for JSON
+                          if (selected) {
+                            if (!isOnlyOne) _cfg.entities.remove(ent);
+                          } else {
+                            _cfg.entities.add(ent);
+                          }
+                        }
+                      }),
                     );
                   }).toList(),
                 ),
@@ -473,8 +483,14 @@ class _ExportOptionsSheetState extends ConsumerState<_ExportOptionsSheet> {
                       _chip(
                         label: entry.$2,
                         selected: _cfg.format == entry.$1,
-                        onSelected: () =>
-                            setState(() => _cfg.format = entry.$1),
+                        onSelected: () => setState(() {
+                              _cfg.format = entry.$1;
+                              if (entry.$1 != ExportFormat.json &&
+                                  _cfg.entities.length > 1) {
+                                // If switching away from JSON, restrict to one entity
+                                _cfg.entities = {_cfg.entities.first};
+                              }
+                            }),
                         avatar: Icon(
                           entry.$3,
                           size: 16,

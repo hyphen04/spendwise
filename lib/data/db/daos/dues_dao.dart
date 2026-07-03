@@ -13,6 +13,12 @@ class DueSettlementWithCount {
   DueSettlementWithCount(this.settlement, this.entryCount);
 }
 
+class DueEntryWithContact {
+  final DueEntry entry;
+  final DueContact contact;
+  DueEntryWithContact(this.entry, this.contact);
+}
+
 @DriftAccessor(tables: [DueContacts, DueEntries, DueSettlements, Transactions])
 class DuesDao extends DatabaseAccessor<AppDatabase> with _$DuesDaoMixin {
   DuesDao(super.db);
@@ -41,6 +47,20 @@ class DuesDao extends DatabaseAccessor<AppDatabase> with _$DuesDaoMixin {
 
   Future<void> deleteEntry(String id) =>
       (delete(dueEntries)..where((e) => e.id.equals(id))).go();
+
+  Future<List<DueEntryWithContact>> getAllEntriesWithContact() async {
+    final query = select(dueEntries).join([
+      innerJoin(dueContacts, dueContacts.id.equalsExp(dueEntries.contactId)),
+    ])..orderBy([OrderingTerm.desc(dueEntries.entryDate)]);
+
+    final rows = await query.get();
+    return rows.map((row) {
+      return DueEntryWithContact(
+        row.readTable(dueEntries),
+        row.readTable(dueContacts),
+      );
+    }).toList();
+  }
 
   // --- Settlements ---
 

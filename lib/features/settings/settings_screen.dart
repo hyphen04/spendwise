@@ -1,5 +1,6 @@
 import 'dart:io';
-
+import 'package:drift/drift.dart' show Value;
+import '../../data/db/app_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -17,7 +18,6 @@ import '../../state/database_provider.dart';
 import '../../state/prefs_providers.dart';
 import 'update_check_dialog.dart';
 import '../reports/export/export_service.dart';
-import '../reports/export/dues_export_service.dart';
 import '../reports/import/import_service.dart';
 import '../../services/database_backup_service.dart';
 import 'manage_backups_screen.dart';
@@ -269,8 +269,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
       builder: (ctx) => AlertDialog(
         title: const Text('Clear all data?'),
         content: const Text(
-            'This deletes all transactions and budgets. '
-            'Accounts, categories, and modes are kept. This cannot be undone.'),
+            'This deletes all transactions, dues, and budgets, and resets account balances to zero. '
+            'Your accounts, categories, and modes are kept. This cannot be undone.'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
@@ -289,7 +289,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
     final db = ref.read(appDatabaseProvider);
     await db.transaction(() async {
       await db.delete(db.transactions).go();
+      await db.delete(db.transactionTags).go();
+      await db.delete(db.dueEntries).go();
+      await db.delete(db.dueSettlements).go();
+      await db.delete(db.dueContacts).go();
       await db.delete(db.budgets).go();
+      await db.update(db.accounts).write(
+          const AccountsCompanion(openingBalance: Value(0.0)));
     });
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -397,6 +403,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                     ),
                   ),
                   onTap: () => _showColorPicker(context, ref),
+                ),
+              ],
+            ),
+          ),
+
+          // ── Home Screen ───────────────────────────────────────────────────────
+          _sectionHeader('Home Screen', context),
+          Card(
+            child: Column(
+              children: [
+                SwitchListTile(
+                  title: const Text('Quick Dues Widget'),
+                  subtitle: const Text('Show quick dues entry on home screen'),
+                  secondary: const Icon(Icons.flash_on_rounded),
+                  value: ref.watch(showQuickDuesProvider),
+                  onChanged: (v) => ref.read(showQuickDuesProvider.notifier).set(v),
                 ),
               ],
             ),
@@ -527,17 +549,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                         defaultTo: DateTime(now.year, now.month + 1).toIso8601String());
                   },
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.import_contacts_outlined),
-                  title: const Text('Export Dues & Tabs (CSV)'),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () {
-                    final db = ref.read(appDatabaseProvider);
-                    DuesExportService.exportToCsv(db);
-                  },
-                ),
-                const Divider(height: 1),
+
                 ListTile(
                   leading: const Icon(Icons.download_outlined),
                   title: const Text('Import Data'),

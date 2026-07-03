@@ -149,3 +149,19 @@ class BackupQuotaMbNotifier extends StateNotifier<int> {
     state = v;
   }
 }
+
+// ── Quick Dues Widget ────────────────────────────────────────────────────────
+
+final showQuickDuesProvider =
+    StateNotifierProvider<ShowQuickDuesNotifier, bool>(
+        (ref) => ShowQuickDuesNotifier(ref.watch(prefsServiceProvider)));
+
+class ShowQuickDuesNotifier extends StateNotifier<bool> {
+  ShowQuickDuesNotifier(this._prefs) : super(_prefs.showQuickDuesWidget);
+  final PrefsService _prefs;
+
+  Future<void> set(bool v) async {
+    await _prefs.setShowQuickDuesWidget(v);
+    state = v;
+  }
+}

@@ -1,51 +1,112 @@
 import 'dart:convert';
-import 'import_models.dart';
+import 'package:drift/drift.dart';
+import '../../../data/db/app_database.dart';
 
 class JsonImporter {
-  static List<ParsedRow> parse(String content) {
-    dynamic decoded;
-    try {
-      decoded = jsonDecode(content);
-    } catch (_) {
-      return [const ParsedRow(rowIndex: 0, note: '__JSON_PARSE_ERROR__')];
-    }
-
+  static Future<void> importData(AppDatabase db, String content) async {
+    final decoded = jsonDecode(content);
     if (decoded is! Map<String, dynamic>) {
-      return [const ParsedRow(rowIndex: 0, note: '__JSON_NOT_OBJECT__')];
+      throw Exception('Invalid backup format: Not a JSON object.');
     }
 
-    final txList = decoded['transactions'];
-    if (txList == null || txList is! List) {
-      return [const ParsedRow(rowIndex: 0, note: '__NO_TRANSACTIONS_KEY__')];
+    final data = decoded['data'];
+    if (data is! Map<String, dynamic>) {
+      throw Exception('Invalid backup format: Missing "data" key.');
     }
 
-    String? toStr(dynamic value) {
-      if (value == null) return null;
-      final v = value.toString().trim();
-      return v.isEmpty ? null : v;
-    }
+    await db.transaction(() async {
+      // 1. Core Lookups
+      if (data.containsKey('accounts')) {
+        for (final item in data['accounts']) {
+          await db.into(db.accounts).insert(
+                Account.fromJson(item),
+                mode: InsertMode.insertOrReplace,
+              );
+        }
+      }
 
-    final result = <ParsedRow>[];
-    for (var i = 0; i < txList.length; i++) {
-      final tx = txList[i];
-      if (tx is! Map<String, dynamic>) continue;
+      if (data.containsKey('categories')) {
+        for (final item in data['categories']) {
+          await db.into(db.categories).insert(
+                Category.fromJson(item),
+                mode: InsertMode.insertOrReplace,
+              );
+        }
+      }
 
-      // Skip EXAMPLE rows
-      final note = toStr(tx['note']) ?? '';
-      if (note.toLowerCase().startsWith('example')) continue;
+      if (data.containsKey('modes')) {
+        for (final item in data['modes']) {
+          await db.into(db.modes).insert(
+                Mode.fromJson(item),
+                mode: InsertMode.insertOrReplace,
+              );
+        }
+      }
 
-      result.add(ParsedRow(
-        rowIndex: i + 1,
-        rawDate: toStr(tx['date']),
-        rawTime: toStr(tx['time']),
-        rawAmount: toStr(tx['amount']),
-        kind: toStr(tx['kind']),
-        account: toStr(tx['account']),
-        category: toStr(tx['category']),
-        mode: toStr(tx['mode']),
-        note: toStr(tx['note']),
-      ));
-    }
-    return result;
+      if (data.containsKey('tags')) {
+        for (final item in data['tags']) {
+          await db.into(db.tags).insert(
+                Tag.fromJson(item),
+                mode: InsertMode.insertOrReplace,
+              );
+        }
+      }
+
+      // 2. Dependents
+      if (data.containsKey('budgets')) {
+        for (final item in data['budgets']) {
+          await db.into(db.budgets).insert(
+                Budget.fromJson(item),
+                mode: InsertMode.insertOrReplace,
+              );
+        }
+      }
+
+      if (data.containsKey('due_contacts')) {
+        for (final item in data['due_contacts']) {
+          await db.into(db.dueContacts).insert(
+                DueContact.fromJson(item),
+                mode: InsertMode.insertOrReplace,
+              );
+        }
+      }
+
+      // 3. Foreign key constraints dependents
+      if (data.containsKey('transactions')) {
+        for (final item in data['transactions']) {
+          await db.into(db.transactions).insert(
+                Transaction.fromJson(item),
+                mode: InsertMode.insertOrReplace,
+              );
+        }
+      }
+
+      if (data.containsKey('transaction_tags')) {
+        for (final item in data['transaction_tags']) {
+          await db.into(db.transactionTags).insert(
+                TransactionTag.fromJson(item),
+                mode: InsertMode.insertOrReplace,
+              );
+        }
+      }
+
+      if (data.containsKey('due_entries')) {
+        for (final item in data['due_entries']) {
+          await db.into(db.dueEntries).insert(
+                DueEntry.fromJson(item),
+                mode: InsertMode.insertOrReplace,
+              );
+        }
+      }
+
+      if (data.containsKey('due_settlements')) {
+        for (final item in data['due_settlements']) {
+          await db.into(db.dueSettlements).insert(
+                DueSettlement.fromJson(item),
+                mode: InsertMode.insertOrReplace,
+              );
+        }
+      }
+    });
   }
 }

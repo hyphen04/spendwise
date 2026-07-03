@@ -9,6 +9,7 @@ import 'csv_importer.dart';
 import 'import_models.dart';
 import 'import_preview_sheet.dart';
 import 'json_importer.dart';
+import 'raw_db_importer.dart';
 import 'template_generator.dart';
 import 'xlsx_importer.dart';
 
@@ -59,6 +60,8 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
           path = await TemplateGenerator.generateXlsx(widget.db);
         case ImportFormat.json:
           path = await TemplateGenerator.generateJson(widget.db);
+        case ImportFormat.rawDbZip:
+          throw Exception('No template for raw db backup.');
       }
       await SharePlus.instance.share(
         ShareParams(
@@ -88,6 +91,7 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
       ImportFormat.csv => 'csv',
       ImportFormat.xlsx => 'xlsx',
       ImportFormat.json => 'json',
+      ImportFormat.rawDbZip => 'zip',
     };
 
     FilePickerResult? result;
@@ -119,6 +123,63 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
       _loadingMessage = 'Parsing file…';
     });
 
+    if (_format == ImportFormat.rawDbZip) {
+      if (!mounted) return;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Restore Raw Database'),
+          content: const Text(
+            'WARNING: This will permanently delete ALL your current data and replace it entirely with the backup.\n\nAre you sure you want to proceed?',
+            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Theme.of(context).colorScheme.onError,
+              ),
+              child: const Text('Delete & Restore'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed != true) return;
+      if (!mounted) return;
+
+      setState(() {
+        _step = _Step.loading;
+        _loadingMessage = 'Restoring raw db backup…';
+      });
+      try {
+        await RawDbImporter.importData(widget.db, picked.path!);
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Backup restored successfully.'),
+                behavior: SnackBarBehavior.floating),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _step = _Step.options);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Failed to restore raw db backup: $e'),
+                behavior: SnackBarBehavior.floating),
+          );
+        }
+      }
+      return;
+    }
+
     List<ParsedRow> parsed;
     try {
       parsed = await _parse(picked);
@@ -131,6 +192,40 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
             behavior: SnackBarBehavior.floating,
           ),
         );
+      }
+      return;
+    }
+
+    if (_format == ImportFormat.json) {
+      setState(() {
+        _step = _Step.loading;
+        _loadingMessage = 'Restoring backup…';
+      });
+
+      try {
+        final bytes = picked.bytes;
+        final String content = bytes != null
+            ? String.fromCharCodes(bytes)
+            : await File(picked.path!).readAsString();
+        await JsonImporter.importData(widget.db, content);
+
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Backup restored successfully.'),
+                behavior: SnackBarBehavior.floating),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _step = _Step.options);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Failed to restore backup: $e'),
+                behavior: SnackBarBehavior.floating),
+          );
+        }
       }
       return;
     }
@@ -249,14 +344,8 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
         return XlsxImporter.parse(data);
 
       case ImportFormat.json:
-        final bytes = picked.bytes;
-        final String content;
-        if (bytes != null) {
-          content = String.fromCharCodes(bytes);
-        } else {
-          content = await File(picked.path!).readAsString();
-        }
-        return JsonImporter.parse(content);
+      case ImportFormat.rawDbZip:
+        return []; // Handled separately
     }
   }
 
@@ -320,6 +409,7 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
                   (ImportFormat.xlsx, 'Excel', Icons.table_chart_outlined),
                   (ImportFormat.csv, 'CSV', Icons.view_list_outlined),
                   (ImportFormat.json, 'JSON', Icons.data_object_outlined),
+                  (ImportFormat.rawDbZip, 'Raw DB Zip', Icons.folder_zip_outlined),
                 ])
                   _chip(
                     label: label,
@@ -343,6 +433,8 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
                   'Single sheet. Includes your accounts, categories, and modes as comments at the bottom for reference.',
                 ImportFormat.json =>
                   'Full envelope format with a reference section. Great for round-tripping data.',
+                ImportFormat.rawDbZip =>
+                  'Restores your entire database directly from a raw backup zip file. Flexible and handles migrations natively.',
               },
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
@@ -353,12 +445,14 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
             _sectionLabel('Actions', cs, tt),
             const SizedBox(height: 10),
 
-            OutlinedButton.icon(
-              onPressed: _downloadTemplate,
-              icon: const Icon(Icons.download_outlined, size: 18),
-              label: const Text('Download Template'),
-            ),
-            const SizedBox(height: 10),
+            if (_format != ImportFormat.rawDbZip) ...[
+              OutlinedButton.icon(
+                onPressed: _downloadTemplate,
+                icon: const Icon(Icons.download_outlined, size: 18),
+                label: const Text('Download Template'),
+              ),
+              const SizedBox(height: 10),
+            ],
             FilledButton.icon(
               onPressed: _pickAndImport,
               icon: const Icon(Icons.upload_file_rounded, size: 18),
