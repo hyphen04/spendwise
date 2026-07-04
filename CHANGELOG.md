@@ -5,6 +5,22 @@ Format: `## vX.X.X — YYYY-MM-DD` with Added / Changed / Fixed sections.
 
 ---
 
+## v2.8.0 — 2026-07-04
+
+### Added
+- **Quick Dues Widget**: A new, modern, minimalist Neo-bank style Quick Dues widget on the Home Screen for fast entry.
+- **Dynamic Entry Highlights**: The add entry dialog now dynamically highlights red or green depending on if you are adding a Payable or Receivable.
+- **Widget Toggle**: Added a setting to easily toggle the Quick Dues widget on and off from the home screen.
+- **Raw Database Import**: Introduced support for importing raw database backups directly.
+- **Privacy Mode**: Added a convenient eye-icon toggle next to the Total Net Worth on the home screen to hide/reveal your balance like a bank app. This defaults to hidden for privacy.
+
+### Changed
+- Replaced the horizontal segmented control in quick dues with an intuitive side-by-side action button layout.
+- Upgraded the "Swipe to Add" experience with contextual dynamic colors.
+- Upgraded the Total Net Worth font to a futuristic, geometric style (Orbitron) for a more striking appearance.
+
+---
+
 ## v2.7.0 — 2026-07-02
 
 ### Added
