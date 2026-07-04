@@ -161,11 +161,12 @@ class HomeScreen extends ConsumerWidget {
                       ref.watch(hideNetWorthProvider)
                           ? '••••••••'
                           : '${totalNetWorth >= 0 ? '' : '−'}₹${NumberFormat('#,##,##0.00', 'en_IN').format(totalNetWorth.abs())}',
-                      style: GoogleFonts.shareTechMono(
+                      style: GoogleFonts.orbitron(
                         fontSize: 52,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w700,
                         color: cs.onSurface,
-                        letterSpacing: -1.5,
+                        letterSpacing: -1.0,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                   ).animate().fadeIn(delay: 60.ms).slideY(
