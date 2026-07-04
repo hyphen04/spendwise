@@ -127,28 +127,45 @@ class HomeScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Caption: "Total Net Worth"
-                  Text(
-                    'total net worth',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: cs.onSurfaceVariant,
-                      letterSpacing: 0.5,
-                    ),
-                  ).animate().fadeIn(delay: 40.ms),
+                  // Caption: "Total Net Worth" + Visibility Toggle
+                  Row(
+                    children: [
+                      Text(
+                        'total net worth',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: cs.onSurfaceVariant,
+                          letterSpacing: 0.5,
+                        ),
+                      ).animate().fadeIn(delay: 40.ms),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () {
+                          final current = ref.read(hideNetWorthProvider);
+                          ref.read(hideNetWorthProvider.notifier).set(!current);
+                        },
+                        child: Icon(
+                          ref.watch(hideNetWorthProvider) ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                          size: 16,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 6),
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      '${totalNetWorth >= 0 ? '' : '−'}₹${NumberFormat('#,##,##0.00', 'en_IN').format(totalNetWorth.abs())}',
-                      style: GoogleFonts.outfit(
+                      ref.watch(hideNetWorthProvider)
+                          ? '••••••••'
+                          : '${totalNetWorth >= 0 ? '' : '−'}₹${NumberFormat('#,##,##0.00', 'en_IN').format(totalNetWorth.abs())}',
+                      style: GoogleFonts.shareTechMono(
                         fontSize: 52,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w500,
                         color: cs.onSurface,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                        height: 1.0,
+                        letterSpacing: -1.5,
                       ),
                     ),
                   ).animate().fadeIn(delay: 60.ms).slideY(

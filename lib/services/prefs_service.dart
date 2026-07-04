@@ -16,6 +16,9 @@ class PrefsService {
   bool get oledDark => _prefs.getBool('oled_dark') ?? false;
   Future<void> setOledDark(bool v) => _prefs.setBool('oled_dark', v);
 
+  bool get hideNetWorth => _prefs.getBool('hide_net_worth') ?? false;
+  Future<void> setHideNetWorth(bool v) => _prefs.setBool('hide_net_worth', v);
+
   int get themeSeedColor => _prefs.getInt('theme_seed_color') ?? 0xFF0A0A0A; // Default to Black
   Future<void> setThemeSeedColor(int v) => _prefs.setInt('theme_seed_color', v);
 

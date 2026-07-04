@@ -40,6 +40,22 @@ class OledDarkNotifier extends StateNotifier<bool> {
   }
 }
 
+// ── Hide Net Worth ───────────────────────────────────────────────────────────
+
+final hideNetWorthProvider =
+    StateNotifierProvider<HideNetWorthNotifier, bool>(
+        (ref) => HideNetWorthNotifier(ref.watch(prefsServiceProvider)));
+
+class HideNetWorthNotifier extends StateNotifier<bool> {
+  HideNetWorthNotifier(this._prefs) : super(_prefs.hideNetWorth);
+  final PrefsService _prefs;
+
+  Future<void> set(bool v) async {
+    await _prefs.setHideNetWorth(v);
+    state = v;
+  }
+}
+
 // ── Theme Seed Color ────────────────────────────────────────────────────────
 
 final themeSeedColorProvider =
