@@ -94,6 +94,51 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
     if (mounted) Navigator.pop(context);
   }
 
+  Future<void> _delete() async {
+    final repo = ref.read(duesRepositoryProvider);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final nav = Navigator.of(context);
+    
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Contact?'),
+        content: const Text('Are you sure you want to delete this contact? You cannot undo this action.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await repo.deleteContact(widget.existingContact!.id);
+      if (mounted) {
+        nav.pop(); // close sheet
+        nav.pop(); // close detail screen
+      }
+    } catch (e) {
+      if (mounted) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: const Text('Cannot delete contact. Settle or delete their entries first.'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -272,6 +317,16 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
               onPressed: _nameCtrl.text.trim().isNotEmpty ? _save : null,
               child: Text(isUpdate ? 'Save Changes' : 'Create Contact'),
             ),
+            if (isUpdate) ...[
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: _delete,
+                style: TextButton.styleFrom(
+                  foregroundColor: cs.error,
+                ),
+                child: const Text('Delete Contact'),
+              ),
+            ],
           ],
         ),
       ),

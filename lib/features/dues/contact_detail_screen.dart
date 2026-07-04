@@ -156,10 +156,12 @@ class ContactDetailScreen extends ConsumerWidget {
                             onDismissed: (_) {
                               ref.read(duesRepositoryProvider).deleteEntry(e.id);
                             },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
-                              child: Row(
-                                      children: [
+                            child: InkWell(
+                              onTap: () => showAddDueEntrySheet(context, prefilledContact: contact, existingEntry: e),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+                                child: Row(
+                                        children: [
                                         Container(
                                           width: 40,
                                           height: 40,
@@ -230,6 +232,7 @@ class ContactDetailScreen extends ConsumerWidget {
                                         ),
                                       ],
                                     ),
+                              ),
                             ),
                           );
                         },

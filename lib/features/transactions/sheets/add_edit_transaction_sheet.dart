@@ -5,6 +5,7 @@ import '../../../data/validators.dart';
 import '../../../state/manage_providers.dart';
 import '../../../state/transactions_providers.dart';
 import '../../../utils/amount_input_formatter.dart';
+import '../../../widgets/swipe_action_button.dart';
 import 'amount_entry_sheet.dart';
 
 // ── Mode filtering helpers ────────────────────────────────────────────────────
@@ -203,6 +204,19 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
     }
   }
 
+  bool get _isFormValid {
+    final amtStr = _amountCtrl.text.replaceAll(',', '');
+    final amt = double.tryParse(amtStr) ?? 0;
+    if (amt <= 0) return false;
+    
+    if (_isTransfer) {
+      if (_accountId == null || _toAccountId == null || _accountId == _toAccountId) return false;
+    } else {
+      if (_accountId == null || _categoryId == null || _modeId == null) return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -277,6 +291,7 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
                   fontFeatures: [FontFeature.tabularFigures()],
                 ),
                 validator: AppValidators.amount,
+                onChanged: (_) => setState(() {}),
                 autofocus: !_isEditing,
               ),
               const SizedBox(height: 16),
@@ -406,15 +421,11 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
 
               const SizedBox(height: 28),
 
-              FilledButton(
-                onPressed: _saving ? null : _save,
-                child: _saving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(_isEditing ? 'Save Changes' : 'Add Transaction'),
+              SwipeActionButton(
+                label: _isEditing ? 'Swipe to Save' : 'Swipe to Add',
+                color: Theme.of(context).colorScheme.primary,
+                enabled: !_saving && _isFormValid,
+                onAction: _save,
               ),
             ],
           ),

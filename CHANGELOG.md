@@ -3,6 +3,16 @@
 All notable changes to SpendWise are listed here.
 Format: `## vX.X.X — YYYY-MM-DD` with Added / Changed / Fixed sections.
 
+## v2.9.1 — 2026-07-04
+
+### Added
+- **Dues Management Enhancements**: Added the ability to edit unsettled due entries directly from the contact detail screen and the option to delete a contact entirely (provided they have no active entries).
+
+### Changed
+- **Swipe-to-Add Interactions**: Replaced standard "Add Transaction" buttons with a sleek "Swipe to Add/Save" component in the transaction sheets to match the settlement sheet design. The swipe action gracefully stays disabled until all required fields are filled out.
+
+---
+
 ---
 
 ## v2.9.0 — 2026-07-04

@@ -154,6 +154,29 @@ class DuesRepository {
     return id;
   }
 
+  Future<void> updateEntry(
+    DueEntry existing, {
+    required double amount,
+    required String direction,
+    required DateTime date,
+    String? mealSlot,
+    required String note,
+  }) async {
+    await _db.duesDao.upsertEntry(
+      DueEntriesCompanion(
+        id: Value(existing.id),
+        contactId: Value(existing.contactId),
+        amount: Value(amount),
+        direction: Value(direction),
+        entryDate: Value(date.toIso8601String()),
+        mealSlot: Value(mealSlot),
+        note: Value(note),
+        createdAt: Value(existing.createdAt),
+        updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+      ),
+    );
+  }
+
   Future<void> deleteEntry(String id) => _db.duesDao.deleteEntry(id);
 
   // --- Settlements ---

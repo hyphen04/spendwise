@@ -8,6 +8,7 @@ import '../../../data/db/app_database.dart';
 import '../../../state/manage_providers.dart';
 import '../../../state/prefs_providers.dart';
 import '../../../state/transactions_providers.dart';
+import '../../../widgets/swipe_action_button.dart';
 
 Future<void> showAmountEntrySheet(
   BuildContext context, {
@@ -441,6 +442,15 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
     final cashMode = _cashMode(modes);
     final visibleModes = cashAccount ? (cashMode != null ? [cashMode] : modes) : _digitalModes(modes);
 
+    bool isValid = _amount > 0;
+    if (_isTransfer) {
+      isValid = isValid && _fromAccountId != null && _toAccountId != null && _fromAccountId != _toAccountId;
+    } else {
+      isValid = isValid && _accountId != null && _categoryId != null;
+    }
+    final effectiveModeId = (cashAccount && cashMode != null) ? cashMode.id : _modeId;
+    isValid = isValid && effectiveModeId != null;
+
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
@@ -579,15 +589,11 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
             const SizedBox(height: 24),
 
             // ── Save ──────────────────────────────────────────────────────
-            FilledButton(
-              onPressed: _saving ? null : _save,
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: _saving
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Add Transaction'),
+            SwipeActionButton(
+              label: 'Swipe to Add',
+              color: Theme.of(context).colorScheme.primary,
+              enabled: !_saving && isValid,
+              onAction: _save,
             ),
           ],
         ),

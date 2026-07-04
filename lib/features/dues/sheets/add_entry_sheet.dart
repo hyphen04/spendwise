@@ -11,18 +11,23 @@ import '../../../app/widgets/date_strip.dart';
 Future<void> showAddDueEntrySheet(
   BuildContext context, {
   DueContact? prefilledContact,
+  DueEntry? existingEntry,
 }) {
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
-    builder: (context) => _AddEntrySheet(prefilledContact: prefilledContact),
+    builder: (context) => _AddEntrySheet(
+      prefilledContact: prefilledContact,
+      existingEntry: existingEntry,
+    ),
   );
 }
 
 class _AddEntrySheet extends ConsumerStatefulWidget {
-  const _AddEntrySheet({this.prefilledContact});
+  const _AddEntrySheet({this.prefilledContact, this.existingEntry});
   final DueContact? prefilledContact;
+  final DueEntry? existingEntry;
 
   @override
   ConsumerState<_AddEntrySheet> createState() => _AddEntrySheetState();
@@ -40,10 +45,19 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
   void initState() {
     super.initState();
     _selectedContact = widget.prefilledContact;
-    _noteCtrl = TextEditingController(text: _selectedContact?.defaultNote ?? '');
     
-    if (_selectedContact != null && _selectedContact!.defaultAmount != null) {
-      _amount = _selectedContact!.defaultAmount!.toStringAsFixed(0);
+    if (widget.existingEntry != null) {
+      final e = widget.existingEntry!;
+      _amount = e.amount.toStringAsFixed(0);
+      _direction = e.direction;
+      _date = DateTime.parse(e.entryDate);
+      _mealSlot = e.mealSlot;
+      _noteCtrl = TextEditingController(text: e.note);
+    } else {
+      _noteCtrl = TextEditingController(text: _selectedContact?.defaultNote ?? '');
+      if (_selectedContact != null && _selectedContact!.defaultAmount != null) {
+        _amount = _selectedContact!.defaultAmount!.toStringAsFixed(0);
+      }
     }
   }
 
@@ -78,14 +92,25 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
     if (amt <= 0 || _selectedContact == null) return;
 
     final repo = ref.read(duesRepositoryProvider);
-    await repo.addEntry(
-      contactId: _selectedContact!.id,
-      amount: amt,
-      direction: _direction,
-      date: _date,
-      mealSlot: _selectedContact!.type == 'vendor' ? _mealSlot : null,
-      note: _noteCtrl.text.trim(),
-    );
+    if (widget.existingEntry != null) {
+      await repo.updateEntry(
+        widget.existingEntry!,
+        amount: amt,
+        direction: _direction,
+        date: _date,
+        mealSlot: _selectedContact!.type == 'vendor' ? _mealSlot : null,
+        note: _noteCtrl.text.trim(),
+      );
+    } else {
+      await repo.addEntry(
+        contactId: _selectedContact!.id,
+        amount: amt,
+        direction: _direction,
+        date: _date,
+        mealSlot: _selectedContact!.type == 'vendor' ? _mealSlot : null,
+        note: _noteCtrl.text.trim(),
+      );
+    }
     
     if (mounted) Navigator.pop(context);
   }
