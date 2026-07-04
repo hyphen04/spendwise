@@ -116,12 +116,44 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
     setState(() => _step = 1);
   }
 
-  bool get _canSave => _isTransfer
-      ? (_fromAccountId != null && _toAccountId != null && _modeId != null)
-      : (_accountId != null && _categoryId != null && _modeId != null);
-
   Future<void> _save() async {
-    if (!_canSave) return;
+    final accounts = ref.read(accountsStreamProvider).valueOrNull ?? [];
+    final modes = ref.read(modesStreamProvider).valueOrNull ?? [];
+    final modeSourceId = _isTransfer ? _fromAccountId : _accountId;
+    final effectiveModeId = _isCashAccount(modeSourceId, accounts) ? _cashMode(modes)?.id : _modeId;
+
+    if (_isTransfer) {
+      if (_fromAccountId == null) {
+        _showError('Please select a From Account.');
+        return;
+      }
+      if (_toAccountId == null) {
+        _showError('Please select a To Account.');
+        return;
+      }
+      if (_fromAccountId == _toAccountId) {
+        _showError('From and To accounts cannot be the same.');
+        return;
+      }
+      if (effectiveModeId == null) {
+        _showError('Please select a Payment Mode.');
+        return;
+      }
+    } else {
+      if (_accountId == null) {
+        _showError('Please select an Account.');
+        return;
+      }
+      if (_categoryId == null) {
+        _showError('Please select a Category.');
+        return;
+      }
+      if (effectiveModeId == null) {
+        _showError('Please select a Payment Mode.');
+        return;
+      }
+    }
+
     final date = DateTime(
       _selectedDate.year,
       _selectedDate.month,
@@ -137,7 +169,7 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
           transactionDate: date,
           fromAccountId: _fromAccountId!,
           toAccountId: _toAccountId!,
-          modeId: _modeId!,
+          modeId: effectiveModeId,
           note: _noteCtrl.text.trim(),
         );
       } else {
@@ -146,23 +178,24 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
           transactionDate: date,
           accountId: _accountId!,
           categoryId: _categoryId!,
-          modeId: _modeId!,
+          modeId: effectiveModeId,
           kind: _kind,
           note: _noteCtrl.text.trim(),
         );
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(e.toString()),
-              behavior: SnackBarBehavior.floating),
-        );
-      }
+      _showError(e.toString());
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  void _showError(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
+    );
   }
 
   Future<void> _pickDate() async {
@@ -547,7 +580,7 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
 
             // ── Save ──────────────────────────────────────────────────────
             FilledButton(
-              onPressed: (_saving || !_canSave) ? null : _save,
+              onPressed: _saving ? null : _save,
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

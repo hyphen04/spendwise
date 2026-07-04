@@ -160,6 +160,31 @@ class ReportsRepository {
     return result;
   }
 
+  Future<List<DayTotal>> dailyTotals(int year, int month) async {
+    final result = <DayTotal>[];
+    final numDays = DateTime(year, month + 1, 0).day;
+    for (int d = 1; d <= numDays; d++) {
+      final from = DateTime(year, month, d).toIso8601String();
+      final to = DateTime(year, month, d + 1).toIso8601String();
+      final rows = await _db.customSelect(
+        'SELECT kind, COALESCE(SUM(amount),0) AS total FROM transactions '
+        'WHERE kind IN (\'income\',\'expense\') '
+        'AND transaction_date >= ? AND transaction_date < ? GROUP BY kind',
+        variables: [Variable.withString(from), Variable.withString(to)],
+      ).get();
+      double income = 0, expense = 0;
+      for (final r in rows) {
+        if (r.data['kind'] == 'income') {
+          income = (r.data['total'] as num).toDouble();
+        } else if (r.data['kind'] == 'expense') {
+          expense = (r.data['total'] as num).toDouble();
+        }
+      }
+      result.add(DayTotal(year: year, month: month, day: d, income: income, expense: expense));
+    }
+    return result;
+  }
+
   Future<List<MonthTotal>> cashFlowMonths({int count = 6}) async {
     final now = DateTime.now();
     final result = <MonthTotal>[];

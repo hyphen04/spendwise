@@ -62,7 +62,7 @@ class TransactionTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _HighlightText(
-                    text: isTransfer ? 'Transfer' : row.categoryName,
+                    text: isTransfer ? '${row.accountName} ⇄ ${row.transferPairAccountName}' : row.categoryName,
                     highlight: highlight,
                     baseStyle: GoogleFonts.manrope(
                       fontSize: 15,
@@ -79,7 +79,7 @@ class TransactionTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   _HighlightText(
-                    text: tx.note.isNotEmpty ? tx.note : row.accountName,
+                    text: tx.note.isNotEmpty ? tx.note : (isTransfer ? 'Transfer' : row.accountName),
                     highlight: highlight,
                     baseStyle: GoogleFonts.inter(
                       fontSize: 12,

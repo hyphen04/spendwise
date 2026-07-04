@@ -5,6 +5,18 @@ Format: `## vX.X.X — YYYY-MM-DD` with Added / Changed / Fixed sections.
 
 ---
 
+## v2.9.0 — 2026-07-04
+
+### Added
+- **Daily Trends Analysis**: The Monthly Summary report now features deep day-by-day analysis, complete with daily income vs expense bar charts and cumulative wealth growth tracking.
+- **Smart Insights**: Added intelligent insight cards to all major reports, automatically summarizing peak spending days, top categories, and positive cashflow periods.
+- **Contextual Time Selector**: Time navigation (Month/Year selectors) has been moved into the individual reports, giving you precise control exactly where you need it.
+
+### Changed
+- **Reports Dashboard Redesign**: The main Reports hub has been transformed from a standard list into a sleek, responsive, and flat-design Bento Grid layout.
+
+---
+
 ## v2.8.0 — 2026-07-04
 
 ### Added

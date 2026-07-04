@@ -110,13 +110,14 @@ class _BudgetCard extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 6),
               Text(
-                '₹${_fmt(progress.spent)} / ₹${_fmt(progress.budget.amount)}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: isOver ? cs.error : cs.onSurfaceVariant,
-                      fontWeight: isOver ? FontWeight.w600 : null,
-                    ),
+                '₹${_fmt(progress.spent)} / ₹${_fmt(progress.effectiveAmount)}',
+                style: TextStyle(
+                  color: isOver ? cs.error : cs.onSurfaceVariant,
+                  fontSize: 12,
+                  fontWeight: isOver ? FontWeight.w600 : null,
+                ),
               ),
             ],
           ),

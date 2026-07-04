@@ -1,33 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../state/reports_providers.dart';
+import '../widgets/insight_card.dart';
+import '../widgets/report_period_app_bar.dart';
 
-class ModeBreakdownReport extends ConsumerWidget {
-  const ModeBreakdownReport({
-    super.key,
-    required this.from,
-    required this.to,
-    required this.monthLabel,
-  });
-  final String from;
-  final String to;
-  final String monthLabel;
+const _months = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+];
+
+class ModeBreakdownReport extends ConsumerStatefulWidget {
+  const ModeBreakdownReport({super.key, required this.year, required this.month});
+  final int year;
+  final int month;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ModeBreakdownReport> createState() => _ModeBreakdownReportState();
+}
+
+class _ModeBreakdownReportState extends ConsumerState<ModeBreakdownReport> {
+  late int _currentYear;
+  late int _currentMonth;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentYear = widget.year;
+    _currentMonth = widget.month;
+  }
+
+  void _previousMonth() {
+    setState(() {
+      if (_currentMonth == 1) {
+        _currentMonth = 12;
+        _currentYear--;
+      } else {
+        _currentMonth--;
+      }
+    });
+  }
+
+  void _nextMonth() {
+    setState(() {
+      if (_currentMonth == 12) {
+        _currentMonth = 1;
+        _currentYear++;
+      } else {
+        _currentMonth++;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final async = ref.watch(modeBreakdownProvider((from, to)));
+    
+    final fromIso = DateTime(_currentYear, _currentMonth).toIso8601String();
+    final toIso = DateTime(_currentYear, _currentMonth + 1).toIso8601String();
+    final monthLabel = '${_months[_currentMonth - 1]} $_currentYear';
+    
+    final now = DateTime.now();
+    final isCurrentOrFuture = _currentYear > now.year || (_currentYear == now.year && _currentMonth >= now.month);
+    
+    final async = ref.watch(modeBreakdownProvider((fromIso, toIso)));
 
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Mode Breakdown', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-            Text(monthLabel, style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
-          ],
-        ),
+      appBar: ReportPeriodAppBar(
+        title: 'Payment Modes',
+        subtitle: monthLabel,
+        onPrevious: _previousMonth,
+        onNext: _nextMonth,
+        disableNext: isCurrentOrFuture,
       ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -65,6 +108,12 @@ class ModeBreakdownReport extends ConsumerWidget {
                   ],
                 ),
               ),
+              const SizedBox(height: 20),
+              () {
+                final top = modes.first;
+                final pct = (top.total / total * 100).toStringAsFixed(0);
+                return InsightCard(text: 'You primarily use ${top.name} for your transactions, accounting for $pct% of your total spending. Make sure all your ${top.name} expenses are accurately recorded.');
+              }(),
               const SizedBox(height: 20),
               ...modes.map((m) {
                 final fraction = maxAmt > 0

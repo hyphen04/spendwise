@@ -53,17 +53,8 @@ class BudgetsRepository {
   Future<int> delete(String id) => _db.budgetsDao.deleteById(id);
 
   Future<double> spendingForBudget(Budget b, DateTime month) async {
-    DateTime from, to;
-    if (b.period == 'week') {
-      final now = DateTime.now();
-      final monday =
-          now.subtract(Duration(days: now.weekday - 1));
-      from = DateTime(monday.year, monday.month, monday.day);
-      to = from.add(const Duration(days: 7));
-    } else {
-      from = DateTime(month.year, month.month);
-      to = DateTime(month.year, month.month + 1);
-    }
+    final from = DateTime(month.year, month.month);
+    final to = DateTime(month.year, month.month + 1);
 
     final fromIso = from.toIso8601String();
     final toIso = to.toIso8601String();
@@ -103,12 +94,20 @@ class BudgetsRepository {
     final cats = await _db.categoriesDao.getAllActive();
     final catMap = {for (final c in cats) c.id: c};
 
+    final endOfMonth = DateTime(month.year, month.month + 1, 1).subtract(const Duration(seconds: 1));
+
     final result = <BudgetProgress>[];
     for (final b in budgets) {
+      try {
+        final startDate = DateTime.parse(b.startDate);
+        if (startDate.isAfter(endOfMonth)) continue;
+      } catch (_) {} // Fallback if parse fails
+
       final spent = await spendingForBudget(b, month);
       result.add(BudgetProgress(
         budget: b,
         spent: spent,
+        month: month,
         category: catMap[b.categoryId],
       ));
     }

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../data/models/report_models.dart';
 import '../../../state/reports_providers.dart';
 import '../widgets/insight_card.dart';
+import '../widgets/report_period_app_bar.dart';
 
 const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -35,35 +36,12 @@ class _YearlySummaryReportState extends ConsumerState<YearlySummaryReport> {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.chevron_left_rounded),
-              onPressed: () => setState(() => _currentYear--),
-            ),
-            Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Yearly Overview', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                    Text('$_currentYear', style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
-                  ],
-                ),
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.chevron_right_rounded),
-              onPressed: _currentYear < DateTime.now().year
-                  ? () => setState(() => _currentYear++)
-                  : null,
-            ),
-          ],
-        ),
-        centerTitle: true,
+      appBar: ReportPeriodAppBar(
+        title: 'Yearly Overview',
+        subtitle: '$_currentYear',
+        onPrevious: () => setState(() => _currentYear--),
+        onNext: () => setState(() => _currentYear++),
+        disableNext: _currentYear >= DateTime.now().year,
       ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),

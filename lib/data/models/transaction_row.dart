@@ -8,12 +8,14 @@ class TransactionRow {
     this.account,
     this.category,
     this.mode,
+    this.transferPairAccount,
   });
 
   final Transaction transaction;
   final Account? account;
   final Category? category;
   final Mode? mode;
+  final Account? transferPairAccount;
 
   String get accountName => account?.name ?? '—';
   String get accountIcon => account?.icon ?? '🏦';
@@ -22,4 +24,5 @@ class TransactionRow {
   String get categoryColor => category?.color ?? '#475569';
   String get modeIcon => mode?.icon ?? '💳';
   String get modeName => mode?.name ?? '—';
+  String get transferPairAccountName => transferPairAccount?.name ?? '—';
 }

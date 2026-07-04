@@ -99,7 +99,10 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
   }
 
   Future<void> _save() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      _showError('Please check the highlighted fields for errors.');
+      return;
+    }
     final amount = double.parse(
         _amountCtrl.text.trim().replaceAll(',', ''));
     final date = DateTime(
@@ -210,7 +213,7 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
         [];
     final modes = ref.watch(modesStreamProvider).valueOrNull ?? [];
 
-    final modeSourceId = _isTransfer ? null : _accountId;
+    final modeSourceId = _accountId;
     final cashAccount = _isCashAccount(modeSourceId, accounts);
     final cashM = _cashMode(modes);
     final visibleModes = cashAccount ? (cashM != null ? [cashM] : modes) : _digitalModes(modes);
@@ -305,7 +308,10 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
                             child: Text('${a.icon} ${a.name}', overflow: TextOverflow.ellipsis),
                           ))
                       .toList(),
-                  onChanged: (v) => setState(() => _accountId = v),
+                  onChanged: (v) => setState(() {
+                    _accountId = v;
+                    _autoSetMode(v, accounts, modes);
+                  }),
                   validator: (v) =>
                       v == null ? 'Select a source account.' : null,
                 ),

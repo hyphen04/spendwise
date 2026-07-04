@@ -33,12 +33,22 @@ final transactionRowsProvider = Provider<AsyncValue<List<TransactionRow>>>((ref)
     final catMap = {for (final c in catAsync.valueOrNull ?? <Category>[]) c.id: c};
     final modeMap = {for (final m in modeAsync.valueOrNull ?? <Mode>[]) m.id: m};
     return txs
-        .map((tx) => TransactionRow(
-              transaction: tx,
-              account: accMap[tx.accountId],
-              category: catMap[tx.categoryId],
-              mode: modeMap[tx.modeId],
-            ))
+        .map((tx) {
+          Account? pairAccount;
+          if (tx.kind == 'transfer' && tx.transferPairId != null) {
+            final pairTx = txs.where((t) => t.id == tx.transferPairId).firstOrNull;
+            if (pairTx != null) {
+              pairAccount = accMap[pairTx.accountId];
+            }
+          }
+          return TransactionRow(
+            transaction: tx,
+            account: accMap[tx.accountId],
+            category: catMap[tx.categoryId],
+            mode: modeMap[tx.modeId],
+            transferPairAccount: pairAccount,
+          );
+        })
         .toList();
   });
 });

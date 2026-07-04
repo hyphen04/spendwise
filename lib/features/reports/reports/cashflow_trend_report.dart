@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/report_models.dart';
 import '../../../state/reports_providers.dart';
+import '../widgets/insight_card.dart';
 
 class CashflowTrendReport extends ConsumerWidget {
   const CashflowTrendReport({super.key});
@@ -143,7 +144,25 @@ class CashflowTrendReport extends ConsumerWidget {
                   _LegendDot(color: expenseColor, label: 'Expense'),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
+              () {
+                var bestMonth = months.first;
+                for (final m in months) {
+                  if (m.net > bestMonth.net) bestMonth = m;
+                }
+                const monthNames = [
+                  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+                ];
+                final mName = monthNames[bestMonth.month - 1];
+                if (bestMonth.net <= 0) {
+                  return const InsightCard(text: 'You have consistently spent more than you earned over the last 6 months. Reviewing your top expenses could help reverse this trend.');
+                }
+                return InsightCard(
+                  text: 'Your highest net savings in the last 6 months was in $mName (+₹${_MonthRow._fmt(bestMonth.net)}). Compare your current habits to $mName to optimize savings.',
+                );
+              }(),
+              const SizedBox(height: 16),
               // Monthly table
               ...months.map((m) => _MonthRow(month: m)),
             ],

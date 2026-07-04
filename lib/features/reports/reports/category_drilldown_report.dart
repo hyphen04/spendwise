@@ -2,33 +2,76 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../state/reports_providers.dart';
+import '../widgets/insight_card.dart';
+import '../widgets/report_period_app_bar.dart';
 
-class CategoryDrilldownReport extends ConsumerWidget {
-  const CategoryDrilldownReport({
-    super.key,
-    required this.from,
-    required this.to,
-    required this.monthLabel,
-  });
-  final String from;
-  final String to;
-  final String monthLabel;
+const _months = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+];
+
+class CategoryDrilldownReport extends ConsumerStatefulWidget {
+  const CategoryDrilldownReport({super.key, required this.year, required this.month});
+  final int year;
+  final int month;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CategoryDrilldownReport> createState() => _CategoryDrilldownReportState();
+}
+
+class _CategoryDrilldownReportState extends ConsumerState<CategoryDrilldownReport> {
+  late int _currentYear;
+  late int _currentMonth;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentYear = widget.year;
+    _currentMonth = widget.month;
+  }
+
+  void _previousMonth() {
+    setState(() {
+      if (_currentMonth == 1) {
+        _currentMonth = 12;
+        _currentYear--;
+      } else {
+        _currentMonth--;
+      }
+    });
+  }
+
+  void _nextMonth() {
+    setState(() {
+      if (_currentMonth == 12) {
+        _currentMonth = 1;
+        _currentYear++;
+      } else {
+        _currentMonth++;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final async = ref.watch(categoryBreakdownProvider((from, to)));
+    
+    final fromIso = DateTime(_currentYear, _currentMonth).toIso8601String();
+    final toIso = DateTime(_currentYear, _currentMonth + 1).toIso8601String();
+    final monthLabel = '${_months[_currentMonth - 1]} $_currentYear';
+    
+    final now = DateTime.now();
+    final isCurrentOrFuture = _currentYear > now.year || (_currentYear == now.year && _currentMonth >= now.month);
+    
+    final async = ref.watch(categoryBreakdownProvider((fromIso, toIso)));
 
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Categories', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-            Text(monthLabel, style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
-          ],
-        ),
+      appBar: ReportPeriodAppBar(
+        title: 'Category Breakdown',
+        subtitle: monthLabel,
+        onPrevious: _previousMonth,
+        onNext: _nextMonth,
+        disableNext: isCurrentOrFuture,
       ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -50,7 +93,7 @@ class CategoryDrilldownReport extends ConsumerWidget {
             children: [
               // Pie chart
               SizedBox(
-                height: 220,
+                height: 200,
                 child: PieChart(
                   PieChartData(
                     sections: cats.asMap().entries.map((e) {
@@ -58,7 +101,7 @@ class CategoryDrilldownReport extends ConsumerWidget {
                       return PieChartSectionData(
                         value: e.value.total,
                         color: palette[e.key % palette.length],
-                        radius: 80,
+                        radius: 60,
                         title: pct > 0.05
                             ? '${(pct * 100).toStringAsFixed(0)}%'
                             : '',
@@ -69,11 +112,31 @@ class CategoryDrilldownReport extends ConsumerWidget {
                       );
                     }).toList(),
                     sectionsSpace: 2,
-                    centerSpaceRadius: 48,
+                    centerSpaceRadius: 40,
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
+              () {
+                final top1 = cats[0];
+                final top1Pct = ((top1.total / total) * 100).toStringAsFixed(0);
+                if (cats.length == 1) {
+                  return InsightCard(text: 'Your entire spending this month went to ${top1.name} (100%).');
+                }
+                final top2 = cats[1];
+                final top2Pct = ((top2.total / total) * 100).toStringAsFixed(0);
+                final top3Total = cats.take(3).fold<double>(0, (s, c) => s + c.total);
+                final top3Pct = ((top3Total / total) * 100).toStringAsFixed(0);
+                
+                String insight = 'Your top spending category is ${top1.name} ($top1Pct%). It was followed by ${top2.name} ($top2Pct%). ';
+                if (cats.length >= 3) {
+                  insight += 'Together, your top 3 categories account for $top3Pct% of all your expenses this month. Consider setting a budget for ${top1.name} if you want to save more.';
+                } else {
+                  insight += 'Together, they account for $top3Pct% of your expenses.';
+                }
+                return InsightCard(text: insight);
+              }(),
+              const SizedBox(height: 24),
               // Ranked list
               ...cats.asMap().entries.map((e) {
                 final cat = e.value;
