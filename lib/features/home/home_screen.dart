@@ -8,14 +8,13 @@ import '../../app/widgets/smooth_line_chart.dart';
 import '../../data/models/transaction_row.dart';
 import '../../state/home_providers.dart';
 import '../../state/reports_providers.dart';
-import '../../state/transactions_providers.dart';
+
 import '../../services/update_service.dart';
 import '../../state/update_provider.dart';
 import '../../state/prefs_providers.dart';
 import '../search/search_sheet.dart';
 import '../settings/update_check_dialog.dart';
 import '../transactions/sheets/amount_entry_sheet.dart';
-import '../transactions/sheets/add_edit_transaction_sheet.dart';
 import '../transactions/sheets/transaction_detail_sheet.dart';
 import '../transactions/widgets/transaction_tile.dart';
 import 'widgets/home_dues_widget.dart';
@@ -69,7 +68,7 @@ class HomeScreen extends ConsumerWidget {
                     children: [
                       TextSpan(
                         text: 'spend',
-                        style: GoogleFonts.manrope(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 24,
                           fontWeight: FontWeight.w500,
                           color: cs.onSurface,
@@ -79,7 +78,7 @@ class HomeScreen extends ConsumerWidget {
                       ),
                       TextSpan(
                         text: 'wise',
-                        style: GoogleFonts.manrope(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
                           color: cs.primary,
@@ -93,7 +92,7 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: 3),
                 Text(
                   _greeting(),
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
                     color: cs.onSurfaceVariant,
                     fontWeight: FontWeight.w400,
@@ -132,7 +131,7 @@ class HomeScreen extends ConsumerWidget {
                     children: [
                       Text(
                         'total net worth',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: cs.onSurfaceVariant,
@@ -161,7 +160,7 @@ class HomeScreen extends ConsumerWidget {
                       ref.watch(hideNetWorthProvider)
                           ? '••••••••'
                           : '${totalNetWorth >= 0 ? '' : '−'}₹${NumberFormat('#,##,##0.00', 'en_IN').format(totalNetWorth.abs())}',
-                      style: GoogleFonts.orbitron(
+                      style: GoogleFonts.spaceGrotesk(
                         fontSize: 52,
                         fontWeight: FontWeight.w700,
                         color: cs.onSurface,
@@ -178,7 +177,7 @@ class HomeScreen extends ConsumerWidget {
                     children: [
                       Text(
                         'THIS MONTH ($captionMonth)',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: cs.onSurfaceVariant,
@@ -189,7 +188,7 @@ class HomeScreen extends ConsumerWidget {
                       if (summary.income > 0 || summary.expense > 0)
                         Text(
                           '↑ ₹${_fmt(summary.income)}   ↓ ₹${_fmt(summary.expense)}',
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: cs.onSurfaceVariant,
@@ -199,7 +198,7 @@ class HomeScreen extends ConsumerWidget {
                       else
                         Text(
                           'No activity yet',
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                             color: cs.onSurfaceVariant.withValues(alpha: 0.6),
@@ -249,7 +248,7 @@ class HomeScreen extends ConsumerWidget {
                 children: [
                   Text(
                     'recent activity',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: cs.onSurface,
@@ -272,7 +271,7 @@ class HomeScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'Welcome to SpendWise!',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.plusJakartaSans(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: cs.onSurface),
@@ -280,7 +279,7 @@ class HomeScreen extends ConsumerWidget {
                     const SizedBox(height: 8),
                     Text(
                       'Tap + to add your first transaction.',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.plusJakartaSans(
                           fontSize: 14, color: cs.onSurfaceVariant),
                     ),
                   ],
@@ -301,7 +300,7 @@ class HomeScreen extends ConsumerWidget {
                   },
                   child: Text(
                     'View all history →',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: cs.onSurface,
@@ -345,7 +344,7 @@ floatingActionButton: FloatingActionButton(
           padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
           child: Text(
             _humanDate(dateKey),
-            style: GoogleFonts.inter(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: cs.onSurfaceVariant,
@@ -363,14 +362,6 @@ floatingActionButton: FloatingActionButton(
               TransactionTile(
                 row: row,
                 onTap: () => showTransactionDetailSheet(ctx, row: row),
-                onEdit: () =>
-                    showAddEditTransactionSheet(ctx, editing: row.transaction, toAccountId: row.transferPairAccount?.id),
-                onDuplicate: () => ref
-                    .read(transactionsRepositoryProvider)
-                    .duplicate(row.transaction),
-                onDelete: () => ref
-                    .read(transactionsRepositoryProvider)
-                    .delete(row.transaction.id),
               ).animate(delay: Duration(milliseconds: i * 25)).fadeIn(duration: 180.ms),
               if (i < list.length - 1)
                 Divider(

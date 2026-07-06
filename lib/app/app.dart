@@ -23,45 +23,21 @@ class _AppContent extends ConsumerStatefulWidget {
   ConsumerState<_AppContent> createState() => _AppContentState();
 }
 
-class _AppContentState extends ConsumerState<_AppContent>
-    with WidgetsBindingObserver {
+class _AppContentState extends ConsumerState<_AppContent> {
   bool _showWelcome = false;
   bool _showOnboarding = false;
   bool _showLock = false;
-  DateTime? _backgroundedAt;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     final prefs = ref.read(prefsServiceProvider);
     _showWelcome = prefs.isFirstRun;
     _showOnboarding = false;
     if (!_showWelcome && prefs.lockEnabled) _showLock = true;
   }
 
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // paused = Android backgrounded; hidden = iOS before paused when switching apps
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.hidden) {
-      _backgroundedAt = DateTime.now();
-    } else if (state == AppLifecycleState.resumed) {
-      if (!mounted) return;
-      if (!ref.read(lockEnabledProvider)) return;
-      final bg = _backgroundedAt;
-      if (bg == null) return;
-      final elapsed = DateTime.now().difference(bg).inSeconds;
-      final timeout = ref.read(prefsServiceProvider).lockTimeoutSeconds;
-      if (elapsed >= timeout) setState(() => _showLock = true);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

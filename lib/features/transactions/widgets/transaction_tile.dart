@@ -10,17 +10,11 @@ class TransactionTile extends StatelessWidget {
     super.key,
     required this.row,
     required this.onTap,
-    required this.onEdit,
-    required this.onDuplicate,
-    required this.onDelete,
     this.highlight = '',
   });
 
   final TransactionRow row;
   final VoidCallback onTap;
-  final VoidCallback onEdit;
-  final VoidCallback onDuplicate;
-  final VoidCallback onDelete;
   /// When non-empty, the matching substring in the title and note is bolded.
   final String highlight;
 
@@ -36,7 +30,7 @@ class TransactionTile extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      onLongPress: () => _showActionsSheet(context),
+      onLongPress: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
         child: Row(
@@ -64,12 +58,12 @@ class TransactionTile extends StatelessWidget {
                   _HighlightText(
                     text: isTransfer ? '${row.accountName} ⇄ ${row.transferPairAccountName}' : row.categoryName,
                     highlight: highlight,
-                    baseStyle: GoogleFonts.manrope(
+                    baseStyle: GoogleFonts.plusJakartaSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: cs.onSurface,
                     ),
-                    matchStyle: GoogleFonts.manrope(
+                    matchStyle: GoogleFonts.plusJakartaSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                       color: cs.onSurface,
@@ -81,12 +75,12 @@ class TransactionTile extends StatelessWidget {
                   _HighlightText(
                     text: tx.note.isNotEmpty ? tx.note : (isTransfer ? 'Transfer' : row.accountName),
                     highlight: highlight,
-                    baseStyle: GoogleFonts.inter(
+                    baseStyle: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
                       color: cs.onSurfaceVariant,
                     ),
-                    matchStyle: GoogleFonts.inter(
+                    matchStyle: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: cs.onSurfaceVariant,
@@ -101,53 +95,13 @@ class TransactionTile extends StatelessWidget {
             // Amount — colored by kind
             Text(
               '$sign₹${_fmtAmt(tx.amount)}',
-              style: GoogleFonts.manrope(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
                 color: amountColor,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showActionsSheet(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: const Text('Edit'),
-              onTap: () {
-                Navigator.pop(ctx);
-                onEdit();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.copy_outlined),
-              title: const Text('Duplicate'),
-              onTap: () {
-                Navigator.pop(ctx);
-                onDuplicate();
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.delete_outline_rounded, color: cs.onSurface),
-              title: const Text('Delete'),
-              onTap: () {
-                Navigator.pop(ctx);
-                onDelete();
-              },
-            ),
-            const SizedBox(height: 8),
           ],
         ),
       ),

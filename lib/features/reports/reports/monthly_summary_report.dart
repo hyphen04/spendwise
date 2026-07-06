@@ -87,13 +87,11 @@ class _MonthlySummaryReportState extends ConsumerState<MonthlySummaryReport> {
                 padding: const EdgeInsets.all(20),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // Stat cards
-                    Row(
-                      children: [
-                        _StatCard(label: 'Income', amount: summary.income, color: const Color(0xFF16A34A)),
-                        const SizedBox(width: 12),
-                        _StatCard(label: 'Expense', amount: summary.expense, color: const Color(0xFFDC2626)),
-                      ],
+                    _BalanceFlowCard(
+                      opening: summary.openingBalance,
+                      closing: summary.closingBalance,
+                      income: summary.income,
+                      expense: summary.expense,
                     ),
                     const SizedBox(height: 12),
                     _NetGainCard(net: summary.net),
@@ -153,7 +151,7 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: GoogleFonts.inter(
+        style: GoogleFonts.plusJakartaSans(
           fontSize: 12,
           fontWeight: FontWeight.w700,
           color: cs.onSurfaceVariant,
@@ -190,7 +188,7 @@ class _NetGainCard extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             'Net Savings: $prefix₹${_fmtAmt(net.abs())}', 
-            style: GoogleFonts.manrope(
+            style: GoogleFonts.plusJakartaSans(
               fontWeight: FontWeight.w700, 
               fontSize: 15, 
               color: color,
@@ -202,40 +200,85 @@ class _NetGainCard extends StatelessWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({required this.label, required this.amount, required this.color});
-  final String label;
-  final double amount;
-  final Color color;
+class _BalanceFlowCard extends StatelessWidget {
+  const _BalanceFlowCard({
+    required this.opening,
+    required this.closing,
+    required this.income,
+    required this.expense,
+  });
+  final double opening;
+  final double closing;
+  final double income;
+  final double expense;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                '₹${_fmtAmt(amount)}',
-                style: GoogleFonts.manrope(
-                    color: color,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 22,
-                    fontFeatures: const [FontFeature.tabularFigures()]),
-              ),
-            ),
-          ],
-        ),
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(24),
       ),
+      child: Column(
+        children: [
+          _FlowRow(label: 'Opening Balance', amount: opening, color: cs.onSurfaceVariant),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.5)),
+          ),
+          _FlowRow(label: 'Income', amount: income, color: const Color(0xFF16A34A), prefix: '+ '),
+          const SizedBox(height: 12),
+          _FlowRow(label: 'Expense', amount: expense, color: const Color(0xFFDC2626), prefix: '- '),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.5)),
+          ),
+          _FlowRow(label: 'Closing Balance', amount: closing, color: cs.onSurface, isBold: true),
+        ],
+      ),
+    );
+  }
+}
+
+class _FlowRow extends StatelessWidget {
+  const _FlowRow({
+    required this.label, 
+    required this.amount, 
+    required this.color,
+    this.prefix = '',
+    this.isBold = false,
+  });
+  final String label;
+  final double amount;
+  final Color color;
+  final String prefix;
+  final bool isBold;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            color: color,
+            fontSize: isBold ? 15 : 14,
+            fontWeight: isBold ? FontWeight.w600 : FontWeight.w500,
+          ),
+        ),
+        Text(
+          '$prefix₹${_fmtAmt(amount)}',
+          style: GoogleFonts.plusJakartaSans(
+            color: color,
+            fontSize: isBold ? 16 : 15,
+            fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -288,11 +331,11 @@ class _DailyIncomeExpenseBars extends StatelessWidget {
               if (bestDay == null || d.income > bestDay.income) bestDay = d;
               if (worstDay == null || d.expense > worstDay.expense) worstDay = d;
             }
-            if (bestDay!.income == 0 && worstDay!.expense == 0) return const SizedBox();
+            if (bestDay?.income == 0 && worstDay?.expense == 0) return const SizedBox();
             
             String insight = '';
-            if (bestDay!.income > 0) insight += 'You had the highest income on ${_months[currentMonth - 1]} ${bestDay.day} (₹${_fmtAmt(bestDay.income)}). ';
-            if (worstDay!.expense > 0) insight += 'Your expenses peaked on ${_months[currentMonth - 1]} ${worstDay.day} (₹${_fmtAmt(worstDay.expense)}). ';
+            if (bestDay != null && bestDay.income > 0) insight += 'You had the highest income on ${_months[currentMonth - 1]} ${bestDay.day} (₹${_fmtAmt(bestDay.income)}). ';
+            if (worstDay != null && worstDay.expense > 0) insight += 'Your expenses peaked on ${_months[currentMonth - 1]} ${worstDay.day} (₹${_fmtAmt(worstDay.expense)}). ';
             insight += 'You had $positiveDays days where income exceeded expenses.';
             return InsightCard(text: insight.trim());
           }(),
@@ -549,7 +592,7 @@ class _MonthTopSpends extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(tx.note.isEmpty ? 'Expense' : tx.note, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(tx.note.isEmpty ? 'Expense' : tx.note, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 6),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(2),
@@ -559,7 +602,7 @@ class _MonthTopSpends extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Text('₹${_fmtAmt(tx.amount)}', style: GoogleFonts.manrope(fontWeight: FontWeight.w700, fontSize: 15, color: cs.onSurface)),
+                  Text('₹${_fmtAmt(tx.amount)}', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 15, color: cs.onSurface)),
                 ],
               ),
             );

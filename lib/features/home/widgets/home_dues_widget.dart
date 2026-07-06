@@ -79,7 +79,7 @@ class _HomeDuesWidgetState extends ConsumerState<HomeDuesWidget> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Text(
                 'quick dues entry',
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: Theme.of(context).colorScheme.onSurface,
@@ -187,7 +187,7 @@ class _DueQuickCardState extends ConsumerState<_DueQuickCard> {
         return AlertDialog(
           title: Text(
             'Add Entry',
-            style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: actionColor),
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: actionColor),
           ),
           content: SizedBox(
             width: double.maxFinite,
@@ -196,7 +196,7 @@ class _DueQuickCardState extends ConsumerState<_DueQuickCard> {
               children: [
               Text(
                 'Logging a new ${isPayable ? 'Payable (You Owe)' : 'Receivable (They Owe)'} for ${widget.contact.name}.',
-                style: GoogleFonts.inter(color: cs.onSurfaceVariant, fontSize: 14),
+                style: GoogleFonts.plusJakartaSans(color: cs.onSurfaceVariant, fontSize: 14),
               ),
               const SizedBox(height: 20),
               TextField(
@@ -204,7 +204,7 @@ class _DueQuickCardState extends ConsumerState<_DueQuickCard> {
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 autofocus: false,
                 cursorColor: actionColor,
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16),
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 16),
                 decoration: InputDecoration(
                   labelText: 'Amount',
                   floatingLabelStyle: TextStyle(color: actionColor, fontWeight: FontWeight.w600),
@@ -296,7 +296,7 @@ class _DueQuickCardState extends ConsumerState<_DueQuickCard> {
                   children: [
                     Text(
                       widget.contact.name,
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                         color: cs.onSurface,
@@ -307,7 +307,7 @@ class _DueQuickCardState extends ConsumerState<_DueQuickCard> {
                     const SizedBox(height: 2),
                     Text(
                       balanceText,
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: balanceColor,
@@ -335,7 +335,7 @@ class _DueQuickCardState extends ConsumerState<_DueQuickCard> {
                     children: [
                       const Icon(Icons.remove, size: 16),
                       const SizedBox(width: 4),
-                      Text('I Owe', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
+                      Text('I Owe', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13)),
                     ],
                   ),
                 ),
@@ -355,7 +355,7 @@ class _DueQuickCardState extends ConsumerState<_DueQuickCard> {
                     children: [
                       const Icon(Icons.add, size: 16),
                       const SizedBox(width: 4),
-                      Text('They Owe', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
+                      Text('They Owe', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13)),
                     ],
                   ),
                 ),
@@ -475,7 +475,7 @@ class _AnimatedSuccessOverlayState extends State<_AnimatedSuccessOverlay>
                           const SizedBox(height: 16),
                           Text(
                             widget.message,
-                            style: GoogleFonts.manrope(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
                               color: cs.onSurface,
@@ -485,7 +485,7 @@ class _AnimatedSuccessOverlayState extends State<_AnimatedSuccessOverlay>
                           const SizedBox(height: 4),
                           Text(
                             '₹${widget.amt.toStringAsFixed(widget.amt.truncateToDouble() == widget.amt ? 0 : 2)} logged',
-                            style: GoogleFonts.inter(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                               color: cs.onSurfaceVariant,

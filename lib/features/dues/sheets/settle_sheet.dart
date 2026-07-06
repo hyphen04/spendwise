@@ -145,7 +145,7 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
                   Expanded(
                     child: Text(
                       'Settle ${widget.contact.name}',
-                      style: GoogleFonts.manrope(fontSize: 20, fontWeight: FontWeight.w800, color: cs.onSurface),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.w800, color: cs.onSurface),
                     ),
                   ),
                 ],
@@ -155,7 +155,7 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
               if (_step == 0) ...[
                 Text(
                   'Select entries to settle (${_selectedEntryIds.length}/${widget.entries.length}):',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: cs.onSurfaceVariant),
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: 8),
                 
@@ -185,14 +185,14 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
                         },
                         title: Text(
                           '₹${e.amount.toStringAsFixed(0)} • ${e.note.isEmpty ? 'Entry' : e.note}',
-                          style: GoogleFonts.manrope(
+                          style: GoogleFonts.plusJakartaSans(
                             decoration: selected ? null : TextDecoration.lineThrough,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         subtitle: Text(
                           DateFormat('dd MMM').format(DateTime.parse(e.entryDate)),
-                          style: GoogleFonts.inter(),
+                          style: GoogleFonts.plusJakartaSans(),
                         ),
                         secondary: Icon(
                           e.direction == 'payable' ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
@@ -210,7 +210,7 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
                   icon: const Icon(Icons.arrow_forward_rounded),
                   label: Text(
                     'Next (₹${total.abs().toStringAsFixed(0)}) • ${_selectedEntryIds.length} entries',
-                    style: GoogleFonts.manrope(fontSize: 16, fontWeight: FontWeight.w700),
+                    style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),

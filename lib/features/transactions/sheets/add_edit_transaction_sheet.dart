@@ -5,7 +5,6 @@ import '../../../data/validators.dart';
 import '../../../state/manage_providers.dart';
 import '../../../state/transactions_providers.dart';
 import '../../../utils/amount_input_formatter.dart';
-import '../../../widgets/swipe_action_button.dart';
 import 'amount_entry_sheet.dart';
 
 // ── Mode filtering helpers ────────────────────────────────────────────────────
@@ -430,11 +429,18 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
 
               const SizedBox(height: 28),
 
-              SwipeActionButton(
-                label: _isEditing ? 'Swipe to Save' : 'Swipe to Add',
-                color: Theme.of(context).colorScheme.primary,
-                enabled: !_saving && _isFormValid,
-                onAction: _save,
+              SizedBox(
+                height: 56,
+                child: FilledButton(
+                  onPressed: (!_saving && _isFormValid) ? _save : null,
+                  child: _saving
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                        )
+                      : Text(_isEditing ? 'Save' : 'Add', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                ),
               ),
             ],
           ),

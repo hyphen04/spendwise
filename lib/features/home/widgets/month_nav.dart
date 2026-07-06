@@ -45,7 +45,7 @@ class MonthNav extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
             child: Text(
               _label(period.month, period.year),
-              style: GoogleFonts.inter(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: cs.onSurface,
@@ -177,7 +177,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
                 ),
                 Text(
                   '$_year',
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: cs.onSurface,
@@ -232,7 +232,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
                     alignment: Alignment.center,
                     child: Text(
                       names[i],
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: isSelected

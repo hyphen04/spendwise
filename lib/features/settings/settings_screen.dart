@@ -99,50 +99,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
     }
   }
 
-  // ── Timeout picker ───────────────────────────────────────────────────────────
-
-  static const _timeoutOptions = [
-    (0, 'Immediately'),
-    (15, '15 seconds'),
-    (30, '30 seconds'),
-    (60, '1 minute'),
-    (300, '5 minutes'),
-    (900, '15 minutes'),
-    (1800, '30 minutes'),
-    (3600, '1 hour'),
-  ];
-
-  String _timeoutLabel(int seconds) {
-    for (final t in _timeoutOptions) {
-      if (t.$1 == seconds) return t.$2;
-    }
-    return '$seconds seconds';
-  }
-
-  Future<void> _pickTimeout() async {
-    final current = ref.read(prefsServiceProvider).lockTimeoutSeconds;
-    final choice = await showDialog<int>(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: const Text('Lock after'),
-        children: _timeoutOptions
-            .map((t) => ListTile(
-                  title: Text(t.$2),
-                  trailing: t.$1 == current
-                      ? Icon(Icons.check_rounded,
-                          color: Theme.of(ctx).colorScheme.primary)
-                      : null,
-                  onTap: () => Navigator.pop(ctx, t.$1),
-                ))
-            .toList(),
-      ),
-    );
-    if (choice != null) {
-      await ref.read(prefsServiceProvider).setLockTimeout(choice);
-      if (mounted) setState(() {});
-    }
-  }
-
   // ── Backup Quota Picker ──────────────────────────────────────────────────────
 
   static const _quotaOptions = [
@@ -455,27 +411,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                           ref.read(biometricEnabledProvider.notifier).set(v),
                     ),
                   ],
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.timer_outlined),
-                    title: const Text('Lock after'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _timeoutLabel(
-                              ref.read(prefsServiceProvider).lockTimeoutSeconds),
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(color: cs.onSurfaceVariant),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.chevron_right_rounded),
-                      ],
-                    ),
-                    onTap: _pickTimeout,
-                  ),
+
                 ],
               ],
             ),

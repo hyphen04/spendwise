@@ -30,6 +30,7 @@ class _YearlySummaryReportState extends ConsumerState<YearlySummaryReport> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final async = ref.watch(monthlyTotalsProvider(_currentYear));
+    final balancesAsync = ref.watch(yearlyBalancesProvider(_currentYear));
     
     final fromIso = DateTime(_currentYear, 1, 1).toIso8601String();
     final toIso = DateTime(_currentYear + 1, 1, 1).toIso8601String();
@@ -57,14 +58,21 @@ class _YearlySummaryReportState extends ConsumerState<YearlySummaryReport> {
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     // Year totals hero
-                    Row(
-                      children: [
-                        _YearCard(label: 'Total Income', amount: totalIncome, color: const Color(0xFF16A34A)),
-                        const SizedBox(width: 12),
-                        _YearCard(label: 'Total Expense', amount: totalExpense, color: const Color(0xFFDC2626)),
-                      ],
+                    balancesAsync.when(
+                      loading: () => const SizedBox(height: 0),
+                      error: (_, __) => const SizedBox(height: 0),
+                      data: (b) => Column(
+                        children: [
+                          _BalanceFlowCard(
+                            opening: b.$1,
+                            closing: b.$2,
+                            income: totalIncome,
+                            expense: totalExpense,
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 12),
                     _NetGainCard(net: totalIncome - totalExpense),
                     const SizedBox(height: 48),
 
@@ -109,7 +117,7 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: GoogleFonts.inter(
+        style: GoogleFonts.plusJakartaSans(
           fontSize: 12,
           fontWeight: FontWeight.w700,
           color: cs.onSurfaceVariant,
@@ -146,7 +154,7 @@ class _NetGainCard extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             'Net Gain: $prefix₹${_fmt(net.abs())}', 
-            style: GoogleFonts.manrope(
+            style: GoogleFonts.plusJakartaSans(
               fontWeight: FontWeight.w700, 
               fontSize: 15, 
               color: color,
@@ -158,40 +166,85 @@ class _NetGainCard extends StatelessWidget {
   }
 }
 
-class _YearCard extends StatelessWidget {
-  const _YearCard({required this.label, required this.amount, required this.color});
-  final String label;
-  final double amount;
-  final Color color;
+class _BalanceFlowCard extends StatelessWidget {
+  const _BalanceFlowCard({
+    required this.opening,
+    required this.closing,
+    required this.income,
+    required this.expense,
+  });
+  final double opening;
+  final double closing;
+  final double income;
+  final double expense;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                '₹${_fmt(amount)}',
-                style: GoogleFonts.manrope(
-                    color: color,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 22,
-                    fontFeatures: const [FontFeature.tabularFigures()]),
-              ),
-            ),
-          ],
-        ),
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(24),
       ),
+      child: Column(
+        children: [
+          _FlowRow(label: 'Opening Balance', amount: opening, color: cs.onSurfaceVariant),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.5)),
+          ),
+          _FlowRow(label: 'Income', amount: income, color: const Color(0xFF16A34A), prefix: '+ '),
+          const SizedBox(height: 12),
+          _FlowRow(label: 'Expense', amount: expense, color: const Color(0xFFDC2626), prefix: '- '),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.5)),
+          ),
+          _FlowRow(label: 'Closing Balance', amount: closing, color: cs.onSurface, isBold: true),
+        ],
+      ),
+    );
+  }
+}
+
+class _FlowRow extends StatelessWidget {
+  const _FlowRow({
+    required this.label, 
+    required this.amount, 
+    required this.color,
+    this.prefix = '',
+    this.isBold = false,
+  });
+  final String label;
+  final double amount;
+  final Color color;
+  final String prefix;
+  final bool isBold;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            color: color,
+            fontSize: isBold ? 15 : 14,
+            fontWeight: isBold ? FontWeight.w600 : FontWeight.w500,
+          ),
+        ),
+        Text(
+          '$prefix₹${_fmt(amount)}',
+          style: GoogleFonts.plusJakartaSans(
+            color: color,
+            fontSize: isBold ? 16 : 15,
+            fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -530,7 +583,7 @@ class _YearTopSpends extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(tx.note.isEmpty ? 'Expense' : tx.note, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(tx.note.isEmpty ? 'Expense' : tx.note, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 6),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(2),
@@ -540,7 +593,7 @@ class _YearTopSpends extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Text('₹${_fmt(tx.amount)}', style: GoogleFonts.manrope(fontWeight: FontWeight.w700, fontSize: 15, color: cs.onSurface)),
+                  Text('₹${_fmt(tx.amount)}', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 15, color: cs.onSurface)),
                 ],
               ),
             );

@@ -25,7 +25,7 @@ class InsightCard extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 height: 1.5,
                 color: cs.onSurface,

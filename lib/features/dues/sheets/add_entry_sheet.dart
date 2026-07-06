@@ -152,7 +152,7 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
                   const SizedBox(width: 8),
                   Text(
                     _selectedContact!.name,
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 16, 
                       fontWeight: FontWeight.w700,
                       color: cs.onSurface,
@@ -244,7 +244,7 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
                 children: [
                   Text(
                     '₹',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 32,
                       fontWeight: FontWeight.w800,
                       color: cs.onSurface.withValues(alpha: 0.35),
@@ -255,7 +255,7 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
                   Flexible(
                     child: Text(
                       _amount.isEmpty ? '0' : _amount,
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 52,
                         fontWeight: FontWeight.w800,
                         color: cs.onSurface,

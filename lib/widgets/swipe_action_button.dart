@@ -57,7 +57,7 @@ class _SwipeActionButtonState extends State<SwipeActionButton> {
                     padding: const EdgeInsets.only(left: 48),
                     child: Text(
                       widget.label,
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: widget.color,

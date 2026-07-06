@@ -51,7 +51,7 @@ class SettlementDetailSheet extends ConsumerWidget {
                   const SizedBox(width: 40), // Balance the icon width
                   Text(
                     'Settlement Details', 
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 20, 
                       fontWeight: FontWeight.w800,
                       color: cs.onSurface,
@@ -68,7 +68,7 @@ class SettlementDetailSheet extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               '₹${settlement.totalAmount.toStringAsFixed(0)}', 
-              style: GoogleFonts.manrope(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 36, 
                 fontWeight: FontWeight.w800, 
                 fontFeatures: const [FontFeature.tabularFigures()],
@@ -78,7 +78,7 @@ class SettlementDetailSheet extends ConsumerWidget {
             const SizedBox(height: 4),
             Text(
               DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.parse(settlement.settledDate)), 
-              style: GoogleFonts.inter(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 color: cs.onSurfaceVariant,
               )
@@ -93,7 +93,7 @@ class SettlementDetailSheet extends ConsumerWidget {
                 ),
                 child: Text(
                   settlement.note, 
-                  style: GoogleFonts.inter(color: cs.onSurfaceVariant)
+                  style: GoogleFonts.plusJakartaSans(color: cs.onSurfaceVariant)
                 ),
               ),
             ],
@@ -105,7 +105,7 @@ class SettlementDetailSheet extends ConsumerWidget {
                   entriesAsync.when(
                     data: (entries) => Text(
                       '${entries.length} Entries Included',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 16, 
                         fontWeight: FontWeight.w700,
                         color: cs.onSurface,
@@ -113,7 +113,7 @@ class SettlementDetailSheet extends ConsumerWidget {
                     ),
                     loading: () => Text(
                       'Entries Included',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 16, 
                         fontWeight: FontWeight.w700,
                         color: cs.onSurface,
@@ -121,7 +121,7 @@ class SettlementDetailSheet extends ConsumerWidget {
                     ),
                     error: (_, __) => Text(
                       'Entries Included',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 16, 
                         fontWeight: FontWeight.w700,
                         color: cs.onSurface,
@@ -173,7 +173,7 @@ class SettlementDetailSheet extends ConsumerWidget {
                                     e.note.isEmpty ? 'Entry' : e.note,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.manrope(
+                                    style: GoogleFonts.plusJakartaSans(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
                                       color: cs.onSurface,
@@ -184,14 +184,14 @@ class SettlementDetailSheet extends ConsumerWidget {
                                     children: [
                                       Text(
                                         date,
-                                        style: GoogleFonts.inter(
+                                        style: GoogleFonts.plusJakartaSans(
                                           fontSize: 12, 
                                           fontWeight: FontWeight.w400,
                                           color: cs.onSurfaceVariant
                                         ),
                                       ),
                                       if (e.mealSlot != null) ...[
-                                        Text(' • ', style: GoogleFonts.inter(fontSize: 12, color: cs.onSurfaceVariant)),
+                                        Text(' • ', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: cs.onSurfaceVariant)),
                                         Icon(
                                           e.mealSlot == 'lunch' ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded,
                                           size: 12,
@@ -200,7 +200,7 @@ class SettlementDetailSheet extends ConsumerWidget {
                                         const SizedBox(width: 4),
                                         Text(
                                           e.mealSlot == 'lunch' ? 'Lunch' : 'Dinner',
-                                          style: GoogleFonts.inter(fontSize: 12, color: cs.onSurfaceVariant),
+                                          style: GoogleFonts.plusJakartaSans(fontSize: 12, color: cs.onSurfaceVariant),
                                         ),
                                       ],
                                     ],
@@ -211,7 +211,7 @@ class SettlementDetailSheet extends ConsumerWidget {
                             const SizedBox(width: 12),
                             Text(
                               '₹${e.amount.toStringAsFixed(0)}',
-                              style: GoogleFonts.manrope(
+                              style: GoogleFonts.plusJakartaSans(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
                                 fontFeatures: const [FontFeature.tabularFigures()],

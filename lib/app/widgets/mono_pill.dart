@@ -58,7 +58,7 @@ class MonoPill extends StatelessWidget {
             ],
             Text(
               label,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: dense ? 13 : 14,
                 fontWeight: FontWeight.w600,
                 color: fg,

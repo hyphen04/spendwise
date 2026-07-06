@@ -74,7 +74,7 @@ class DateStrip extends StatelessWidget {
               child: Text(
                 label,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 11,
                   fontWeight: active ? FontWeight.w700 : FontWeight.w400,
                   color: active ? cs.onPrimary : cs.onSurfaceVariant,

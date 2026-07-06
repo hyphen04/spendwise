@@ -188,7 +188,7 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: cs.surfaceContainerHighest.withOpacity(0.5),
+                            color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(

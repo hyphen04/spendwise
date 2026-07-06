@@ -154,7 +154,7 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
           children: [
             Text(
               isUpdate ? 'Edit Contact' : 'New Contact',
-              style: GoogleFonts.manrope(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 20, 
                 fontWeight: FontWeight.w800,
                 color: cs.onSurface,
@@ -373,7 +373,7 @@ class _TypeToggle extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               label,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.plusJakartaSans(
                 color: isSelected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),

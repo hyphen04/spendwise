@@ -23,6 +23,13 @@ final monthlyTotalsProvider =
   return ref.read(reportsRepositoryProvider).monthlyTotals(year);
 });
 
+// year → (opening balance, closing balance)
+final yearlyBalancesProvider =
+    FutureProvider.family<(double, double), int>((ref, year) {
+  ref.watch(allTransactionsStreamProvider);
+  return ref.read(reportsRepositoryProvider).yearlyBalances(year);
+});
+
 // (year, month) → List<DayTotal> for all days in the month
 final dailyTotalsProvider =
     FutureProvider.family<List<DayTotal>, (int, int)>((ref, args) {
@@ -62,6 +69,13 @@ final accountStatementProvider =
     FutureProvider.family<List<Transaction>, (String, String, String)>((ref, args) {
   ref.watch(allTransactionsStreamProvider);
   return ref.read(reportsRepositoryProvider).accountStatement(accountId: args.$1, from: args.$2, to: args.$3);
+});
+
+// (accountId, from, to) → account statement balances (opening, closing)
+final accountStatementBalancesProvider =
+    FutureProvider.family<(double, double), (String, String, String)>((ref, args) {
+  ref.watch(allTransactionsStreamProvider);
+  return ref.read(reportsRepositoryProvider).accountStatementBalances(args.$1, args.$2, args.$3);
 });
 
 // Calculate current balance for a specific account

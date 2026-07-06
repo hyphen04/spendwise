@@ -78,7 +78,7 @@ class _DetailSheetState extends ConsumerState<_DetailSheet> {
                   // Amount
                   Text(
                     '$sign₹${_fmt(tx.amount)}',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 40,
                       fontWeight: FontWeight.w800,
                       color: cs.onSurface,
@@ -97,7 +97,7 @@ class _DetailSheetState extends ConsumerState<_DetailSheet> {
                     ),
                     child: Text(
                       tx.kind[0].toUpperCase() + tx.kind.substring(1),
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: cs.onSurfaceVariant,
@@ -266,7 +266,7 @@ class _InfoRow extends StatelessWidget {
           const SizedBox(width: 10),
           Text(
             label,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 13,
               color: cs.onSurfaceVariant,
               fontWeight: FontWeight.w400,
@@ -276,7 +276,7 @@ class _InfoRow extends StatelessWidget {
           Flexible(
             child: Text(
               value,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
                 color: cs.onSurface,
@@ -336,7 +336,7 @@ class _ActionButton extends StatelessWidget {
           foregroundColor: fg,
           minimumSize: const Size.fromHeight(48),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       );
     }
@@ -349,7 +349,7 @@ class _ActionButton extends StatelessWidget {
         side: BorderSide(color: cs.outline),
         minimumSize: const Size.fromHeight(48),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+        textStyle: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600),
       ),
     );
   }

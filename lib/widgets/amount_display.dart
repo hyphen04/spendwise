@@ -29,7 +29,7 @@ class AmountDisplay extends StatelessWidget {
     final c = color ?? Theme.of(context).colorScheme.onSurface;
     return Text(
       '${_sign()}$prefix${_fmt(amount.abs())}',
-      style: GoogleFonts.manrope(
+      style: GoogleFonts.plusJakartaSans(
         fontSize: fontSize,
         fontWeight: fontWeight,
         color: c,

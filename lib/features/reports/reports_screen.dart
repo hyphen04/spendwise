@@ -183,7 +183,7 @@ class _SectionHeader extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: Text(
           title,
-          style: GoogleFonts.inter(
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 12,
             fontWeight: FontWeight.w700,
             color: cs.onSurfaceVariant,
@@ -242,7 +242,7 @@ class _ReportCard extends StatelessWidget {
                 const Spacer(),
                 Text(
                   title,
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: cs.onSurface,
@@ -253,7 +253,7 @@ class _ReportCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   description,
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     color: cs.onSurfaceVariant,

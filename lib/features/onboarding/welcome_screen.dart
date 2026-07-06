@@ -29,7 +29,7 @@ class WelcomeScreen extends StatelessWidget {
               children: [
                 Text(
                   'spendwise',
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 44,
                     fontWeight: FontWeight.w800,
                     color: cs.onSurface,
@@ -43,7 +43,7 @@ class WelcomeScreen extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(
                   'your minimal money tracker',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
                     color: cs.onSurfaceVariant,
@@ -68,7 +68,7 @@ class WelcomeScreen extends StatelessWidget {
               ),
               child: Text(
                 'Get started',
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),
@@ -134,7 +134,7 @@ class _FloatingPill extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: cs.surface,

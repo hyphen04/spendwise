@@ -77,6 +77,8 @@ class MonthlySummary {
     this.biggestSpendTitle,
     this.biggestSpendAmount,
     this.biggestSpendNote,
+    this.openingBalance = 0.0,
+    this.closingBalance = 0.0,
   });
   final double income;
   final double expense;
@@ -84,6 +86,8 @@ class MonthlySummary {
   final String? biggestSpendTitle;
   final double? biggestSpendAmount;
   final String? biggestSpendNote;
+  final double openingBalance;
+  final double closingBalance;
   double get net => income - expense;
 }
 

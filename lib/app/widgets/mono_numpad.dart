@@ -130,7 +130,7 @@ class _DigitKey extends StatelessWidget {
       keySize: keySize,
       child: Text(
         label,
-        style: GoogleFonts.manrope(
+        style: GoogleFonts.plusJakartaSans(
           fontSize: keySize * 0.36,
           fontWeight: FontWeight.w600,
           color: cs.onSurface,

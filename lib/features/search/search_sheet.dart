@@ -8,11 +8,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/models/transaction_row.dart';
 import '../../state/search_provider.dart';
-import '../../state/transactions_providers.dart';
+
 import '../manage/sheets/account_form_sheet.dart';
 import '../manage/sheets/category_form_sheet.dart';
 import '../manage/sheets/mode_form_sheet.dart';
-import '../transactions/sheets/add_edit_transaction_sheet.dart';
+
 import '../transactions/sheets/transaction_detail_sheet.dart';
 import '../transactions/widgets/transaction_tile.dart';
 import '../../state/manage_providers.dart';
@@ -122,14 +122,14 @@ class _SearchSheetState extends ConsumerState<_SearchSheet> {
                       controller: _ctrl,
                       autofocus: true,
                       onChanged: _onChanged,
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 18,
                         fontWeight: FontWeight.w500,
                         color: cs.onSurface,
                       ),
                       decoration: InputDecoration(
                         hintText: 'Search SpendWise...',
-                        hintStyle: GoogleFonts.inter(
+                        hintStyle: GoogleFonts.plusJakartaSans(
                           fontSize: 18,
                           fontWeight: FontWeight.w400,
                           color: cs.onSurfaceVariant.withValues(alpha: 0.6),
@@ -310,14 +310,6 @@ class _SearchSheetState extends ConsumerState<_SearchSheet> {
         row: row,
         highlight: highlight,
         onTap: () => showTransactionDetailSheet(context, row: row),
-        onEdit: () =>
-            showAddEditTransactionSheet(context, editing: row.transaction, toAccountId: row.transferPairAccount?.id),
-        onDuplicate: () => ref
-            .read(transactionsRepositoryProvider)
-            .duplicate(row.transaction),
-        onDelete: () => ref
-            .read(transactionsRepositoryProvider)
-            .delete(row.transaction.id),
       ));
       if (i < rows.length - 1) {
         widgets.add(Divider(
@@ -349,7 +341,7 @@ class _SectionHeader extends StatelessWidget {
         children: [
           Text(
             label,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color: cs.onSurfaceVariant,
@@ -366,7 +358,7 @@ class _SectionHeader extends StatelessWidget {
               ),
               child: Text(
                 '$count',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   color: cs.onSurfaceVariant,
@@ -416,12 +408,12 @@ class _EntityTile extends StatelessWidget {
                   _HighlightText(
                     text: label,
                     highlight: highlight,
-                    baseStyle: GoogleFonts.inter(
+                    baseStyle: GoogleFonts.plusJakartaSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: cs.onSurface,
                     ),
-                    highlightStyle: GoogleFonts.inter(
+                    highlightStyle: GoogleFonts.plusJakartaSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: cs.onSurface,
@@ -430,7 +422,7 @@ class _EntityTile extends StatelessWidget {
                   if (sublabel != null)
                     Text(
                       sublabel!,
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
                         color: cs.onSurfaceVariant,
                       ),
@@ -497,7 +489,7 @@ class _EmptyHint extends StatelessWidget {
       child: Text(
         message,
         textAlign: TextAlign.center,
-        style: GoogleFonts.inter(fontSize: 14, color: cs.onSurfaceVariant),
+        style: GoogleFonts.plusJakartaSans(fontSize: 14, color: cs.onSurfaceVariant),
       ),
     );
   }

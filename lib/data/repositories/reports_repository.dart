@@ -66,6 +66,19 @@ class ReportsRepository {
       biggestNote = rawNote.isNotEmpty ? rawNote : null;
     }
 
+    final baseBalRow = await _db.customSelect('SELECT COALESCE(SUM(opening_balance), 0) AS total FROM accounts').getSingle();
+    final double baseBalance = (baseBalRow.data['total'] as num).toDouble();
+
+    final prevTxRow = await _db.customSelect(
+      'SELECT COALESCE(SUM(CASE WHEN kind IN (\'income\', \'transfer_in\') THEN amount WHEN kind IN (\'expense\', \'transfer_out\') THEN -amount ELSE 0 END), 0) AS net '
+      'FROM transactions WHERE transaction_date < ?',
+      variables: [Variable.withString(from)],
+    ).getSingle();
+    final double prevNet = (prevTxRow.data['net'] as num).toDouble();
+
+    final openingBalance = baseBalance + prevNet;
+    final closingBalance = openingBalance + income - expense;
+
     return MonthlySummary(
       income: income,
       expense: expense,
@@ -73,6 +86,8 @@ class ReportsRepository {
       biggestSpendTitle: biggestTitle,
       biggestSpendAmount: biggestAmount,
       biggestSpendNote: biggestNote,
+      openingBalance: openingBalance,
+      closingBalance: closingBalance,
     );
   }
 
@@ -243,6 +258,62 @@ class ReportsRepository {
               t.transactionDate.isSmallerThanValue(to))
           ..orderBy([(t) => OrderingTerm.asc(t.transactionDate)]))
         .get();
+  }
+
+  Future<(double, double)> accountStatementBalances(String accountId, String from, String to) async {
+    final accRow = await _db.customSelect(
+      'SELECT opening_balance FROM accounts WHERE id = ?',
+      variables: [Variable.withString(accountId)]
+    ).getSingleOrNull();
+    final double baseBalance = (accRow?.data['opening_balance'] as num?)?.toDouble() ?? 0.0;
+
+    final prevTxRow = await _db.customSelect(
+      'SELECT COALESCE(SUM(CASE WHEN kind IN (\'income\', \'transfer_in\') THEN amount WHEN kind IN (\'expense\', \'transfer_out\') THEN -amount ELSE 0 END), 0) AS net '
+      'FROM transactions WHERE account_id = ? AND transaction_date < ?',
+      variables: [Variable.withString(accountId), Variable.withString(from)],
+    ).getSingle();
+    final double prevNet = (prevTxRow.data['net'] as num).toDouble();
+
+    final openingBalance = baseBalance + prevNet;
+
+    final currTxRow = await _db.customSelect(
+      'SELECT COALESCE(SUM(CASE WHEN kind IN (\'income\', \'transfer_in\') THEN amount WHEN kind IN (\'expense\', \'transfer_out\') THEN -amount ELSE 0 END), 0) AS net '
+      'FROM transactions WHERE account_id = ? AND transaction_date >= ? AND transaction_date < ?',
+      variables: [Variable.withString(accountId), Variable.withString(from), Variable.withString(to)],
+    ).getSingle();
+    final double currNet = (currTxRow.data['net'] as num).toDouble();
+
+    final closingBalance = openingBalance + currNet;
+
+    return (openingBalance, closingBalance);
+  }
+
+  Future<(double, double)> yearlyBalances(int year) async {
+    final from = DateTime(year, 1, 1).toIso8601String();
+    final to = DateTime(year + 1, 1, 1).toIso8601String();
+
+    final baseBalRow = await _db.customSelect('SELECT COALESCE(SUM(opening_balance), 0) AS total FROM accounts').getSingle();
+    final double baseBalance = (baseBalRow.data['total'] as num).toDouble();
+
+    final prevTxRow = await _db.customSelect(
+      'SELECT COALESCE(SUM(CASE WHEN kind IN (\'income\', \'transfer_in\') THEN amount WHEN kind IN (\'expense\', \'transfer_out\') THEN -amount ELSE 0 END), 0) AS net '
+      'FROM transactions WHERE transaction_date < ?',
+      variables: [Variable.withString(from)],
+    ).getSingle();
+    final double prevNet = (prevTxRow.data['net'] as num).toDouble();
+
+    final openingBalance = baseBalance + prevNet;
+
+    final currTxRow = await _db.customSelect(
+      'SELECT COALESCE(SUM(CASE WHEN kind IN (\'income\', \'transfer_in\') THEN amount WHEN kind IN (\'expense\', \'transfer_out\') THEN -amount ELSE 0 END), 0) AS net '
+      'FROM transactions WHERE transaction_date >= ? AND transaction_date < ?',
+      variables: [Variable.withString(from), Variable.withString(to)],
+    ).getSingle();
+    final double currNet = (currTxRow.data['net'] as num).toDouble();
+
+    final closingBalance = openingBalance + currNet;
+
+    return (openingBalance, closingBalance);
   }
 
   Future<List<TagTotal>> tagBreakdown({

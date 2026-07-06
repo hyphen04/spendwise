@@ -90,7 +90,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                 // Wordmark
                 Text(
                   'spendwise',
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 32,
                     fontWeight: FontWeight.w800,
                     color: cs.onSurface,
@@ -100,7 +100,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                 const SizedBox(height: 6),
                 Text(
                   'Enter your PIN',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
                     color: cs.onSurfaceVariant,
@@ -136,7 +136,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                   const SizedBox(height: 10),
                   Text(
                     'Incorrect PIN',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 13,
                       color: cs.onSurfaceVariant,
                     ),

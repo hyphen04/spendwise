@@ -47,7 +47,7 @@ class ScreenHeader extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
                       color: cs.onSurface,
@@ -59,7 +59,7 @@ class ScreenHeader extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       subtitle!,
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 13,
                         color: cs.onSurfaceVariant,
                         fontWeight: FontWeight.w400,
@@ -140,7 +140,7 @@ class HeaderIconButton extends StatelessWidget {
               alignment: Alignment.center,
               child: Text(
                 badge.toString(),
-                style: GoogleFonts.inter(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   color: cs.onPrimary,

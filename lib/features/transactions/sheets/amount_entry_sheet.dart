@@ -8,8 +8,6 @@ import '../../../data/db/app_database.dart';
 import '../../../state/manage_providers.dart';
 import '../../../state/prefs_providers.dart';
 import '../../../state/transactions_providers.dart';
-import '../../../widgets/swipe_action_button.dart';
-
 Future<void> showAmountEntrySheet(
   BuildContext context, {
   String initialKind = 'expense',
@@ -295,7 +293,7 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
             children: [
               Text(
                 '₹',
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
                   color: cs.onSurface.withValues(alpha: 0.35),
@@ -306,7 +304,7 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
               Flexible(
                 child: Text(
                   _raw.isEmpty ? '0' : _raw,
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 52,
                     fontWeight: FontWeight.w800,
                     color: cs.onSurface,
@@ -487,11 +485,11 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
                       children: [
                         Text(
                           _kind[0].toUpperCase() + _kind.substring(1),
-                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: cs.onSurfaceVariant),
+                          style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w500, color: cs.onSurfaceVariant),
                         ),
                         Text(
                           '₹$_raw',
-                          style: GoogleFonts.manrope(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 28, fontWeight: FontWeight.w800,
                             color: cs.onSurface,
                             fontFeatures: const [FontFeature.tabularFigures()],
@@ -589,11 +587,18 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
             const SizedBox(height: 24),
 
             // ── Save ──────────────────────────────────────────────────────
-            SwipeActionButton(
-              label: 'Swipe to Add',
-              color: Theme.of(context).colorScheme.primary,
-              enabled: !_saving && isValid,
-              onAction: _save,
+            SizedBox(
+              height: 56,
+              child: FilledButton(
+                onPressed: (!_saving && isValid) ? _save : null,
+                child: _saving
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2.5),
+                      )
+                    : const Text('Add Transaction', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              ),
             ),
           ],
         ),

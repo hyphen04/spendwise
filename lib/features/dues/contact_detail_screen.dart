@@ -35,7 +35,7 @@ class ContactDetailScreen extends ConsumerWidget {
                 pinned: true,
                 title: Text(
                   contact.name,
-                  style: GoogleFonts.manrope(fontWeight: FontWeight.w700),
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
                 ),
                 actions: [
                   IconButton(
@@ -64,7 +64,7 @@ class ContactDetailScreen extends ConsumerWidget {
                       const SizedBox(height: 20),
                       Text(
                         '₹${balance.abs().toStringAsFixed(0)}',
-                        style: GoogleFonts.manrope(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 48,
                           fontWeight: FontWeight.w800,
                           fontFeatures: const [FontFeature.tabularFigures()],
@@ -79,7 +79,7 @@ class ContactDetailScreen extends ConsumerWidget {
                         balance == 0 
                             ? 'All Settled Up' 
                             : (isPayable ? 'You Owe Them' : 'They Owe You'),
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 16, 
                           color: cs.onSurfaceVariant,
                           fontWeight: FontWeight.w500,
@@ -99,7 +99,7 @@ class ContactDetailScreen extends ConsumerWidget {
                     children: [
                       Text(
                         'Unsettled Entries',
-                        style: GoogleFonts.manrope(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 18, 
                           fontWeight: FontWeight.w800,
                           color: cs.onSurface,
@@ -185,7 +185,7 @@ class ContactDetailScreen extends ConsumerWidget {
                                                 e.note.isEmpty ? 'Entry' : e.note,
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: GoogleFonts.manrope(
+                                                style: GoogleFonts.plusJakartaSans(
                                                   fontSize: 15,
                                                   fontWeight: FontWeight.w600,
                                                   color: cs.onSurface,
@@ -196,14 +196,14 @@ class ContactDetailScreen extends ConsumerWidget {
                                                 children: [
                                                   Text(
                                                     date,
-                                                    style: GoogleFonts.inter(
+                                                    style: GoogleFonts.plusJakartaSans(
                                                       fontSize: 12, 
                                                       fontWeight: FontWeight.w400,
                                                       color: cs.onSurfaceVariant
                                                     ),
                                                   ),
                                                   if (e.mealSlot != null) ...[
-                                                    Text(' • ', style: GoogleFonts.inter(fontSize: 12, color: cs.onSurfaceVariant)),
+                                                    Text(' • ', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: cs.onSurfaceVariant)),
                                                     Icon(
                                                       e.mealSlot == 'lunch' ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded,
                                                       size: 12,
@@ -212,7 +212,7 @@ class ContactDetailScreen extends ConsumerWidget {
                                                     const SizedBox(width: 4),
                                                     Text(
                                                       e.mealSlot == 'lunch' ? 'Lunch' : 'Dinner',
-                                                      style: GoogleFonts.inter(fontSize: 12, color: cs.onSurfaceVariant),
+                                                      style: GoogleFonts.plusJakartaSans(fontSize: 12, color: cs.onSurfaceVariant),
                                                     ),
                                                   ],
                                                 ],
@@ -223,7 +223,7 @@ class ContactDetailScreen extends ConsumerWidget {
                                         const SizedBox(width: 12),
                                         Text(
                                           '₹${e.amount.toStringAsFixed(0)}',
-                                          style: GoogleFonts.manrope(
+                                          style: GoogleFonts.plusJakartaSans(
                                             fontSize: 15,
                                             fontWeight: FontWeight.w700,
                                             fontFeatures: const [FontFeature.tabularFigures()],
@@ -251,7 +251,7 @@ class ContactDetailScreen extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
                   child: Text(
                     'Settlement History',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 18, 
                       fontWeight: FontWeight.w800, 
                       color: cs.onSurface,
@@ -292,7 +292,7 @@ class ContactDetailScreen extends ConsumerWidget {
                                       children: [
                                         Text(
                                           'Settled ₹${s.totalAmount.toStringAsFixed(0)}',
-                                          style: GoogleFonts.manrope(
+                                          style: GoogleFonts.plusJakartaSans(
                                             fontSize: 15,
                                             fontWeight: FontWeight.w600,
                                             color: cs.onSurface,
@@ -302,7 +302,7 @@ class ContactDetailScreen extends ConsumerWidget {
                                         const SizedBox(height: 2),
                                         Text(
                                           '${item.entryCount} entries • ${DateFormat('dd MMM yyyy, HH:mm').format(DateTime.parse(s.settledDate))}',
-                                          style: GoogleFonts.inter(
+                                          style: GoogleFonts.plusJakartaSans(
                                             fontSize: 12, 
                                             fontWeight: FontWeight.w400,
                                             color: cs.onSurfaceVariant

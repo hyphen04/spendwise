@@ -141,64 +141,59 @@ class _StatementList extends ConsumerWidget {
     final cs = Theme.of(context).colorScheme;
     final async = ref.watch(accountStatementProvider((accountId, from, to)));
     final balanceAsync = ref.watch(accountBalanceProvider(accountId));
+    final periodBalancesAsync = ref.watch(accountStatementBalancesProvider((accountId, from, to)));
     
     final catMap = {
       for (final c in ref.watch(categoriesStreamProvider).valueOrNull ?? [])
         c.id: c.name
     };
 
-    return Column(
-      children: [
-        // Top Balance Row
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-          child: Row(
-            children: [
-              Text('Current Balance', style: GoogleFonts.inter(color: cs.onSurfaceVariant, fontSize: 13, fontWeight: FontWeight.w500)),
-              const Spacer(),
-              balanceAsync.when(
-                loading: () => const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
-                error: (e, _) => Text('Error', style: TextStyle(color: cs.error, fontSize: 13)),
-                data: (balance) => Text(
-                  '₹${_fmt(balance)}',
-                  style: GoogleFonts.manrope(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: balance >= 0 ? cs.onSurface : cs.error,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+    return async.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Error: $e')),
+      data: (txs) {
+        double monthIncome = 0.0;
+        double monthExpense = 0.0;
+        for (final t in txs) {
+          if (t.kind == 'income' || t.kind == 'transfer_in') {
+            monthIncome += t.amount;
+          } else if (t.kind == 'expense' || t.kind == 'transfer_out') {
+            monthExpense += t.amount;
+          }
+        }
+        final netFlow = monthIncome - monthExpense;
+
+        return ListView.builder(
+          itemCount: txs.isEmpty ? 2 : txs.length + 2,
+          itemBuilder: (ctx, i) {
+            if (i == 0) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: periodBalancesAsync.when(
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(child: Text('Error: $e')),
+                  data: (b) => _StatementSummaryCard(
+                    opening: b.$1,
+                    closing: b.$2,
+                    income: monthIncome,
+                    expense: monthExpense,
+                    currentBalanceAsync: balanceAsync,
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        Expanded(
-          child: async.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Error: $e')),
-            data: (txs) {
+              );
+            }
+            if (i == 1) {
               if (txs.isEmpty) {
-                return Center(
-                  child: Text('No transactions in this month',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          )),
+                return Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Center(
+                    child: Text('No transactions in this month',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            )),
+                  ),
                 );
               }
-
-              double monthIncome = 0.0;
-              double monthExpense = 0.0;
-              for (final t in txs) {
-                if (t.kind == 'income' || t.kind == 'transfer_in') {
-                  monthIncome += t.amount;
-                } else if (t.kind == 'expense' || t.kind == 'transfer_out') {
-                  monthExpense += t.amount;
-                }
-              }
-              final netFlow = monthIncome - monthExpense;
-
               return Column(
                 children: [
                   Padding(
@@ -220,79 +215,195 @@ class _StatementList extends ConsumerWidget {
                     ),
                   ),
                   const Divider(height: 1),
-                  Expanded(
-                    child: ListView.separated(
-                      itemCount: txs.length,
-                      separatorBuilder: (_, __) =>
-                          const Divider(height: 1, indent: 56),
-                      itemBuilder: (ctx, i) {
-                        final tx = txs[i];
-                        final isIncome = tx.kind == 'income' || tx.kind == 'transfer_in';
-                        final isTransfer = tx.kind.startsWith('transfer');
-                        return ListTile(
-                          dense: true,
-                          leading: CircleAvatar(
-                            radius: 16,
-                            backgroundColor: isTransfer
-                                ? cs.onSurface.withAlpha(20)
-                                : (isIncome
-                                    ? cs.onSurface.withAlpha(20)
-                                    : cs.errorContainer),
-                            child: Text(
-                              isTransfer ? '⇄' : (isIncome ? '↑' : '↓'),
-                              style: TextStyle(
-                                color: isTransfer
-                                    ? cs.onSurface
-                                    : (isIncome
-                                        ? cs.onSurface
-                                        : cs.onErrorContainer),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                          title: Text(
-                              catMap[tx.categoryId] ?? (isTransfer ? 'Transfer' : tx.kind),
-                              style: const TextStyle(fontSize: 14)),
-                          subtitle: tx.note.isNotEmpty
-                              ? Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(tx.note,
-                                        style: const TextStyle(fontSize: 12),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis),
-                                    Text(tx.transactionDate.substring(0, 10),
-                                        style: TextStyle(
-                                            fontSize: 11,
-                                            color: cs.onSurfaceVariant)),
-                                  ],
-                                )
-                              : Text(tx.transactionDate.substring(0, 10),
-                                  style: const TextStyle(fontSize: 12)),
-                          trailing: Text(
-                            '${isIncome ? '+' : '-'}₹${_fmt(tx.amount)}',
-                            style: TextStyle(
-                                color: isIncome
-                                    ? cs.onSurface
-                                    : cs.error,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14),
-                          ),
-                        );
-                      },
+                ],
+              );
+            }
+            
+            final tx = txs[i - 2];
+            final isIncome = tx.kind == 'income' || tx.kind == 'transfer_in';
+            final isTransfer = tx.kind.startsWith('transfer');
+            return Column(
+              children: [
+                ListTile(
+                  dense: true,
+                  leading: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: isTransfer
+                        ? cs.onSurface.withAlpha(20)
+                        : (isIncome
+                            ? cs.onSurface.withAlpha(20)
+                            : cs.errorContainer),
+                    child: Text(
+                      isTransfer ? '⇄' : (isIncome ? '↑' : '↓'),
+                      style: TextStyle(
+                        color: isTransfer
+                            ? cs.onSurface
+                            : (isIncome
+                                ? cs.onSurface
+                                : cs.onErrorContainer),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                      catMap[tx.categoryId] ?? (isTransfer ? 'Transfer' : tx.kind),
+                      style: const TextStyle(fontSize: 14)),
+                  subtitle: tx.note.isNotEmpty
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(tx.note,
+                                style: const TextStyle(fontSize: 12),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis),
+                            Text(tx.transactionDate.substring(0, 10),
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: cs.onSurfaceVariant)),
+                          ],
+                        )
+                      : Text(tx.transactionDate.substring(0, 10),
+                          style: const TextStyle(fontSize: 12)),
+                  trailing: Text(
+                    '${isIncome ? '+' : '-'}₹${_fmt(tx.amount)}',
+                    style: TextStyle(
+                        color: isIncome
+                            ? cs.onSurface
+                            : cs.error,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14),
+                  ),
+                ),
+                if (i - 2 < txs.length - 1)
+                  const Divider(height: 1, indent: 56),
+              ],
+            );
+          },
+        );
+        },
+      );
+  }
+
+}
+
+class _StatementSummaryCard extends StatelessWidget {
+  const _StatementSummaryCard({
+    required this.opening,
+    required this.closing,
+    required this.income,
+    required this.expense,
+    required this.currentBalanceAsync,
+  });
+  final double opening;
+  final double closing;
+  final double income;
+  final double expense;
+  final AsyncValue<double> currentBalanceAsync;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        children: [
+          _FlowRow(label: 'Opening Balance', amount: opening, color: cs.onSurfaceVariant),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.5)),
+          ),
+          _FlowRow(label: 'In (+)', amount: income, color: const Color(0xFF16A34A), prefix: '+ '),
+          const SizedBox(height: 12),
+          _FlowRow(label: 'Out (-)', amount: expense, color: const Color(0xFFDC2626), prefix: '- '),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.5)),
+          ),
+          _FlowRow(label: 'Closing Balance', amount: closing, color: cs.onSurface, isBold: true),
+          
+          // Current Balance (As of Today)
+          Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: cs.primaryContainer.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.account_balance_wallet_outlined, size: 18, color: cs.onPrimaryContainer),
+                  const SizedBox(width: 8),
+                  Text('Current Balance: ', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w500, color: cs.onPrimaryContainer)),
+                  currentBalanceAsync.when(
+                    loading: () => const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+                    error: (e, _) => Text('Error', style: TextStyle(color: cs.error, fontSize: 13)),
+                    data: (balance) => Text(
+                      '₹${_fmt(balance)}',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: balance >= 0 ? cs.onPrimaryContainer : cs.error,
+                      ),
                     ),
                   ),
                 ],
-              );
-            },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FlowRow extends StatelessWidget {
+  const _FlowRow({
+    required this.label, 
+    required this.amount, 
+    required this.color,
+    this.prefix = '',
+    this.isBold = false,
+  });
+  final String label;
+  final double amount;
+  final Color color;
+  final String prefix;
+  final bool isBold;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            color: color,
+            fontSize: isBold ? 15 : 14,
+            fontWeight: isBold ? FontWeight.w600 : FontWeight.w500,
+          ),
+        ),
+        Text(
+          '$prefix₹${_fmt(amount.abs())}',
+          style: GoogleFonts.plusJakartaSans(
+            color: color,
+            fontSize: isBold ? 16 : 15,
+            fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
       ],
     );
   }
-
-  static String _fmt(double v) =>
-      v == v.truncateToDouble() ? v.toInt().toString() : v.toStringAsFixed(2);
 }
+
+String _fmt(double v) =>
+    v == v.truncateToDouble() ? v.toInt().toString() : v.toStringAsFixed(2);

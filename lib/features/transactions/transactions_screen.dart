@@ -7,7 +7,7 @@ import '../../app/themes/app_colors.dart';
 import '../../app/widgets/screen_header.dart';
 import '../../data/db/app_database.dart';
 import '../../data/models/transaction_row.dart';
-import '../../state/dues_providers.dart';
+
 import '../../state/manage_providers.dart';
 import '../../state/period_providers.dart';
 import '../../state/transactions_providers.dart';
@@ -328,12 +328,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             return TransactionTile(
               row: row,
               onTap: () => showTransactionDetailSheet(ctx, row: row),
-              onEdit: () =>
-                  showAddEditTransactionSheet(ctx, editing: row.transaction, toAccountId: row.transferPairAccount?.id),
-              onDuplicate: () => ref
-                  .read(transactionsRepositoryProvider)
-                  .duplicate(row.transaction),
-              onDelete: () => _confirmDelete(ctx, row),
             )
                 .animate(delay: Duration(milliseconds: i * 18))
                 .fadeIn(duration: 180.ms)
@@ -378,45 +372,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     }
   }
 
-  Future<void> _confirmDelete(BuildContext ctx, TransactionRow row) async {
-    final cs = Theme.of(ctx).colorScheme;
-    final settlement = await ref.read(duesRepositoryProvider).getSettlementForTransaction(row.transaction.id);
-    if (!ctx.mounted) return;
-    
-    final result = await showDialog<String>(
-      context: ctx,
-      builder: (_) => AlertDialog(
-        title: const Text('Delete Transaction'),
-        content: Text(settlement != null
-            ? 'This transaction is linked to a Dues settlement.\n\nDo you also want to undo the Dues settlement? (This will mark the tiffin/dues entries as unsettled again)'
-            : (row.transaction.kind == 'transfer'
-                ? 'Delete both legs of this transfer?'
-                : 'Permanently delete this transaction?')),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, 'cancel'),
-              child: const Text('Cancel')),
-          if (settlement != null)
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, 'delete_tx_only'),
-              child: const Text('Delete Tx Only'),
-            ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: cs.error),
-            onPressed: () => Navigator.pop(ctx, settlement != null ? 'delete_and_undo' : 'delete'),
-            child: Text(settlement != null ? 'Undo & Delete' : 'Delete'),
-          ),
-        ],
-      ),
-    );
-    
-    if (result != null && result != 'cancel') {
-      if (result == 'delete_and_undo' && settlement != null) {
-        await ref.read(duesRepositoryProvider).undoSettlement(settlement.id);
-      }
-      await ref.read(transactionsRepositoryProvider).delete(row.transaction.id);
-    }
-  }
+
 }
 
 // ── Header ─────────────────────────────────────────────────────────────────────
@@ -457,10 +413,10 @@ class _Header extends StatelessWidget {
               child: TextField(
                 controller: searchCtrl,
                 onChanged: onQueryChanged,
-                style: GoogleFonts.inter(fontSize: 14),
+                style: GoogleFonts.plusJakartaSans(fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Search transactions…',
-                  hintStyle: GoogleFonts.inter(fontSize: 14, color: cs.onSurfaceVariant),
+                  hintStyle: GoogleFonts.plusJakartaSans(fontSize: 14, color: cs.onSurfaceVariant),
                   prefixIcon: Icon(Icons.search_rounded, size: 18, color: cs.onSurfaceVariant),
                   border: InputBorder.none,
                   isCollapsed: true,
@@ -518,7 +474,7 @@ class _StatsRow extends StatelessWidget {
           const Spacer(),
           Text(
             '$netPrefix₹${_fmt(totals.net.abs())}',
-            style: GoogleFonts.manrope(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: netColor,
@@ -528,7 +484,7 @@ class _StatsRow extends StatelessWidget {
           const SizedBox(width: 5),
           Text(
             'net',
-            style: GoogleFonts.inter(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 11,
               color: cs.onSurfaceVariant,
               fontWeight: FontWeight.w500,
@@ -566,7 +522,7 @@ class _InlineStat extends StatelessWidget {
         const SizedBox(width: 3),
         Text(
           '₹${_fmt(value)}',
-          style: GoogleFonts.manrope(
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 14,
             fontWeight: FontWeight.w700,
             color: color,
@@ -629,7 +585,7 @@ class _ActiveFilterChips extends StatelessWidget {
                     ),
                     child: Text(
                       label,
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: cs.primary,
@@ -645,7 +601,7 @@ class _ActiveFilterChips extends StatelessWidget {
             onTap: onClear,
             child: Text(
               'Clear',
-              style: GoogleFonts.inter(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: cs.onSurfaceVariant,
@@ -680,7 +636,7 @@ class _GroupHeader extends StatelessWidget {
         children: [
           Text(
             label,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 12,
               fontWeight: FontWeight.w700,
               color: cs.onSurface,
@@ -691,7 +647,7 @@ class _GroupHeader extends StatelessWidget {
           if (income > 0)
             Text(
               '+₹${_fmt(income)}',
-              style: GoogleFonts.inter(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: appColors.income,
@@ -703,7 +659,7 @@ class _GroupHeader extends StatelessWidget {
           if (expense > 0)
             Text(
               '−₹${_fmt(expense)}',
-              style: GoogleFonts.inter(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: appColors.expense,
@@ -743,7 +699,7 @@ class _LoadMoreButton extends StatelessWidget {
           minimumSize: const Size(double.infinity, 44),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           textStyle:
-              GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+              GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w500),
         ),
         child: Text('Load $loadNext more  ·  $remaining remaining'),
       ),
@@ -782,7 +738,7 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               hasFilter ? 'No results' : 'No transactions yet',
-              style: GoogleFonts.manrope(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
                 color: cs.onSurface,
@@ -907,7 +863,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                   children: [
                     Text(
                       'Filters',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                         color: cs.onSurface,
@@ -1039,7 +995,7 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label.toUpperCase(),
-      style: GoogleFonts.inter(
+      style: GoogleFonts.plusJakartaSans(
         fontSize: 11,
         fontWeight: FontWeight.w700,
         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -1087,7 +1043,7 @@ class _KindRow extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     label,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: active ? cs.onPrimary : cs.onSurfaceVariant,
@@ -1148,7 +1104,7 @@ class _DateRangeGrid extends StatelessWidget {
               ),
               child: Text(
                 label,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: active ? cs.onPrimary : cs.onSurface,
@@ -1170,7 +1126,7 @@ class _DateRangeGrid extends StatelessWidget {
             ),
             child: Text(
               customLabel ?? 'Custom…',
-              style: GoogleFonts.inter(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: selected == _DateRange.custom
@@ -1240,7 +1196,7 @@ class _MultiSelect<T> extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   labelOf(item),
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     color: active ? cs.onPrimary : cs.onSurface,
@@ -1274,7 +1230,7 @@ class _AmountField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle:
-            GoogleFonts.inter(fontSize: 13, color: cs.onSurfaceVariant),
+            GoogleFonts.plusJakartaSans(fontSize: 13, color: cs.onSurfaceVariant),
         filled: true,
         fillColor: cs.surfaceContainer,
         border: OutlineInputBorder(
@@ -1284,7 +1240,7 @@ class _AmountField extends StatelessWidget {
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       ),
-      style: GoogleFonts.inter(fontSize: 13),
+      style: GoogleFonts.plusJakartaSans(fontSize: 13),
       onChanged: (v) => onChanged(v.isEmpty ? null : double.tryParse(v)),
     );
   }

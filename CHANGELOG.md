@@ -3,6 +3,14 @@
 All notable changes to SpendWise are listed here.
 Format: `## vX.X.X — YYYY-MM-DD` with Added / Changed / Fixed sections.
 
+## v2.11.0 — 2026-07-06
+
+### Changed
+- **Typography Upgrade**: Completely overhauled the app's typography to use a "Fintech Premium" font stack (Plus Jakarta Sans, DM Sans, Space Grotesk) for improved readability and a modern aesthetic.
+- **Transaction Entry UI**: Replaced the "Swipe to Add/Save" slider in the Add/Edit transaction sheets with a standard, solid button for a simpler and more consistent user experience.
+
+---
+
 ## v2.10.0 — 2026-07-06
 
 ### Added
