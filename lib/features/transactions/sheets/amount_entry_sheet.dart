@@ -444,9 +444,9 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
 
     bool isValid = _amount > 0;
     if (_isTransfer) {
-      isValid = isValid && _fromAccountId != null && _toAccountId != null && _fromAccountId != _toAccountId;
+      isValid = isValid && _fromAccountId != null && _toAccountId != null && _fromAccountId != _toAccountId && _modeId != null;
     } else {
-      isValid = isValid && _accountId != null && _categoryId != null;
+      isValid = isValid && _accountId != null && _categoryId != null && _modeId != null;
     }
     final effectiveModeId = (cashAccount && cashMode != null) ? cashMode.id : _modeId;
     isValid = isValid && effectiveModeId != null;

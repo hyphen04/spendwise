@@ -3,6 +3,17 @@
 All notable changes to SpendWise are listed here.
 Format: `## vX.X.X — YYYY-MM-DD` with Added / Changed / Fixed sections.
 
+## v2.10.0 — 2026-07-06
+
+### Added
+- **Account Current Balance Calibration**: Redesigned account creation and editing. You can now simply enter your actual current bank balance, and SpendWise automatically calculates your true starting balance by reverse-engineering your past transactions.
+
+### Changed
+- **Transfer Architecture Overhaul**: Rebuilt the underlying financial engine to rigorously track internal transfers (`transfer_in` and `transfer_out`) for flawlessly accurate net worth and statement calculation.
+- **Swipe-to-Add Transaction Enhancements**: Polished the "Swipe to Add" sliders to strictly remain disabled until all necessary fields (amount, accounts, category, payment mode) are populated.
+
+---
+
 ## v2.9.1 — 2026-07-04
 
 ### Added

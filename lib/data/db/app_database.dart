@@ -59,7 +59,7 @@ class AppDatabase extends _$AppDatabase {
   static const kTransferCategoryId = 'system-transfer-cat-0000-000000000001';
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -97,6 +97,22 @@ class AppDatabase extends _$AppDatabase {
             if (!hasColumn) {
               await m.addColumn(dueContacts, dueContacts.defaultCategoryId);
             }
+          }
+          if (from < 9) {
+            // Migrate transfer kinds
+            await customStatement('''
+              UPDATE transactions SET kind = 'transfer_out' 
+              WHERE kind = 'transfer' 
+              AND id IN (
+                SELECT t1.id FROM transactions t1
+                JOIN transactions t2 ON t1.transfer_pair_id = t2.id
+                WHERE t1.kind = 'transfer' AND t1.rowid < t2.rowid
+              )
+            ''');
+            await customStatement('''
+              UPDATE transactions SET kind = 'transfer_in'
+              WHERE kind = 'transfer'
+            ''');
           }
         },
       );

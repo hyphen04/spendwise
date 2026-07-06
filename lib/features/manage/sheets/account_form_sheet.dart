@@ -8,18 +8,20 @@ import '../widgets/color_picker_row.dart';
 Future<void> showAccountFormSheet(
   BuildContext context, {
   Account? editing,
+  double? currentBalance,
 }) {
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (_) => _AccountFormSheet(editing: editing),
+    builder: (_) => _AccountFormSheet(editing: editing, currentBalance: currentBalance),
   );
 }
 
 class _AccountFormSheet extends ConsumerStatefulWidget {
-  const _AccountFormSheet({this.editing});
+  const _AccountFormSheet({this.editing, this.currentBalance});
   final Account? editing;
+  final double? currentBalance;
 
   @override
   ConsumerState<_AccountFormSheet> createState() => _AccountFormSheetState();
@@ -33,6 +35,7 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
   late String _selectedColor;
   late String _currency;
   bool _saving = false;
+  double _netActivity = 0.0;
 
   @override
   void initState() {
@@ -40,8 +43,9 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
     final e = widget.editing;
     _nameCtrl = TextEditingController(text: e?.name ?? '');
     _iconCtrl = TextEditingController(text: e?.icon ?? '🏦');
+    final initialBalance = widget.currentBalance ?? e?.openingBalance ?? 0.0;
     _balanceCtrl = TextEditingController(
-        text: e?.openingBalance.toStringAsFixed(2) ?? '0.00');
+        text: initialBalance.toStringAsFixed(2));
     _selectedColor = e?.color ?? '#0284C7';
     _currency = e?.currency ?? 'INR';
   }
@@ -59,16 +63,20 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
     setState(() => _saving = true);
     final repo = ref.read(accountsRepositoryProvider);
     try {
-      double balance = double.tryParse(
+      double inputBalance = double.tryParse(
               _balanceCtrl.text.trim().replaceAll(',', '')) ??
           0.0;
+          
+      double openingBalanceToSave = widget.editing == null 
+          ? inputBalance 
+          : inputBalance - _netActivity;
 
       if (widget.editing == null) {
         await repo.create(
           name: _nameCtrl.text.trim(),
           icon: _iconCtrl.text.trim(),
           color: _selectedColor,
-          openingBalance: balance,
+          openingBalance: openingBalanceToSave,
           currency: _currency,
         );
       } else {
@@ -77,7 +85,7 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
           name: _nameCtrl.text.trim(),
           icon: _iconCtrl.text.trim(),
           color: _selectedColor,
-          openingBalance: balance,
+          openingBalance: openingBalanceToSave,
           currency: _currency,
         );
       }
@@ -158,11 +166,11 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
                 Consumer(
                   builder: (context, ref, _) {
                     final netAsync = ref.watch(accountNetBalanceProvider(widget.editing!));
-                    // We parse the current input of the starting balance so the UI updates dynamically if they type
-                    final inputStartingBalance = double.tryParse(_balanceCtrl.text.trim().replaceAll(',', '')) ?? 0.0;
                     final curBal = netAsync.valueOrNull ?? widget.editing!.openingBalance;
-                    final netActivity = curBal - widget.editing!.openingBalance;
-                    final calculatedCurrent = inputStartingBalance + netActivity;
+                    _netActivity = curBal - widget.editing!.openingBalance;
+                    
+                    final inputCurrentBalance = double.tryParse(_balanceCtrl.text.trim().replaceAll(',', '')) ?? 0.0;
+                    final calculatedStarting = inputCurrentBalance - _netActivity;
                     
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -170,11 +178,11 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
                         TextFormField(
                           controller: _balanceCtrl,
                           decoration: const InputDecoration(
-                            labelText: 'Starting Balance',
-                            helperText: 'The initial balance before any transactions.',
+                            labelText: 'Current Balance',
+                            helperText: 'Your actual bank/wallet balance right now.',
                           ),
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          onChanged: (_) => setState(() {}), // Trigger rebuild to update calculated current balance
+                          onChanged: (_) => setState(() {}),
                         ),
                         const SizedBox(height: 12),
                         Container(
@@ -186,9 +194,9 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Calculated Current Balance:', style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13)),
+                              Text('Calculated Starting Balance:', style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13)),
                               Text(
-                                '₹${calculatedCurrent.toStringAsFixed(2)}',
+                                '₹${calculatedStarting.toStringAsFixed(2)}',
                                 style: TextStyle(fontWeight: FontWeight.w600, color: cs.onSurface),
                               ),
                             ],

@@ -364,7 +364,7 @@ floatingActionButton: FloatingActionButton(
                 row: row,
                 onTap: () => showTransactionDetailSheet(ctx, row: row),
                 onEdit: () =>
-                    showAddEditTransactionSheet(ctx, editing: row.transaction),
+                    showAddEditTransactionSheet(ctx, editing: row.transaction, toAccountId: row.transferPairAccount?.id),
                 onDuplicate: () => ref
                     .read(transactionsRepositoryProvider)
                     .duplicate(row.transaction),

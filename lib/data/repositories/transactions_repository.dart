@@ -112,7 +112,7 @@ class TransactionsRepository {
         accountId: fromAccountId,
         categoryId: catId,
         modeId: modeId,
-        kind: const Value('transfer'),
+        kind: const Value('transfer_out'),
         note: Value(note),
         transferPairId: Value(incomeId),
         createdAt: now,
@@ -125,7 +125,7 @@ class TransactionsRepository {
         accountId: toAccountId,
         categoryId: catId,
         modeId: modeId,
-        kind: const Value('transfer'),
+        kind: const Value('transfer_in'),
         note: Value(note),
         transferPairId: Value(expenseId),
         createdAt: now,
@@ -148,24 +148,29 @@ class TransactionsRepository {
     final pair = pairId != null ? await _db.transactionsDao.getById(pairId) : null;
 
     await _db.transaction(() async {
-      // Update the expense leg (the one we opened for editing)
+      final isExistingTransferIn = existing.kind == 'transfer_in';
+      
+      final existingAccountId = isExistingTransferIn ? toAccountId : fromAccountId;
+      final pairAccountId = isExistingTransferIn ? fromAccountId : toAccountId;
+
+      // Update the leg we opened for editing
       await _db.transactionsDao.upsert(TransactionsCompanion(
         id: Value(existing.id),
         amount: Value(amount),
         transactionDate: Value(transactionDate),
-        accountId: Value(fromAccountId),
+        accountId: Value(existingAccountId),
         modeId: Value(modeId),
         note: Value(note),
         createdAt: Value(existing.createdAt),
         updatedAt: Value(now),
       ));
-      // Update the income leg if the pair exists
+      // Update the other leg if the pair exists
       if (pair != null) {
         await _db.transactionsDao.upsert(TransactionsCompanion(
           id: Value(pair.id),
           amount: Value(amount),
           transactionDate: Value(transactionDate),
-          accountId: Value(toAccountId),
+          accountId: Value(pairAccountId),
           modeId: Value(modeId),
           note: Value(note),
           createdAt: Value(pair.createdAt),
@@ -194,7 +199,7 @@ class TransactionsRepository {
   Future<void> delete(String id) async {
     final tx = await getById(id);
     if (tx == null) return;
-    if (tx.kind == 'transfer' && tx.transferPairId != null) {
+    if (tx.kind.startsWith('transfer') && tx.transferPairId != null) {
       await _db.transaction(() async {
         await _db.transactionsDao.deleteById(tx.transferPairId!);
         await _db.transactionsDao.deleteById(id);

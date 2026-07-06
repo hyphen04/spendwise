@@ -75,6 +75,8 @@ class AppColors extends ThemeExtension<AppColors> {
       case 'expense':
         return expense;
       case 'transfer':
+      case 'transfer_in':
+      case 'transfer_out':
         return transfer;
       default:
         return expense;
@@ -89,6 +91,8 @@ class AppColors extends ThemeExtension<AppColors> {
       case 'expense':
         return expenseContainer;
       case 'transfer':
+      case 'transfer_in':
+      case 'transfer_out':
         return transferContainer;
       default:
         return expenseContainer;

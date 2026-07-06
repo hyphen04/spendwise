@@ -35,7 +35,7 @@ final transactionRowsProvider = Provider<AsyncValue<List<TransactionRow>>>((ref)
     return txs
         .map((tx) {
           Account? pairAccount;
-          if (tx.kind == 'transfer' && tx.transferPairId != null) {
+          if (tx.kind.startsWith('transfer') && tx.transferPairId != null) {
             final pairTx = txs.where((t) => t.id == tx.transferPairId).firstOrNull;
             if (pairTx != null) {
               pairAccount = accMap[pairTx.accountId];

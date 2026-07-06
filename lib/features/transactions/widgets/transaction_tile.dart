@@ -29,7 +29,7 @@ class TransactionTile extends StatelessWidget {
     final tx = row.transaction;
     final cs = Theme.of(context).colorScheme;
     final appColors = Theme.of(context).extension<AppColors>()!;
-    final isTransfer = tx.kind == 'transfer';
+    final isTransfer = tx.kind.startsWith('transfer');
     final sign = isTransfer ? '' : (tx.kind == 'expense' ? '−' : '+');
     final amountColor = appColors.forKind(tx.kind);
     final avatarBg = appColors.containerForKind(tx.kind);

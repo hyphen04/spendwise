@@ -28,6 +28,7 @@ Future<void> showAddEditTransactionSheet(
   BuildContext context, {
   Transaction? editing,
   String initialKind = 'expense',
+  String? toAccountId,
 }) {
   if (editing == null) {
     return showAmountEntrySheet(context, initialKind: initialKind);
@@ -36,14 +37,19 @@ Future<void> showAddEditTransactionSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (_) => _AddEditSheet(editing: editing, initialKind: initialKind),
+    builder: (_) => _AddEditSheet(
+      editing: editing, 
+      initialKind: initialKind,
+      toAccountId: toAccountId,
+    ),
   );
 }
 
 class _AddEditSheet extends ConsumerStatefulWidget {
-  const _AddEditSheet({this.editing, required this.initialKind});
+  const _AddEditSheet({this.editing, required this.initialKind, this.toAccountId});
   final Transaction? editing;
   final String initialKind;
+  final String? toAccountId;
 
   @override
   ConsumerState<_AddEditSheet> createState() => _AddEditSheetState();
@@ -65,14 +71,17 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
   void initState() {
     super.initState();
     final e = widget.editing;
-    _kind = e?.kind ?? widget.initialKind;
+    final initial = e?.kind ?? widget.initialKind;
+    _kind = initial.startsWith('transfer') ? 'transfer' : initial;
     _amountCtrl = TextEditingController(
         text: e != null ? _fmtAmt(e.amount) : '');
     _noteCtrl = TextEditingController(text: e?.note ?? '');
     _selectedDate = e != null
         ? DateTime.tryParse(e.transactionDate) ?? DateTime.now()
         : DateTime.now();
-    _accountId = e?.accountId;
+    final isTransferIn = e?.kind == 'transfer_in';
+    _accountId = isTransferIn ? widget.toAccountId : e?.accountId;
+    _toAccountId = isTransferIn ? e?.accountId : widget.toAccountId;
     _categoryId = e?.categoryId == AppDatabase.kTransferCategoryId
         ? null
         : e?.categoryId;

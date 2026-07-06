@@ -31,7 +31,7 @@ class _DetailSheetState extends ConsumerState<_DetailSheet> {
   Widget build(BuildContext context) {
     final tx = widget.row.transaction;
     final cs = Theme.of(context).colorScheme;
-    final isTransfer = tx.kind == 'transfer';
+    final isTransfer = tx.kind.startsWith('transfer');
     final sign = isTransfer ? '' : (tx.kind == 'expense' ? '−' : '+');
 
     return Padding(
@@ -173,7 +173,7 @@ class _DetailSheetState extends ConsumerState<_DetailSheet> {
                       filled: false,
                       onTap: () {
                         Navigator.pop(context);
-                        showAddEditTransactionSheet(context, editing: tx);
+                        showAddEditTransactionSheet(context, editing: tx, toAccountId: widget.row.transferPairAccount?.id);
                       },
                     ),
                   ),
@@ -209,7 +209,7 @@ class _DetailSheetState extends ConsumerState<_DetailSheet> {
         title: const Text('Delete Transaction'),
         content: Text(settlement != null
             ? 'This transaction is linked to a Dues settlement.\n\nDo you also want to undo the Dues settlement? (This will mark the tiffin/dues entries as unsettled again)'
-            : (tx.kind == 'transfer'
+            : (tx.kind.startsWith('transfer')
                 ? 'Delete both legs of this transfer?'
                 : 'Permanently delete this transaction?')),
         actions: [

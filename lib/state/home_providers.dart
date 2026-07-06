@@ -46,9 +46,9 @@ final globalNetWorthProvider = Provider<AsyncValue<double>>((ref) {
     final accMap = {for (final a in accAsync.valueOrNull ?? <Account>[]) a.id: a};
     final acc = accMap[tx.accountId];
     if (acc != null && !acc.isArchived) {
-      if (tx.kind == 'income') {
+      if (tx.kind == 'income' || tx.kind == 'transfer_in') {
         total += tx.amount;
-      } else if (tx.kind == 'expense') {
+      } else if (tx.kind == 'expense' || tx.kind == 'transfer_out') {
         total -= tx.amount;
       }
     }

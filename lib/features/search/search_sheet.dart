@@ -15,6 +15,7 @@ import '../manage/sheets/mode_form_sheet.dart';
 import '../transactions/sheets/add_edit_transaction_sheet.dart';
 import '../transactions/sheets/transaction_detail_sheet.dart';
 import '../transactions/widgets/transaction_tile.dart';
+import '../../state/manage_providers.dart';
 
 void showSearchSheet(BuildContext context) {
   Navigator.of(context).push(
@@ -238,7 +239,10 @@ class _SearchSheetState extends ConsumerState<_SearchSheet> {
                               sublabel: acc.currency,
                               highlight: _debouncedQuery,
                               cs: cs,
-                              onTap: () => showAccountFormSheet(context, editing: acc),
+                              onTap: () {
+                                final netBal = ref.read(accountNetBalanceProvider(acc)).valueOrNull;
+                                showAccountFormSheet(context, editing: acc, currentBalance: netBal);
+                              },
                             ),
                           ),
                         ],
@@ -307,7 +311,7 @@ class _SearchSheetState extends ConsumerState<_SearchSheet> {
         highlight: highlight,
         onTap: () => showTransactionDetailSheet(context, row: row),
         onEdit: () =>
-            showAddEditTransactionSheet(context, editing: row.transaction),
+            showAddEditTransactionSheet(context, editing: row.transaction, toAccountId: row.transferPairAccount?.id),
         onDuplicate: () => ref
             .read(transactionsRepositoryProvider)
             .duplicate(row.transaction),

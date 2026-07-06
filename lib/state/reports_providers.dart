@@ -47,7 +47,7 @@ final categoryBreakdownProvider =
 final modeBreakdownProvider =
     FutureProvider.family<List<ModeTotal>, (String, String)>((ref, args) {
   ref.watch(allTransactionsStreamProvider);
-  return ref.read(reportsRepositoryProvider).modeBreakdown(from: args.$1, to: args.$2);
+  return ref.read(reportsRepositoryProvider).modeBreakdown(from: args.$1, to: args.$2, kind: 'expense');
 });
 
 // (from, to) → top 10 expense transactions
@@ -82,9 +82,9 @@ final accountBalanceProvider = Provider.family<AsyncValue<double>, String>((ref,
 
   for (final tx in txAsync.valueOrNull ?? []) {
     if (tx.accountId == accountId) {
-      if (tx.kind == 'income') {
+      if (tx.kind == 'income' || tx.kind == 'transfer_in') {
         total += tx.amount;
-      } else if (tx.kind == 'expense') {
+      } else if (tx.kind == 'expense' || tx.kind == 'transfer_out') {
         total -= tx.amount;
       }
     }

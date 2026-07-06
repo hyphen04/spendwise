@@ -191,9 +191,9 @@ class _StatementList extends ConsumerWidget {
               double monthIncome = 0.0;
               double monthExpense = 0.0;
               for (final t in txs) {
-                if (t.kind == 'income') {
+                if (t.kind == 'income' || t.kind == 'transfer_in') {
                   monthIncome += t.amount;
-                } else if (t.kind == 'expense') {
+                } else if (t.kind == 'expense' || t.kind == 'transfer_out') {
                   monthExpense += t.amount;
                 }
               }
@@ -227,27 +227,32 @@ class _StatementList extends ConsumerWidget {
                           const Divider(height: 1, indent: 56),
                       itemBuilder: (ctx, i) {
                         final tx = txs[i];
-                        final isIncome = tx.kind == 'income';
+                        final isIncome = tx.kind == 'income' || tx.kind == 'transfer_in';
+                        final isTransfer = tx.kind.startsWith('transfer');
                         return ListTile(
                           dense: true,
                           leading: CircleAvatar(
                             radius: 16,
-                            backgroundColor: isIncome
+                            backgroundColor: isTransfer
                                 ? cs.onSurface.withAlpha(20)
-                                : cs.errorContainer,
+                                : (isIncome
+                                    ? cs.onSurface.withAlpha(20)
+                                    : cs.errorContainer),
                             child: Text(
-                              isIncome ? '↑' : '↓',
+                              isTransfer ? '⇄' : (isIncome ? '↑' : '↓'),
                               style: TextStyle(
-                                color: isIncome
+                                color: isTransfer
                                     ? cs.onSurface
-                                    : cs.onErrorContainer,
+                                    : (isIncome
+                                        ? cs.onSurface
+                                        : cs.onErrorContainer),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
                             ),
                           ),
                           title: Text(
-                              catMap[tx.categoryId] ?? tx.kind,
+                              catMap[tx.categoryId] ?? (isTransfer ? 'Transfer' : tx.kind),
                               style: const TextStyle(fontSize: 14)),
                           subtitle: tx.note.isNotEmpty
                               ? Column(

@@ -43,9 +43,9 @@ final accountNetBalanceProvider =
   return db.transactionsDao.watchByAccount(account.id).map((txs) {
     double income = 0, expense = 0;
     for (final tx in txs) {
-      if (tx.kind == 'income') {
+      if (tx.kind == 'income' || tx.kind == 'transfer_in') {
         income += tx.amount;
-      } else if (tx.kind == 'expense') {
+      } else if (tx.kind == 'expense' || tx.kind == 'transfer_out') {
         expense += tx.amount;
       }
     }

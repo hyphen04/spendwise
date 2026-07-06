@@ -19,7 +19,7 @@ class Transactions extends Table {
   TextColumn get modeId =>
       text().references(Modes, #id, onDelete: KeyAction.restrict)();
 
-  /// 'expense' | 'income' | 'transfer'
+  /// Kind: 'expense' | 'income' | 'transfer_out' | 'transfer_in'
   TextColumn get kind => text().withDefault(const Constant('expense'))();
 
   TextColumn get note => text().withDefault(const Constant(''))();

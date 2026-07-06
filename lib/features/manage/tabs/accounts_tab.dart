@@ -60,7 +60,7 @@ class _AccountTile extends ConsumerWidget {
       subtitle:
           '$currencySymbol ${netBalance.toStringAsFixed(2)}',
       isDefault: isDefault,
-      onEdit: () => showAccountFormSheet(context, editing: account),
+      onEdit: () => showAccountFormSheet(context, editing: account, currentBalance: netBalance),
       onArchive: () => _confirmArchive(context, repo, account),
       onDelete: () => _handleDelete(context, ref, repo, account),
       onSetDefault: () =>
