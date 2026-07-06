@@ -113,8 +113,9 @@ class UpdateService {
           !connectivity.contains(ConnectivityResult.none);
       if (!isOnline) return null;
 
-      final info = await checkForUpdate();
       await prefs.setLastUpdateCheckMs(now);
+
+      final info = await checkForUpdate();
       return info;
     } catch (_) {
       return null;

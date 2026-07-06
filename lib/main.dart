@@ -39,18 +39,24 @@ void main() async {
   // Take a rolling replica backup ONLY if the DB is healthy
   await DatabaseBackupService.backupBeforeInit(prefsService);
 
-  UpdateInfo? pendingUpdate;
+  final container = ProviderContainer(
+    overrides: [
+      appDatabaseProvider.overrideWithValue(db),
+      prefsServiceProvider.overrideWithValue(prefsService),
+    ],
+  );
+
   if (prefsService.autoCheckUpdates) {
-    pendingUpdate = await UpdateService.checkForUpdateIfDue(prefsService);
+    UpdateService.checkForUpdateIfDue(prefsService).then((update) {
+      if (update != null) {
+        container.read(pendingUpdateProvider.notifier).state = update;
+      }
+    });
   }
 
   runApp(
-    ProviderScope(
-      overrides: [
-        appDatabaseProvider.overrideWithValue(db),
-        prefsServiceProvider.overrideWithValue(prefsService),
-        pendingUpdateProvider.overrideWith((ref) => pendingUpdate),
-      ],
+    UncontrolledProviderScope(
+      container: container,
       child: const SpendWiseApp(),
     ),
   );
