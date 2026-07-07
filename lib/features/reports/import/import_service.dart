@@ -5,13 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 import '../../../data/db/app_database.dart';
-import 'csv_importer.dart';
 import 'import_models.dart';
 import 'import_preview_sheet.dart';
 import 'json_importer.dart';
 import 'raw_db_importer.dart';
 import 'template_generator.dart';
-import 'xlsx_importer.dart';
 
 // ── Public entry point ─────────────────────────────────────────────────────
 
@@ -40,7 +38,7 @@ class _ImportOptionsSheet extends StatefulWidget {
 enum _Step { options, loading }
 
 class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
-  ImportFormat _format = ImportFormat.xlsx;
+  ImportFormat _format = ImportFormat.json;
   _Step _step = _Step.options;
   String _loadingMessage = 'Parsing file…';
 
@@ -54,10 +52,6 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
     try {
       final String path;
       switch (_format) {
-        case ImportFormat.csv:
-          path = await TemplateGenerator.generateCsv(widget.db);
-        case ImportFormat.xlsx:
-          path = await TemplateGenerator.generateXlsx(widget.db);
         case ImportFormat.json:
           path = await TemplateGenerator.generateJson(widget.db);
         case ImportFormat.rawDbZip:
@@ -88,8 +82,6 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
   Future<void> _pickAndImport() async {
     // 1. Pick file
     final ext = switch (_format) {
-      ImportFormat.csv => 'csv',
-      ImportFormat.xlsx => 'xlsx',
       ImportFormat.json => 'json',
       ImportFormat.rawDbZip => 'zip',
     };
@@ -323,26 +315,6 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
 
   Future<List<ParsedRow>> _parse(PlatformFile picked) async {
     switch (_format) {
-      case ImportFormat.csv:
-        final bytes = picked.bytes;
-        final String content;
-        if (bytes != null) {
-          content = String.fromCharCodes(bytes);
-        } else {
-          content = await File(picked.path!).readAsString();
-        }
-        return CsvImporter.parse(content);
-
-      case ImportFormat.xlsx:
-        final bytes = picked.bytes;
-        final List<int> data;
-        if (bytes != null) {
-          data = bytes;
-        } else {
-          data = await File(picked.path!).readAsBytes();
-        }
-        return XlsxImporter.parse(data);
-
       case ImportFormat.json:
       case ImportFormat.rawDbZip:
         return []; // Handled separately
@@ -406,8 +378,6 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
               runSpacing: 8,
               children: [
                 for (final (fmt, label, icon) in [
-                  (ImportFormat.xlsx, 'Excel', Icons.table_chart_outlined),
-                  (ImportFormat.csv, 'CSV', Icons.view_list_outlined),
                   (ImportFormat.json, 'JSON', Icons.data_object_outlined),
                   (ImportFormat.rawDbZip, 'Raw DB Zip', Icons.folder_zip_outlined),
                 ])
@@ -427,10 +397,6 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
             // Format hint
             Text(
               switch (_format) {
-                ImportFormat.xlsx =>
-                  'Recommended. 4 sheets: Transactions (editable) + Accounts, Categories, Modes (reference, pre-populated with your data).',
-                ImportFormat.csv =>
-                  'Single sheet. Includes your accounts, categories, and modes as comments at the bottom for reference.',
                 ImportFormat.json =>
                   'Full envelope format with a reference section. Great for round-tripping data.',
                 ImportFormat.rawDbZip =>

@@ -61,7 +61,7 @@ class PrefsService {
   Future<void> setLastUpdateCheckMs(int v) =>
       _prefs.setInt('last_update_check_ms', v);
 
-  int get backupQuotaMb => _prefs.getInt('backup_quota_mb') ?? 20;
+  int get backupQuotaMb => _prefs.getInt('backup_quota_mb') ?? 10;
   Future<void> setBackupQuotaMb(int v) => _prefs.setInt('backup_quota_mb', v);
 
   bool get showQuickDuesWidget => _prefs.getBool('show_quick_dues') ?? true;

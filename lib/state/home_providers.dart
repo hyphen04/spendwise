@@ -114,12 +114,23 @@ final monthTransactionRowsProvider =
   };
 
   return txs
-      .map((tx) => TransactionRow(
-            transaction: tx,
-            account: accMap[tx.accountId],
-            category: catMap[tx.categoryId],
-            mode: modeMap[tx.modeId],
-          ))
+      .where((tx) => tx.kind != 'transfer_in')
+      .map((tx) {
+        Account? pairAccount;
+        if (tx.kind.startsWith('transfer') && tx.transferPairId != null) {
+          final pairTx = txs.where((t) => t.id == tx.transferPairId).firstOrNull;
+          if (pairTx != null) {
+            pairAccount = accMap[pairTx.accountId];
+          }
+        }
+        return TransactionRow(
+          transaction: tx,
+          account: accMap[tx.accountId],
+          category: catMap[tx.categoryId],
+          mode: modeMap[tx.modeId],
+          transferPairAccount: pairAccount,
+        );
+      })
       .toList();
 });
 

@@ -33,6 +33,7 @@ final transactionRowsProvider = Provider<AsyncValue<List<TransactionRow>>>((ref)
     final catMap = {for (final c in catAsync.valueOrNull ?? <Category>[]) c.id: c};
     final modeMap = {for (final m in modeAsync.valueOrNull ?? <Mode>[]) m.id: m};
     return txs
+        .where((tx) => tx.kind != 'transfer_in')
         .map((tx) {
           Account? pairAccount;
           if (tx.kind.startsWith('transfer') && tx.transferPairId != null) {

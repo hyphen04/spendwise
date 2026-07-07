@@ -50,3 +50,5 @@ key.properties
 
 # Custom scripts
 switch_fonts.py
+.env
+DESIGN.md

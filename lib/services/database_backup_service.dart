@@ -117,43 +117,35 @@ class DatabaseBackupService {
     await backupFile.copy(dbFile.path);
   }
 
-  /// Exports the raw 'expenses.db' file and the latest replica (if any) as a single ZIP file
-  static Future<void> exportRawDatabaseZip() async {
-    try {
-      final dbFolder = await getApplicationDocumentsDirectory();
-      final dbFile = File(p.join(dbFolder.path, 'expenses.db'));
-      
-      final filesToZip = <File>[];
-      if (await dbFile.exists()) {
-        filesToZip.add(dbFile);
-      }
-
-      final backups = await getBackups();
-      if (backups.isNotEmpty) {
-        filesToZip.add(backups.first); // latest replica
-      }
-
-      if (filesToZip.isEmpty) {
-        debugPrint('No database files found to export.');
-        return;
-      }
-
-      final encoder = ZipFileEncoder();
-      final tempDir = await getTemporaryDirectory();
-      final zipPath = p.join(tempDir.path, 'spendwise_raw_db_backup.zip');
-      
-      encoder.create(zipPath);
-      for (final f in filesToZip) {
-        encoder.addFile(f);
-      }
-      encoder.close();
-
-      await SharePlus.instance.share(ShareParams(
-        files: [XFile(zipPath)],
-        text: 'SpendWise Raw Database Backup',
-      ));
-    } catch (e, st) {
-      debugPrint('Error exporting raw database: $e\n$st');
+  /// Generates a ZIP file containing the raw 'expenses.db' file and the latest replica (if any) and returns the path
+  static Future<String> generateRawDatabaseZip() async {
+    final dbFolder = await getApplicationDocumentsDirectory();
+    final dbFile = File(p.join(dbFolder.path, 'expenses.db'));
+    
+    final filesToZip = <File>[];
+    if (await dbFile.exists()) {
+      filesToZip.add(dbFile);
     }
+
+    final backups = await getBackups();
+    if (backups.isNotEmpty) {
+      filesToZip.add(backups.first); // latest replica
+    }
+
+    if (filesToZip.isEmpty) {
+      throw Exception('No database files found to export.');
+    }
+
+    final encoder = ZipFileEncoder();
+    final tempDir = await getTemporaryDirectory();
+    final zipPath = p.join(tempDir.path, 'spendwise_raw_db_backup.zip');
+    
+    encoder.create(zipPath);
+    for (final f in filesToZip) {
+      encoder.addFile(f);
+    }
+    encoder.close();
+
+    return zipPath;
   }
 }

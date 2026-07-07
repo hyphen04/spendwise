@@ -3,6 +3,19 @@
 All notable changes to SpendWise are listed here.
 Format: `## vX.X.X — YYYY-MM-DD` with Added / Changed / Fixed sections.
 
+## v2.12.0 — 2026-07-07
+
+### Added
+- **.env Support**: Added support for `.env` files via `flutter_dotenv` for secure environment variable management.
+
+### Changed
+- **Database Backup**: Updated the raw database export to generate a ZIP containing both the main database and the latest replica backup.
+- **Auto Update Check**: Improved auto-update check logic to properly compare build numbers when semantic versions match.
+- **Transaction Lists**: Filtered out `transfer_in` transactions from the Home and Transactions screens to avoid duplicate entries when logging internal transfers.
+- **Backup Quota**: Reduced default backup quota from 20 MB to 10 MB.
+
+---
+
 ## v2.11.0 — 2026-07-06
 
 ### Changed

@@ -21,6 +21,7 @@ import '../reports/export/export_service.dart';
 import '../reports/import/import_service.dart';
 import '../../services/database_backup_service.dart';
 import 'manage_backups_screen.dart';
+import 'sheets/feedback_sheet.dart';
 
 class SettingsScreenV2 extends ConsumerStatefulWidget {
   const SettingsScreenV2({super.key});
@@ -223,19 +224,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Clear all data?'),
+        icon: const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 32),
+        title: const Text('Erase all data?', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
         content: const Text(
             'This deletes all transactions, dues, and budgets, and resets account balances to zero. '
-            'Your accounts, categories, and modes are kept. This cannot be undone.'),
+            'Your accounts, categories, and modes are kept. This cannot be undone.',
+            style: TextStyle(color: Colors.red)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: const Text('Cancel')),
           FilledButton(
             style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(ctx).colorScheme.error),
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
+            child: const Text('Erase All', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -283,15 +287,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
               children: [
 
-          // ── Manage ──────────────────────────────────────────────────────────
-          _sectionHeader('Manage', context),
+          // ── General ──────────────────────────────────────────────────────────
+          _sectionHeader('General', context),
           Card(
-            child: ListTile(
-              leading: const Icon(Icons.tune_rounded),
-              title: const Text('Accounts, Categories & More'),
-              subtitle: const Text('Manage your accounts, categories, modes & budgets'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => context.push('/manage'),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.tune_rounded),
+                  title: const Text('Accounts, Categories & More'),
+                  subtitle: const Text('Manage your accounts, categories, modes & budgets'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push('/manage'),
+                ),
+                const Divider(height: 1),
+                SwitchListTile(
+                  title: const Text('Quick Dues Widget'),
+                  subtitle: const Text('Show quick dues entry on home screen'),
+                  secondary: const Icon(Icons.flash_on_rounded),
+                  value: ref.watch(showQuickDuesProvider),
+                  onChanged: (v) => ref.read(showQuickDuesProvider.notifier).set(v),
+                ),
+              ],
             ),
           ),
 
@@ -364,22 +380,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
             ),
           ),
 
-          // ── Home Screen ───────────────────────────────────────────────────────
-          _sectionHeader('Home Screen', context),
-          Card(
-            child: Column(
-              children: [
-                SwitchListTile(
-                  title: const Text('Quick Dues Widget'),
-                  subtitle: const Text('Show quick dues entry on home screen'),
-                  secondary: const Icon(Icons.flash_on_rounded),
-                  value: ref.watch(showQuickDuesProvider),
-                  onChanged: (v) => ref.read(showQuickDuesProvider.notifier).set(v),
-                ),
-              ],
-            ),
-          ),
-
           // ── Security ────────────────────────────────────────────────────────
           _sectionHeader('Security', context),
           Card(
@@ -423,8 +423,48 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
             child: Column(
               children: [
                 ListTile(
+                  leading: const Icon(Icons.upload_outlined),
+                  title: const Text('Export Data'),
+                  subtitle: const Text('Generate reports as PDF, CSV, or Excel'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () {
+                    final db = ref.read(appDatabaseProvider);
+                    final now = DateTime.now();
+                    ExportService.showExportSheet(context, db,
+                        defaultFrom: DateTime(now.year, now.month).toIso8601String(),
+                        defaultTo: DateTime(now.year, now.month + 1).toIso8601String());
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.download_outlined),
+                  title: const Text('Import Data'),
+                  subtitle: const Text('Restore records from external files'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () {
+                    final db = ref.read(appDatabaseProvider);
+                    ImportService.showImportSheet(context, db);
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.backup_rounded),
+                  title: const Text('Auto-Backups'),
+                  subtitle: const Text('View and restore automated local backups'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ManageBackupsScreen()),
+                    );
+                  },
+                ),
+
+                const Divider(height: 1),
+                ListTile(
                   leading: const Icon(Icons.sd_storage_outlined),
-                  title: const Text('Backup Storage Quota'),
+                  title: const Text('Backup Storage Limit'),
+                  subtitle: const Text('Control how much space backups use'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -444,64 +484,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: const Icon(Icons.backup_rounded),
-                  title: const Text('Manage Backups'),
-                  subtitle: const Text('View and restore database replicas'),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ManageBackupsScreen()),
-                    );
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.archive_outlined),
-                  title: const Text('Download Raw DB (ZIP)'),
-                  subtitle: const Text('Export expenses.db and the latest replica'),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () {
-                    // Show a quick loading indicator while zipping
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Zipping databases...'),
-                        duration: Duration(seconds: 1),
-                      ),
-                    );
-                    DatabaseBackupService.exportRawDatabaseZip();
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.upload_outlined),
-                  title: const Text('Export Data'),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () {
-                    final db = ref.read(appDatabaseProvider);
-                    final now = DateTime.now();
-                    ExportService.showExportSheet(context, db,
-                        defaultFrom: DateTime(now.year, now.month).toIso8601String(),
-                        defaultTo: DateTime(now.year, now.month + 1).toIso8601String());
-                  },
-                ),
-
-                ListTile(
-                  leading: const Icon(Icons.download_outlined),
-                  title: const Text('Import Data'),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () {
-                    final db = ref.read(appDatabaseProvider);
-                    ImportService.showImportSheet(context, db);
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: Icon(Icons.delete_outline_rounded,
-                      color: cs.error),
-                  title: Text('Clear All Data',
-                      style: TextStyle(color: cs.error)),
-                  trailing: const Icon(Icons.chevron_right_rounded),
+                  leading: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                  title: const Text('Erase All Data', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                  subtitle: const Text('Permanently delete all your records', style: TextStyle(color: Colors.red)),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: Colors.red),
                   onTap: _clearAllData,
                 ),
                 if (kDebugMode) ...[
@@ -537,24 +523,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
             ),
           ),
 
-          // ── About ────────────────────────────────────────────────────────────
-          _sectionHeader('About', context),
+          // ── Support & Updates ───────────────────────────────────────────────
+          _sectionHeader('Support & Updates', context),
           Card(
             child: Column(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.info_outline_rounded),
-                  title: const Text('Version'),
-                  trailing: Text(
-                    _appVersion.isEmpty ? '…' : _appVersion,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ),
                 if (Platform.isAndroid) ...[
-                  const Divider(height: 1),
                   SwitchListTile(
                     secondary: const Icon(Icons.update_outlined),
                     title: const Text('Auto-check for updates'),
@@ -576,7 +550,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                       ),
                     ),
                   ),
+                  const Divider(height: 1),
                 ],
+                ListTile(
+                  leading: const Icon(Icons.bug_report_outlined),
+                  title: const Text('Send Feedback'),
+                  subtitle: const Text('Report bugs or request features'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => showFeedbackSheet(context),
+                ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.article_outlined),
@@ -627,7 +609,7 @@ class _AboutCard extends StatefulWidget {
 }
 
 class _AboutCardState extends State<_AboutCard> {
-  static const _githubUrl = 'https://github.com/hyphen04';
+  static const _appGithubUrl = 'https://github.com/hyphen04/spendwise';
   static const _portfolioUrl = 'https://kunj.dev';
 
   String _version = '';
@@ -656,257 +638,161 @@ class _AboutCardState extends State<_AboutCard> {
     final tt = Theme.of(context).textTheme;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── App card ────────────────────────────────────────────────────────
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: cs.surfaceContainer,
-            borderRadius: BorderRadius.circular(16),
+        Material(
+          color: cs.surfaceContainerLow,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(color: cs.outlineVariant.withOpacity(0.5)),
           ),
+          clipBehavior: Clip.antiAlias,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      'assets/logo/logo.png',
-                      width: 44,
-                      height: 44,
-                      fit: BoxFit.cover,
-                    ),
+              const SizedBox(height: 32),
+              // ── Logo ──
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: cs.shadow.withOpacity(0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    )
+                  ]
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset(
+                    'assets/logo/logo.png',
+                    width: 72,
+                    height: 72,
+                    fit: BoxFit.cover,
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'SpendWise',
-                          style: tt.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        Text(
-                          'Personal Finance',
-                          style: tt.bodySmall
-                              ?.copyWith(color: cs.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (_version.isNotEmpty)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: cs.secondaryContainer,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'v$_version',
-                        style: tt.labelSmall?.copyWith(
-                          color: cs.onSecondaryContainer,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Text(
-                'Finally, an app that tells you exactly where your money went. '
-                'You probably won\'t like the answer — but hey, at least it\'s offline so no one else can see your shame.',
-                style: tt.bodySmall
-                    ?.copyWith(color: cs.onSurfaceVariant, height: 1.55),
+                ),
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  _StatCell(emoji: '📵', label: 'Offline', cs: cs, tt: tt),
-                  const SizedBox(width: 8),
-                  _StatCell(emoji: '🚫', label: 'No Ads', cs: cs, tt: tt),
-                  const SizedBox(width: 8),
-                  _StatCell(emoji: '🔒', label: 'Private', cs: cs, tt: tt),
-                  const SizedBox(width: 8),
-                  _StatCell(emoji: '💾', label: 'On-Device', cs: cs, tt: tt),
-                ],
+              
+              // ── App Name & Version ──
+              Text(
+                'SpendWise',
+                style: tt.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                  color: cs.onSurface,
+                ),
               ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 12),
-
-        // ── Developer card ──────────────────────────────────────────────────
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: cs.surfaceContainer,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: cs.primary,
-                    child: Text(
-                      'KP',
-                      style: TextStyle(
-                        color: cs.onPrimary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13,
-                        letterSpacing: 0.5,
-                      ),
+              if (_version.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    'v$_version',
+                    style: tt.labelLarge?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(width: 14),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+              
+              const SizedBox(height: 16),
+              
+              // ── Description ──
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  'Finally, an app that tells you exactly where your money went. '
+                  'Offline, private, and ad-free.',
+                  textAlign: TextAlign.center,
+                  style: tt.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              const Divider(height: 1),
+              
+              // ── App GitHub ──
+              InkWell(
+                onTap: () => _launch(context, _appGithubUrl),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
                     children: [
-                      Text('Kunj Patel',
-                          style: tt.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w700)),
-                      Text(
-                        'Software Developer · Gujarat',
-                        style: tt.bodySmall
-                            ?.copyWith(color: cs.onSurfaceVariant),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: cs.primaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.code_rounded, color: cs.onPrimaryContainer, size: 22),
                       ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Open Source', style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                            const SizedBox(height: 2),
+                            Text('github.com/hyphen04/spendwise', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward_ios_rounded, size: 14, color: cs.onSurfaceVariant),
                     ],
                   ),
-                ],
+                ),
               ),
-              const SizedBox(height: 14),
-              Text(
-                'Builds software that respects the person using it. '
-                'Currently questioning why he made an app that judges his own spending — '
-                'but the code is clean, and that\'s what matters.',
-                style: tt.bodySmall
-                    ?.copyWith(color: cs.onSurfaceVariant, height: 1.55),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  _LinkChip(
-                    icon: Icons.code_rounded,
-                    label: 'github.com/hyphen04',
-                    onTap: () => _launch(context, _githubUrl),
-                    cs: cs,
+              
+              const Divider(height: 1),
+              
+              // ── Developer ──
+              InkWell(
+                onTap: () => _launch(context, _portfolioUrl),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: cs.secondaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.person_outline_rounded, color: cs.onSecondaryContainer, size: 22),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Designed & Developed by', style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                            const SizedBox(height: 2),
+                            Text('Kunj Patel (kunj.dev)', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward_ios_rounded, size: 14, color: cs.onSurfaceVariant),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  _LinkChip(
-                    icon: Icons.language_rounded,
-                    label: 'kunj.dev',
-                    onTap: () => _launch(context, _portfolioUrl),
-                    cs: cs,
-                  ),
-                ],
+                ),
               ),
             ],
           ),
         ),
-
-        const SizedBox(height: 16),
+        
+        const SizedBox(height: 24),
         Center(
           child: Text(
             'Made with ☕ and questionable life choices',
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant.withOpacity(0.8),
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],
-    );
-  }
-}
-
-class _StatCell extends StatelessWidget {
-  const _StatCell({
-    required this.emoji,
-    required this.label,
-    required this.cs,
-    required this.tt,
-  });
-
-  final String emoji;
-  final String label;
-  final ColorScheme cs;
-  final TextTheme tt;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 18)),
-            const SizedBox(height: 5),
-            Text(
-              label,
-              style: tt.labelSmall?.copyWith(
-                color: cs.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _LinkChip extends StatelessWidget {
-  const _LinkChip({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    required this.cs,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final ColorScheme cs;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          border: Border.all(color: cs.outline),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: cs.onSurface),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: cs.onSurface,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -113,11 +113,12 @@ class UpdateService {
           !connectivity.contains(ConnectivityResult.none);
       if (!isOnline) return null;
 
-      await prefs.setLastUpdateCheckMs(now);
-
       final info = await checkForUpdate();
+      // Only record the check time if it succeeded without exceptions
+      await prefs.setLastUpdateCheckMs(now);
       return info;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Auto update check failed: $e');
       return null;
     }
   }
@@ -206,10 +207,12 @@ class UpdateService {
 
   static bool _isNewer(String tagName, String currentVersion) {
     final tag = tagName.startsWith('v') ? tagName.substring(1) : tagName;
-    final cur = currentVersion.split('+').first;
+    
+    final tagBase = tag.split('+').first;
+    final curBase = currentVersion.split('+').first;
 
-    final tagParts = tag.split('.').map(_toInt).toList();
-    final curParts = cur.split('.').map(_toInt).toList();
+    final tagParts = tagBase.split('.').map(_toInt).toList();
+    final curParts = curBase.split('.').map(_toInt).toList();
 
     for (var i = 0; i < 3; i++) {
       final t = i < tagParts.length ? tagParts[i] : 0;
@@ -217,7 +220,12 @@ class UpdateService {
       if (t > c) return true;
       if (t < c) return false;
     }
-    return false;
+    
+    // Semantic versions are equal, check build numbers
+    final tagBuild = tag.contains('+') ? _toInt(tag.split('+').last) : 0;
+    final curBuild = currentVersion.contains('+') ? _toInt(currentVersion.split('+').last) : 0;
+    
+    return tagBuild > curBuild;
   }
 
   static int _toInt(String s) => int.tryParse(s.trim()) ?? 0;
