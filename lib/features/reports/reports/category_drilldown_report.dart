@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../state/reports_providers.dart';
+import '../../../utils/color_utils.dart';
 import '../widgets/insight_card.dart';
 import '../widgets/report_period_app_bar.dart';
 
@@ -86,7 +87,11 @@ class _CategoryDrilldownReportState extends ConsumerState<CategoryDrilldownRepor
             );
           }
           final total = cats.fold<double>(0, (s, c) => s + c.total);
-          final palette = _palette(cats.length);
+          // Resolve each category's stored color (#RRGGBB) into a Flutter
+          // Color once; reused by the pie, the legend swatches and the
+          // progress bars so they all agree. Falls back to a neutral slate
+          // when a category has no color set.
+          final colors = cats.map((c) => hexToColor(c.color)).toList();
 
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -100,7 +105,7 @@ class _CategoryDrilldownReportState extends ConsumerState<CategoryDrilldownRepor
                       final pct = total > 0 ? e.value.total / total : 0.0;
                       return PieChartSectionData(
                         value: e.value.total,
-                        color: palette[e.key % palette.length],
+                        color: colors[e.key],
                         radius: 60,
                         title: pct > 0.05
                             ? '${(pct * 100).toStringAsFixed(0)}%'
@@ -141,6 +146,7 @@ class _CategoryDrilldownReportState extends ConsumerState<CategoryDrilldownRepor
               ...cats.asMap().entries.map((e) {
                 final cat = e.value;
                 final pct = total > 0 ? cat.total / total : 0.0;
+                final color = colors[e.key];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Row(
@@ -149,7 +155,7 @@ class _CategoryDrilldownReportState extends ConsumerState<CategoryDrilldownRepor
                         width: 12,
                         height: 12,
                         decoration: BoxDecoration(
-                          color: palette[e.key % palette.length],
+                          color: color,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -181,7 +187,7 @@ class _CategoryDrilldownReportState extends ConsumerState<CategoryDrilldownRepor
                             LinearProgressIndicator(
                               value: pct,
                               minHeight: 4,
-                              color: palette[e.key % palette.length],
+                              color: color,
                               backgroundColor: cs.surfaceContainerHigh,
                               borderRadius: BorderRadius.circular(2),
                             ),
@@ -197,17 +203,6 @@ class _CategoryDrilldownReportState extends ConsumerState<CategoryDrilldownRepor
         },
       ),
     );
-  }
-
-  // Grayscale ramp: near-black → light gray, fully monochrome.
-  static List<Color> _palette(int count) {
-    final n = count < 1 ? 1 : count;
-    return List.generate(n, (i) {
-      // Spread from 0x18 (near-black) to 0xCC (light gray)
-      final t = n == 1 ? 0.0 : i / (n - 1);
-      final v = (0x18 + (0xCC - 0x18) * t).round();
-      return Color.fromARGB(255, v, v, v);
-    });
   }
 
   static String _fmt(double v) =>

@@ -42,8 +42,11 @@ class CashflowTrendReport extends ConsumerWidget {
               .fold<double>(0, (a, b) => a > b ? a : b);
           final yMax = maxY > 0 ? maxY * 1.2 : 1000.0;
 
-          final incomeColor = cs.onSurface;
-          final expenseColor = cs.onSurfaceVariant;
+          // Income = green, expense = red. Use the explicit hex codes that
+          // match the rest of the reports — cs.error/onSurface are monochrome
+          // in this app's theme, so they'd render black/grey here.
+          const incomeColor = Color(0xFF16A34A);
+          const expenseColor = Color(0xFFDC2626);
 
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -228,15 +231,19 @@ class _MonthRow extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Text('+₹${_fmt(month.income)}',
-                    style: TextStyle(color: cs.onSurface, fontSize: 13)),
+                    style: const TextStyle(
+                        color: Color(0xFF16A34A), fontSize: 13)),
                 Text('−₹${_fmt(month.expense)}',
-                    style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13)),
+                    style: const TextStyle(
+                        color: Color(0xFFDC2626), fontSize: 13)),
                 Text(
                   '${month.net >= 0 ? '+' : '−'}₹${_fmt(month.net.abs())}',
                   style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
-                      color: cs.onSurface),
+                      color: month.net >= 0
+                          ? const Color(0xFF10B981)
+                          : const Color(0xFFEF4444)),
                 ),
               ],
             ),

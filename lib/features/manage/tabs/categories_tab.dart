@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import '../../../app/themes/app_colors.dart';
+import '../../../app/utils/feedback.dart';
+import '../../../app/widgets/confirm_delete_dialog.dart';
 import '../../../data/db/app_database.dart';
 import '../../../data/repositories/categories_repository.dart';
 import '../../../state/manage_providers.dart';
@@ -80,16 +84,47 @@ class _CategoryTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(categoriesRepositoryProvider);
+    final appColors = Theme.of(context).extension<AppColors>()!;
     final kindLabel = category.kind[0].toUpperCase() + category.kind.substring(1);
 
-    return EntityTile(
-      icon: category.icon,
-      name: category.name,
-      colorHex: category.color,
-      subtitle: kindLabel,
-      onEdit: () => showCategoryFormSheet(context, editing: category),
-      onArchive: () => _confirmArchive(context, repo, category),
-      onDelete: () => _handleDelete(context, ref, repo, category),
+    return Slidable(
+      key: ValueKey(category.id),
+      startActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: 0.25,
+        children: [
+          SlidableAction(
+            onPressed: (_) =>
+                showCategoryFormSheet(context, editing: category),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            icon: Icons.edit_outlined,
+            label: 'Edit',
+          ),
+        ],
+      ),
+      endActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: 0.25,
+        children: [
+          SlidableAction(
+            onPressed: (_) => _handleDelete(context, ref, repo, category),
+            backgroundColor: appColors.expense,
+            foregroundColor: appColors.onExpense,
+            icon: Icons.delete_outline_rounded,
+            label: 'Delete',
+          ),
+        ],
+      ),
+      child: EntityTile(
+        icon: category.icon,
+        name: category.name,
+        colorHex: category.color,
+        subtitle: kindLabel,
+        onEdit: () => showCategoryFormSheet(context, editing: category),
+        onArchive: () => _confirmArchive(context, repo, category),
+        onDelete: () => _handleDelete(context, ref, repo, category),
+      ),
     );
   }
 
@@ -127,25 +162,15 @@ class _CategoryTile extends ConsumerWidget {
     if (!context.mounted) return;
 
     if (count == 0) {
-      final ok = await showDialog<bool>(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Delete Category'),
-          content: Text('Permanently delete "${cat.name}"?'),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel')),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error),
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Delete'),
-            ),
-          ],
-        ),
+      final ok = await showConfirmDeleteDialog(
+        context,
+        title: 'Delete Category',
+        message: 'Permanently delete "${cat.name}"?',
       );
-      if (ok == true) await repo.reassignAndDelete(cat.id, cat.id);
+      if (ok) {
+        await repo.reassignAndDelete(cat.id, cat.id);
+        if (context.mounted) showFeedbackSnackBar(context, 'Category deleted');
+      }
       return;
     }
 
@@ -217,6 +242,7 @@ class _CategoryTile extends ConsumerWidget {
     );
     if (confirmed == true && target != null) {
       await repo.reassignAndDelete(cat.id, target!.id);
+      if (context.mounted) showFeedbackSnackBar(context, 'Category deleted');
     }
   }
 }

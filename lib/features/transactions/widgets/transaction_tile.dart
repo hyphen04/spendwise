@@ -1,20 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/themes/app_colors.dart';
 import '../../../data/models/transaction_row.dart';
 
 /// Flat monochrome transaction row — no card, no shadow, no colored amounts.
 /// Income vs expense is shown by the +/− sign only.
+///
+/// Swipe right→left reveals **Delete** (end pane); swipe left→right reveals
+/// **Edit** + **Duplicate** (start pane). A plain tap opens the edit form
+/// (see CLAUDE.md → List Row Interaction Rules).
 class TransactionTile extends StatelessWidget {
   const TransactionTile({
     super.key,
     required this.row,
     required this.onTap,
+    this.onEdit,
+    this.onDuplicate,
+    this.onDelete,
     this.highlight = '',
   });
 
   final TransactionRow row;
   final VoidCallback onTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDuplicate;
+  final VoidCallback? onDelete;
   /// When non-empty, the matching substring in the title and note is bolded.
   final String highlight;
 
@@ -28,10 +39,50 @@ class TransactionTile extends StatelessWidget {
     final amountColor = appColors.forKind(tx.kind);
     final avatarBg = appColors.containerForKind(tx.kind);
 
-    return InkWell(
-      onTap: onTap,
-      onLongPress: onTap,
-      child: Padding(
+    return Slidable(
+      key: ValueKey(row.transaction.id),
+      startActionPane: (onEdit != null || onDuplicate != null)
+          ? ActionPane(
+              motion: const DrawerMotion(),
+              extentRatio: 0.5,
+              children: [
+                if (onEdit != null)
+                  SlidableAction(
+                    onPressed: (_) => onEdit!(),
+                    backgroundColor: cs.primary,
+                    foregroundColor: cs.onPrimary,
+                    icon: Icons.edit_outlined,
+                    label: 'Edit',
+                  ),
+                if (onDuplicate != null)
+                  SlidableAction(
+                    onPressed: (_) => onDuplicate!(),
+                    backgroundColor: cs.surfaceContainerHighest,
+                    foregroundColor: cs.onSurface,
+                    icon: Icons.content_copy_rounded,
+                    label: 'Duplicate',
+                  ),
+              ],
+            )
+          : null,
+      endActionPane: onDelete != null
+          ? ActionPane(
+              motion: const DrawerMotion(),
+              extentRatio: 0.25,
+              children: [
+                SlidableAction(
+                  onPressed: (_) => onDelete!(),
+                  backgroundColor: appColors.expense,
+                  foregroundColor: appColors.onExpense,
+                  icon: Icons.delete_outline_rounded,
+                  label: 'Delete',
+                ),
+              ],
+            )
+          : null,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
         child: Row(
           children: [
@@ -104,6 +155,7 @@ class TransactionTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

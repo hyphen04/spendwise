@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../data/db/app_database.dart';
 import '../../../state/dues_providers.dart';
+import '../../../app/utils/feedback.dart';
 import '../../../app/widgets/mono_numpad.dart';
 import '../../../app/widgets/mono_pill.dart';
 import '../../../app/widgets/date_strip.dart';
@@ -112,7 +113,11 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
       );
     }
     
-    if (mounted) Navigator.pop(context);
+    if (mounted) {
+      showFeedbackSnackBar(
+          context, widget.existingEntry != null ? 'Entry updated' : 'Entry added');
+      Navigator.pop(context);
+    }
   }
 
   @override

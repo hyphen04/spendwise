@@ -57,9 +57,9 @@ final modeBreakdownProvider =
   return ref.read(reportsRepositoryProvider).modeBreakdown(from: args.$1, to: args.$2, kind: 'expense');
 });
 
-// (from, to) → top 10 expense transactions
+// (from, to) → top 10 expense categories by total spend
 final topSpendsProvider =
-    FutureProvider.family<List<Transaction>, (String, String)>((ref, args) {
+    FutureProvider.family<List<CategoryTotal>, (String, String)>((ref, args) {
   ref.watch(allTransactionsStreamProvider);
   return ref.read(reportsRepositoryProvider).topSpends(from: args.$1, to: args.$2);
 });

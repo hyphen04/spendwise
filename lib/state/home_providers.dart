@@ -57,11 +57,6 @@ final globalNetWorthProvider = Provider<AsyncValue<double>>((ref) {
   return AsyncData(total);
 });
 
-/// Latest 10 transactions across all time.
-final globalRecentTransactionsProvider = Provider<List<TransactionRow>>((ref) {
-  return (ref.watch(transactionRowsProvider).valueOrNull ?? []).take(10).toList();
-});
-
 /// Income + expense totals for a given (year, month).
 final homeSummaryProvider =
     Provider.family<HomeSummary, (int, int)>((ref, args) {

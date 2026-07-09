@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/db/app_database.dart';
 import '../../../data/validators.dart';
 import '../../../state/manage_providers.dart';
+import '../../../app/utils/feedback.dart';
 import '../widgets/color_picker_row.dart';
 
 Future<void> showAccountFormSheet(
@@ -89,7 +90,11 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
           currency: _currency,
         );
       }
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        showFeedbackSnackBar(
+            context, widget.editing == null ? 'Account added' : 'Account updated');
+        Navigator.of(context).pop();
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

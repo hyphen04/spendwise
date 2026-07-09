@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import '../../../app/themes/app_colors.dart';
+import '../../../app/utils/feedback.dart';
+import '../../../app/widgets/confirm_delete_dialog.dart';
 import '../../../data/db/app_database.dart';
 import '../../../data/repositories/modes_repository.dart';
 import '../../../state/manage_providers.dart';
@@ -44,21 +48,51 @@ class _ModeTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(modesRepositoryProvider);
+    final appColors = Theme.of(context).extension<AppColors>()!;
 
     final defaultModeId = ref.watch(defaultModeIdProvider);
     final isDefault = mode.id == defaultModeId;
 
-    return EntityTile(
-      icon: mode.icon,
-      name: mode.name,
-      isDefault: isDefault,
-      onEdit: () => showModeFormSheet(context, editing: mode),
-      onArchive: () => _confirmArchive(context, repo, mode),
-      onDelete: () => _handleDelete(context, ref, repo, mode),
-      onSetDefault: () =>
-          ref.read(defaultModeIdProvider.notifier).set(mode.id),
-      onClearDefault: () =>
-          ref.read(defaultModeIdProvider.notifier).set(null),
+    return Slidable(
+      key: ValueKey(mode.id),
+      startActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: 0.25,
+        children: [
+          SlidableAction(
+            onPressed: (_) => showModeFormSheet(context, editing: mode),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            icon: Icons.edit_outlined,
+            label: 'Edit',
+          ),
+        ],
+      ),
+      endActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: 0.25,
+        children: [
+          SlidableAction(
+            onPressed: (_) => _handleDelete(context, ref, repo, mode),
+            backgroundColor: appColors.expense,
+            foregroundColor: appColors.onExpense,
+            icon: Icons.delete_outline_rounded,
+            label: 'Delete',
+          ),
+        ],
+      ),
+      child: EntityTile(
+        icon: mode.icon,
+        name: mode.name,
+        isDefault: isDefault,
+        onEdit: () => showModeFormSheet(context, editing: mode),
+        onArchive: () => _confirmArchive(context, repo, mode),
+        onDelete: () => _handleDelete(context, ref, repo, mode),
+        onSetDefault: () =>
+            ref.read(defaultModeIdProvider.notifier).set(mode.id),
+        onClearDefault: () =>
+            ref.read(defaultModeIdProvider.notifier).set(null),
+      ),
     );
   }
 
@@ -96,25 +130,15 @@ class _ModeTile extends ConsumerWidget {
     if (!context.mounted) return;
 
     if (count == 0) {
-      final ok = await showDialog<bool>(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Delete Mode'),
-          content: Text('Permanently delete "${mode.name}"?'),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel')),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error),
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Delete'),
-            ),
-          ],
-        ),
+      final ok = await showConfirmDeleteDialog(
+        context,
+        title: 'Delete Mode',
+        message: 'Permanently delete "${mode.name}"?',
       );
-      if (ok == true) await repo.reassignAndDelete(mode.id, mode.id);
+      if (ok) {
+        await repo.reassignAndDelete(mode.id, mode.id);
+        if (context.mounted) showFeedbackSnackBar(context, 'Mode deleted');
+      }
       return;
     }
 
@@ -183,6 +207,7 @@ class _ModeTile extends ConsumerWidget {
     );
     if (confirmed == true && target != null) {
       await repo.reassignAndDelete(mode.id, target!.id);
+      if (context.mounted) showFeedbackSnackBar(context, 'Mode deleted');
     }
   }
 }

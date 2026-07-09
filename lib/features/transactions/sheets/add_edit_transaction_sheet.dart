@@ -5,6 +5,7 @@ import '../../../data/validators.dart';
 import '../../../state/manage_providers.dart';
 import '../../../state/transactions_providers.dart';
 import '../../../utils/amount_input_formatter.dart';
+import '../../../app/utils/feedback.dart';
 import 'amount_entry_sheet.dart';
 
 // ── Mode filtering helpers ────────────────────────────────────────────────────
@@ -188,7 +189,11 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
           );
         }
       }
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        showFeedbackSnackBar(
+            context, _isEditing ? 'Transaction updated' : 'Transaction added');
+        Navigator.of(context).pop();
+      }
     } catch (e) {
       _showError(e.toString());
     } finally {

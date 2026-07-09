@@ -66,12 +66,15 @@ class ReportsRepository {
       biggestNote = rawNote.isNotEmpty ? rawNote : null;
     }
 
-    final baseBalRow = await _db.customSelect('SELECT COALESCE(SUM(opening_balance), 0) AS total FROM accounts').getSingle();
+    final baseBalRow = await _db.customSelect(
+      'SELECT COALESCE(SUM(opening_balance), 0) AS total FROM accounts WHERE is_archived = 0',
+    ).getSingle();
     final double baseBalance = (baseBalRow.data['total'] as num).toDouble();
 
     final prevTxRow = await _db.customSelect(
       'SELECT COALESCE(SUM(CASE WHEN kind IN (\'income\', \'transfer_in\') THEN amount WHEN kind IN (\'expense\', \'transfer_out\') THEN -amount ELSE 0 END), 0) AS net '
-      'FROM transactions WHERE transaction_date < ?',
+      'FROM transactions WHERE transaction_date < ? '
+      'AND account_id IN (SELECT id FROM accounts WHERE is_archived = 0)',
       variables: [Variable.withString(from)],
     ).getSingle();
     final double prevNet = (prevTxRow.data['net'] as num).toDouble();
@@ -231,19 +234,33 @@ class ReportsRepository {
     return result;
   }
 
-  Future<List<Transaction>> topSpends({
+  Future<List<CategoryTotal>> topSpends({
     required String from,
     required String to,
     int limit = 10,
-  }) {
-    return (_db.select(_db.transactions)
-          ..where((t) =>
-              t.kind.equals('expense') &
-              t.transactionDate.isBiggerOrEqualValue(from) &
-              t.transactionDate.isSmallerThanValue(to))
-          ..orderBy([(t) => OrderingTerm.desc(t.amount)])
-          ..limit(limit))
-        .get();
+  }) async {
+    final rows = await _db.customSelect(
+      'SELECT t.category_id, c.name, c.icon, c.color, SUM(t.amount) AS total '
+      'FROM transactions t LEFT JOIN categories c ON t.category_id = c.id '
+      'WHERE t.transaction_date >= ? AND t.transaction_date < ? '
+      'AND t.kind = \'expense\' '
+      'GROUP BY t.category_id ORDER BY total DESC LIMIT ?',
+      variables: [
+        Variable.withString(from),
+        Variable.withString(to),
+        Variable.withInt(limit),
+      ],
+    ).get();
+
+    return rows
+        .map((r) => CategoryTotal(
+              categoryId: r.data['category_id'] as String? ?? '',
+              name: r.data['name'] as String? ?? 'Unknown',
+              icon: r.data['icon'] as String? ?? '📦',
+              color: r.data['color'] as String? ?? '#475569',
+              total: (r.data['total'] as num).toDouble(),
+            ))
+        .toList();
   }
 
   Future<List<Transaction>> accountStatement({
@@ -292,12 +309,15 @@ class ReportsRepository {
     final from = DateTime(year, 1, 1).toIso8601String();
     final to = DateTime(year + 1, 1, 1).toIso8601String();
 
-    final baseBalRow = await _db.customSelect('SELECT COALESCE(SUM(opening_balance), 0) AS total FROM accounts').getSingle();
+    final baseBalRow = await _db.customSelect(
+      'SELECT COALESCE(SUM(opening_balance), 0) AS total FROM accounts WHERE is_archived = 0',
+    ).getSingle();
     final double baseBalance = (baseBalRow.data['total'] as num).toDouble();
 
     final prevTxRow = await _db.customSelect(
       'SELECT COALESCE(SUM(CASE WHEN kind IN (\'income\', \'transfer_in\') THEN amount WHEN kind IN (\'expense\', \'transfer_out\') THEN -amount ELSE 0 END), 0) AS net '
-      'FROM transactions WHERE transaction_date < ?',
+      'FROM transactions WHERE transaction_date < ? '
+      'AND account_id IN (SELECT id FROM accounts WHERE is_archived = 0)',
       variables: [Variable.withString(from)],
     ).getSingle();
     final double prevNet = (prevTxRow.data['net'] as num).toDouble();
@@ -306,7 +326,8 @@ class ReportsRepository {
 
     final currTxRow = await _db.customSelect(
       'SELECT COALESCE(SUM(CASE WHEN kind IN (\'income\', \'transfer_in\') THEN amount WHEN kind IN (\'expense\', \'transfer_out\') THEN -amount ELSE 0 END), 0) AS net '
-      'FROM transactions WHERE transaction_date >= ? AND transaction_date < ?',
+      'FROM transactions WHERE transaction_date >= ? AND transaction_date < ? '
+      'AND account_id IN (SELECT id FROM accounts WHERE is_archived = 0)',
       variables: [Variable.withString(from), Variable.withString(to)],
     ).getSingle();
     final double currNet = (currTxRow.data['net'] as num).toDouble();

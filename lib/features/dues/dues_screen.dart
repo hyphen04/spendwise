@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../app/themes/app_colors.dart';
+import '../../data/db/app_database.dart';
+import '../../app/utils/feedback.dart';
+import '../../app/utils/infinite_scroll.dart';
+import '../../app/widgets/confirm_delete_dialog.dart';
+import '../../app/widgets/load_more_button.dart';
 import '../../app/widgets/screen_header.dart';
 import '../../state/dues_providers.dart';
 import 'sheets/add_contact_sheet.dart';
@@ -19,6 +25,28 @@ class DuesScreen extends ConsumerStatefulWidget {
 
 class _DuesScreenState extends ConsumerState<DuesScreen> {
   String _filter = 'all'; // 'all', 'payable', 'receivable'
+  final _paging = PagingState();
+
+  Future<void> _deleteContact(BuildContext context, DueContact contact) async {
+    final ok = await showConfirmDeleteDialog(
+      context,
+      title: 'Delete Contact',
+      message: 'Delete "${contact.name}"? You cannot undo this action.',
+    );
+    if (!ok) return;
+    try {
+      await ref.read(duesRepositoryProvider).deleteContact(contact.id);
+      if (!context.mounted) return;
+      showFeedbackSnackBar(context, 'Contact deleted');
+    } catch (_) {
+      if (!context.mounted) return;
+      showFeedbackSnackBar(
+        context,
+        'Cannot delete contact. Settle or delete their entries first.',
+        error: true,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +72,17 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
             ),
             
             Expanded(
-              child: CustomScrollView(
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (n) {
+                  final total = contactsAsync.valueOrNull?.length ?? 0;
+                  maybeLoadMore(
+                    n,
+                    hasMore: _paging.hasMore(total),
+                    onLoadMore: () => setState(_paging.loadMore),
+                  );
+                  return false;
+                },
+                child: CustomScrollView(
                 slivers: [
                   // Inline Stats
                   if (totalPayable > 0 || totalReceivable > 0)
@@ -104,19 +142,28 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
                           _FilterChip(
                             label: 'All',
                             isSelected: _filter == 'all',
-                            onTap: () => setState(() => _filter = 'all'),
+                            onTap: () => setState(() {
+                              _filter = 'all';
+                              _paging.reset();
+                            }),
                           ),
                           const SizedBox(width: 8),
                           _FilterChip(
                             label: 'Payable',
                             isSelected: _filter == 'payable',
-                            onTap: () => setState(() => _filter = 'payable'),
+                            onTap: () => setState(() {
+                              _filter = 'payable';
+                              _paging.reset();
+                            }),
                           ),
                           const SizedBox(width: 8),
                           _FilterChip(
                             label: 'Receivable',
                             isSelected: _filter == 'receivable',
-                            onTap: () => setState(() => _filter = 'receivable'),
+                            onTap: () => setState(() {
+                              _filter = 'receivable';
+                              _paging.reset();
+                            }),
                           ),
                         ],
                       ),
@@ -175,11 +222,12 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
                           ),
                         );
                       }
-                      
+
+                      final visible = contacts.take(_paging.visibleCount).toList();
                       return SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
-                            final contact = contacts[index];
+                            final contact = visible[index];
                             final balanceAsync = ref.watch(contactSummaryProvider(contact.id));
                             
                             return balanceAsync.when(
@@ -187,11 +235,41 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
                                 if (_filter == 'payable' && summary.balance >= 0) return const SizedBox.shrink();
                                 if (_filter == 'receivable' && summary.balance <= 0) return const SizedBox.shrink();
                                 
-                                final balanceColor = summary.balance == 0 
-                                    ? cs.onSurface 
+                                final balanceColor = summary.balance == 0
+                                    ? cs.onSurface
                                     : (summary.balance < 0 ? appColors.expense : appColors.income);
 
-                                return InkWell(
+                                return Slidable(
+                                  key: ValueKey(contact.id),
+                                  startActionPane: ActionPane(
+                                    motion: const DrawerMotion(),
+                                    extentRatio: 0.25,
+                                    children: [
+                                      SlidableAction(
+                                        onPressed: (_) => showAddContactSheet(
+                                            context, existingContact: contact),
+                                        backgroundColor: cs.primary,
+                                        foregroundColor: cs.onPrimary,
+                                        icon: Icons.edit_outlined,
+                                        label: 'Edit',
+                                      ),
+                                    ],
+                                  ),
+                                  endActionPane: ActionPane(
+                                    motion: const DrawerMotion(),
+                                    extentRatio: 0.25,
+                                    children: [
+                                      SlidableAction(
+                                        onPressed: (_) =>
+                                            _deleteContact(context, contact),
+                                        backgroundColor: appColors.expense,
+                                        foregroundColor: appColors.onExpense,
+                                        icon: Icons.delete_outline_rounded,
+                                        label: 'Delete',
+                                      ),
+                                    ],
+                                  ),
+                                  child: InkWell(
                                   onTap: () => context.push('/dues/${contact.id}'),
                                   onLongPress: () => showAddDueEntrySheet(context, prefilledContact: contact),
                                   child: Padding(
@@ -266,22 +344,34 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
                                       ],
                                     ),
                                   ),
-                                );
+                                ),
+                              );
                               },
                               loading: () => const SizedBox(height: 72, child: Center(child: CircularProgressIndicator())),
                               error: (_, __) => const SizedBox.shrink(),
                             );
                           },
-                          childCount: contacts.length,
+                          childCount: visible.length,
                         ),
                       );
                     },
                   ),
 
+                  if (_paging.hasMore(contactsAsync.valueOrNull?.length ?? 0))
+                    SliverToBoxAdapter(
+                      child: LoadMoreButton(
+                        showing: _paging.visibleCount,
+                        total: contactsAsync.valueOrNull?.length ?? 0,
+                        pageSize: _paging.pageSize,
+                        onTap: () => setState(_paging.loadMore),
+                      ),
+                    ),
+
                   SliverToBoxAdapter(
                     child: SizedBox(height: MediaQuery.paddingOf(context).bottom + 96),
                   ),
                 ],
+              ),
               ),
             ),
           ],

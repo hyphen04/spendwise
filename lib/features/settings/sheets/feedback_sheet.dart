@@ -1,11 +1,14 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 Future<void> showFeedbackSheet(BuildContext context) async {
   return showModalBottomSheet(
@@ -15,6 +18,8 @@ Future<void> showFeedbackSheet(BuildContext context) async {
     builder: (_) => const _FeedbackSheet(),
   );
 }
+
+enum _FallbackAction { github, copy, cancel }
 
 class _FeedbackSheet extends StatefulWidget {
   const _FeedbackSheet();
@@ -43,15 +48,22 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
 
     setState(() => _submitting = true);
 
+    final type = _type;
+    final title = _titleCtrl.text.trim();
+    final description = _descCtrl.text.trim();
+
+    String? appVersion;
+    String? deviceInfo;
+
     try {
       final pkg = await PackageInfo.fromPlatform();
-      final appVersion = '${pkg.version}+${pkg.buildNumber}';
-      final deviceInfo = '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';
+      appVersion = '${pkg.version}+${pkg.buildNumber}';
+      deviceInfo = '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';
 
       final body = {
-        'type': _type,
-        'title': _titleCtrl.text.trim(),
-        'description': _descCtrl.text.trim(),
+        'type': type,
+        'title': title,
+        'description': description,
         'appVersion': appVersion,
         'deviceInfo': deviceInfo,
       };
@@ -75,12 +87,39 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
         _showError('Validation Error: ${response.body}');
       } else if (response.statusCode == 405) {
         _showError('Method Not Allowed: Check endpoint configuration.');
+      } else if (response.statusCode == 429 ||
+          (response.statusCode >= 500 && response.statusCode < 600)) {
+        // API is out of limit or otherwise unavailable — offer the GitHub
+        // issues page as a public fallback.
+        await _showApiLimitFallback(
+          type: type,
+          title: title,
+          description: description,
+          appVersion: appVersion,
+          deviceInfo: deviceInfo,
+        );
       } else {
         _showError('Server Error (${response.statusCode}): ${response.body}');
       }
-    } catch (e) {
+    } on TimeoutException {
       if (mounted) {
-        _showError('Failed to submit feedback. Check your connection.');
+        await _showApiLimitFallback(
+          type: type,
+          title: title,
+          description: description,
+          appVersion: appVersion ?? 'unknown',
+          deviceInfo: deviceInfo ?? 'unknown',
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        await _showApiLimitFallback(
+          type: type,
+          title: title,
+          description: description,
+          appVersion: appVersion ?? 'unknown',
+          deviceInfo: deviceInfo ?? 'unknown',
+        );
       }
     } finally {
       if (mounted) {
@@ -93,6 +132,113 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
     );
+  }
+
+  Future<void> _showApiLimitFallback({
+    required String type,
+    required String title,
+    required String description,
+    required String appVersion,
+    required String deviceInfo,
+  }) async {
+    final result = await showDialog<_FallbackAction>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: Icon(
+          Icons.cloud_off_rounded,
+          color: Theme.of(ctx).colorScheme.error,
+        ),
+        title: const Text('Feedback service unavailable'),
+        content: const Text(
+          'The feedback service is currently at its daily limit or temporarily unavailable.\n\n'
+          'You can submit your feedback directly on our GitHub issues page instead.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, _FallbackAction.cancel),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, _FallbackAction.copy),
+            child: const Text('Copy feedback'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(ctx, _FallbackAction.github),
+            icon: const Icon(Icons.open_in_new_rounded, size: 18),
+            label: const Text('Open GitHub Issue'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (result == _FallbackAction.github) {
+      await _openGitHubIssue(
+        type: type,
+        title: title,
+        description: description,
+        appVersion: appVersion,
+        deviceInfo: deviceInfo,
+      );
+    } else if (result == _FallbackAction.copy) {
+      await Clipboard.setData(ClipboardData(
+        text: _formatFeedback(
+          type: type,
+          title: title,
+          description: description,
+          appVersion: appVersion,
+          deviceInfo: deviceInfo,
+        ),
+      ));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Feedback copied to clipboard')),
+        );
+      }
+    }
+  }
+
+  Future<void> _openGitHubIssue({
+    required String type,
+    required String title,
+    required String description,
+    required String appVersion,
+    required String deviceInfo,
+  }) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final body = _formatFeedback(
+      type: type,
+      title: title,
+      description: description,
+      appVersion: appVersion,
+      deviceInfo: deviceInfo,
+    );
+    final uri = Uri(
+      scheme: 'https',
+      host: 'github.com',
+      path: '/hyphen04/spendwise/issues/new',
+      queryParameters: {'title': title, 'body': body},
+    );
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      await Clipboard.setData(ClipboardData(text: uri.toString()));
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Link copied to clipboard')),
+      );
+    }
+  }
+
+  String _formatFeedback({
+    required String type,
+    required String title,
+    required String description,
+    required String appVersion,
+    required String deviceInfo,
+  }) {
+    return '$description\n\n---\n\n'
+        '**Type:** $type  \n'
+        '**App version:** $appVersion  \n'
+        '**Device:** $deviceInfo';
   }
 
   @override

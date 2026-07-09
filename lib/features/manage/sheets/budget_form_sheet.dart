@@ -4,6 +4,7 @@ import '../../../data/db/app_database.dart';
 import '../../../state/home_providers.dart';
 import '../../../state/manage_providers.dart';
 import '../../../utils/amount_input_formatter.dart';
+import '../../../app/utils/feedback.dart';
 
 Future<void> showBudgetFormSheet(
   BuildContext context, {
@@ -78,7 +79,11 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
           accountId: _accountId,
         );
       }
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        showFeedbackSnackBar(
+            context, widget.editing == null ? 'Budget added' : 'Budget updated');
+        Navigator.of(context).pop();
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

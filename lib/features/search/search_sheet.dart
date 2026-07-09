@@ -8,14 +8,19 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/models/transaction_row.dart';
 import '../../state/search_provider.dart';
+import '../../app/utils/feedback.dart';
+import '../../app/utils/infinite_scroll.dart';
+import '../../app/widgets/load_more_button.dart';
 
 import '../manage/sheets/account_form_sheet.dart';
 import '../manage/sheets/category_form_sheet.dart';
 import '../manage/sheets/mode_form_sheet.dart';
 
-import '../transactions/sheets/transaction_detail_sheet.dart';
+import '../transactions/sheets/add_edit_transaction_sheet.dart';
+import '../transactions/transaction_actions.dart';
 import '../transactions/widgets/transaction_tile.dart';
 import '../../state/manage_providers.dart';
+import '../../state/transactions_providers.dart';
 
 void showSearchSheet(BuildContext context) {
   Navigator.of(context).push(
@@ -49,6 +54,8 @@ class _SearchSheetState extends ConsumerState<_SearchSheet> {
   // The raw value shown in the field — used for highlight rendering.
   String _rawQuery = '';
   Timer? _debounce;
+  // Client-side paging for the transactions result set.
+  final _paging = PagingState();
 
   @override
   void dispose() {
@@ -57,16 +64,21 @@ class _SearchSheetState extends ConsumerState<_SearchSheet> {
     super.dispose();
   }
 
+  void _setDebounced(String q) => setState(() {
+        _debouncedQuery = q;
+        _paging.reset();
+      });
+
   void _onChanged(String v) {
     final trimmed = v.trim();
     setState(() => _rawQuery = trimmed);
     _debounce?.cancel();
     if (trimmed.isEmpty) {
-      setState(() => _debouncedQuery = '');
+      _setDebounced('');
       return;
     }
     _debounce = Timer(const Duration(milliseconds: 200), () {
-      if (mounted) setState(() => _debouncedQuery = trimmed);
+      if (mounted) _setDebounced(trimmed);
     });
   }
 
@@ -155,6 +167,7 @@ class _SearchSheetState extends ConsumerState<_SearchSheet> {
                                     setState(() {
                                       _rawQuery = '';
                                       _debouncedQuery = '';
+                                      _paging.reset();
                                     });
                                   },
                                 ),
@@ -170,7 +183,17 @@ class _SearchSheetState extends ConsumerState<_SearchSheet> {
 
                 // ── Results area ──────────────────────────────────────────────
                 Expanded(
-                  child: ListView(
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (n) {
+                      maybeLoadMore(
+                        n,
+                        hasMore: _paging.visibleCount <
+                            results.transactions.length,
+                        onLoadMore: () => setState(_paging.loadMore),
+                      );
+                      return false;
+                    },
+                    child: ListView(
                     padding: const EdgeInsets.fromLTRB(0, 8, 0, 32),
                     physics: const BouncingScrollPhysics(),
                     children: [
@@ -200,8 +223,17 @@ class _SearchSheetState extends ConsumerState<_SearchSheet> {
                             count: results.transactions.length,
                             cs: cs,
                           ),
-                          ..._buildTxTiles(results.transactions, cs,
+                          ..._buildTxTiles(
+                              results.transactions.take(_paging.visibleCount).toList(),
+                              cs,
                               highlight: _debouncedQuery),
+                          if (_paging.hasMore(results.transactions.length))
+                            LoadMoreButton(
+                              showing: _paging.visibleCount,
+                              total: results.transactions.length,
+                              pageSize: _paging.pageSize,
+                              onTap: () => setState(_paging.loadMore),
+                            ),
                         ],
 
                         // ── Categories ──────────────────────────────────────────
@@ -289,6 +321,7 @@ class _SearchSheetState extends ConsumerState<_SearchSheet> {
                       ],
                     ],
                   ),
+                  ),
                 ),
               ],
     ),
@@ -309,7 +342,20 @@ class _SearchSheetState extends ConsumerState<_SearchSheet> {
       widgets.add(TransactionTile(
         row: row,
         highlight: highlight,
-        onTap: () => showTransactionDetailSheet(context, row: row),
+        onTap: () => showAddEditTransactionSheet(context,
+            editing: row.transaction,
+            toAccountId: row.transferPairAccount?.id),
+        onEdit: () => showAddEditTransactionSheet(context,
+            editing: row.transaction,
+            toAccountId: row.transferPairAccount?.id),
+        onDuplicate: () async {
+          await ref
+              .read(transactionsRepositoryProvider)
+              .duplicate(row.transaction);
+          if (!mounted) return;
+          showFeedbackSnackBar(context, 'Transaction duplicated');
+        },
+        onDelete: () => confirmAndDeleteTransaction(context, ref, row),
       ));
       if (i < rows.length - 1) {
         widgets.add(Divider(

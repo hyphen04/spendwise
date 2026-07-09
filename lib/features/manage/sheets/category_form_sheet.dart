@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/db/app_database.dart';
 import '../../../data/validators.dart';
 import '../../../state/manage_providers.dart';
+import '../../../app/utils/feedback.dart';
 import '../widgets/color_picker_row.dart';
 
 Future<void> showCategoryFormSheet(
@@ -77,7 +78,11 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
           kind: _kind,
         );
       }
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        showFeedbackSnackBar(
+            context, widget.editing == null ? 'Category added' : 'Category updated');
+        Navigator.of(context).pop();
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

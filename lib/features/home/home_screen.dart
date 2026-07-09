@@ -4,37 +4,57 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../../app/utils/infinite_scroll.dart';
+import '../../app/widgets/load_more_button.dart';
 import '../../app/widgets/smooth_line_chart.dart';
 import '../../data/models/transaction_row.dart';
 import '../../state/home_providers.dart';
 import '../../state/reports_providers.dart';
+import '../../state/transactions_providers.dart';
 
 import '../../services/update_service.dart';
 import '../../state/update_provider.dart';
 import '../../state/prefs_providers.dart';
+import '../../app/utils/feedback.dart';
 import '../search/search_sheet.dart';
 import '../settings/update_check_dialog.dart';
+import '../transactions/sheets/add_edit_transaction_sheet.dart';
 import '../transactions/sheets/amount_entry_sheet.dart';
-import '../transactions/sheets/transaction_detail_sheet.dart';
+import '../transactions/transaction_actions.dart';
 import '../transactions/widgets/transaction_tile.dart';
 import 'widgets/home_dues_widget.dart';
 
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final _paging = PagingState(pageSize: 20);
+
+  @override
+  Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    
+
     final now = DateTime.now();
     // This month's summary
     final summary = ref.watch(homeSummaryProvider((now.year, now.month)));
     final cashflow = ref.watch(cashFlowProvider);
-    
+
     // Global data
     final netWorthAsync = ref.watch(globalNetWorthProvider);
-    final globalRecentRows = ref.watch(globalRecentTransactionsProvider);
+    // Full recent feed (all months, newest-first). The home "recent activity"
+    // section is scoped to the CURRENT MONTH only — the "View all history →"
+    // button navigates to the transactions screen for older months.
+    final allRecentAsync = ref.watch(transactionRowsProvider);
+    final fullRows = allRecentAsync.valueOrNull ?? <TransactionRow>[];
+    final monthPrefix =
+        '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}';
+    final allRecentRows =
+        fullRows.where((r) => r.transaction.transactionDate.startsWith(monthPrefix)).toList();
 
     final topPad = MediaQuery.paddingOf(context).top;
     final botPad = MediaQuery.paddingOf(context).bottom;
@@ -113,7 +133,16 @@ class HomeScreen extends ConsumerWidget {
 
           // ── Scrollable content ─────────────────────────────────────────────
           Expanded(
-            child: CustomScrollView(
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (n) {
+                maybeLoadMore(
+                  n,
+                  hasMore: _paging.visibleCount < allRecentRows.length,
+                  onLoadMore: () => setState(_paging.loadMore),
+                );
+                return false;
+              },
+              child: CustomScrollView(
               slivers: [
                 // ── Update banner (scrolls with content) ──────────────────
                 if (pendingUpdate != null)
@@ -260,8 +289,8 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
 
-          // ── Transaction list (capped at 10) ────────────────────────────────
-          if (globalRecentRows.isEmpty)
+          // ── Transaction list ───────────────────────────────────────────────
+          if (allRecentRows.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
               child: Padding(
@@ -270,7 +299,9 @@ class HomeScreen extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Welcome to SpendWise!',
+                      fullRows.isEmpty
+                          ? 'Welcome to SpendWise!'
+                          : 'No activity this month',
                       style: GoogleFonts.plusJakartaSans(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -278,7 +309,9 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Tap + to add your first transaction.',
+                      fullRows.isEmpty
+                          ? 'Tap + to add your first transaction.'
+                          : 'Tap + to add one, or view all history →',
                       style: GoogleFonts.plusJakartaSans(
                           fontSize: 14, color: cs.onSurfaceVariant),
                     ),
@@ -286,11 +319,23 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
             )
-          else
-            ..._buildDateGroups(globalRecentRows, cs, ref),
+          else ...[
+            ..._buildDateGroups(_visibleRecent(allRecentRows), cs, ref),
+            if (_paging.hasMore(allRecentRows.length))
+              SliverToBoxAdapter(
+                child: LoadMoreButton(
+                  showing: _paging.visibleCount,
+                  total: allRecentRows.length,
+                  pageSize: _paging.pageSize,
+                  onTap: () => setState(_paging.loadMore),
+                ),
+              ),
+          ],
 
           // ── "View all" button ──────────────────────────────────────────────
-          if (globalRecentRows.isNotEmpty)
+          // Always offered when there is any data so the user can reach older
+          // months from the home page (recent activity is scoped to this month).
+          if (fullRows.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
@@ -314,6 +359,7 @@ class HomeScreen extends ConsumerWidget {
         ],
       ),
     ),
+    ),
   ],
 ),
 floatingActionButton: FloatingActionButton(
@@ -323,6 +369,9 @@ floatingActionButton: FloatingActionButton(
       ),
     );
   }
+
+  List<TransactionRow> _visibleRecent(List<TransactionRow> rows) =>
+      rows.take(_paging.visibleCount).toList();
 
   List<Widget> _buildDateGroups(
     List<TransactionRow> rows,
@@ -361,7 +410,20 @@ floatingActionButton: FloatingActionButton(
             children: [
               TransactionTile(
                 row: row,
-                onTap: () => showTransactionDetailSheet(ctx, row: row),
+                onTap: () => showAddEditTransactionSheet(ctx,
+                    editing: row.transaction,
+                    toAccountId: row.transferPairAccount?.id),
+                onEdit: () => showAddEditTransactionSheet(ctx,
+                    editing: row.transaction,
+                    toAccountId: row.transferPairAccount?.id),
+                onDuplicate: () async {
+                  await ref
+                      .read(transactionsRepositoryProvider)
+                      .duplicate(row.transaction);
+                  if (!ctx.mounted) return;
+                  showFeedbackSnackBar(ctx, 'Transaction duplicated');
+                },
+                onDelete: () => confirmAndDeleteTransaction(ctx, ref, row),
               ).animate(delay: Duration(milliseconds: i * 25)).fadeIn(duration: 180.ms),
               if (i < list.length - 1)
                 Divider(

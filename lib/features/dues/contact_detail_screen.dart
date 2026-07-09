@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../app/themes/app_colors.dart';
+import '../../data/db/app_database.dart';
+import '../../app/utils/feedback.dart';
+import '../../app/utils/infinite_scroll.dart';
+import '../../app/widgets/confirm_delete_dialog.dart';
+import '../../app/widgets/load_more_button.dart';
 
 import '../../state/dues_providers.dart';
 import 'sheets/add_contact_sheet.dart';
@@ -11,14 +17,40 @@ import 'sheets/add_entry_sheet.dart';
 import 'sheets/settle_sheet.dart';
 import 'sheets/settlement_detail_sheet.dart';
 
-class ContactDetailScreen extends ConsumerWidget {
+class ContactDetailScreen extends ConsumerStatefulWidget {
   const ContactDetailScreen({super.key, required this.contactId});
   final String contactId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ContactDetailScreen> createState() =>
+      _ContactDetailScreenState();
+}
+
+class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> {
+  final _paging = PagingState();
+
+  Future<void> _deleteEntry(BuildContext context, WidgetRef ref, DueEntry e) async {
+    final ok = await showConfirmDeleteDialog(
+      context,
+      title: 'Delete Entry',
+      message: 'Permanently delete this entry?',
+    );
+    if (!ok) return;
+    await ref.read(duesRepositoryProvider).deleteEntry(e.id);
+    if (!context.mounted) return;
+    showFeedbackSnackBar(context, 'Entry deleted');
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final summaryAsync = ref.watch(contactSummaryProvider(contactId));
+    final appColors = Theme.of(context).extension<AppColors>()!;
+    final summaryAsync = ref.watch(contactSummaryProvider(widget.contactId));
+    // Watched here too so the parent can drive infinite scroll (hasMore needs
+    // the total). Riverpod caches the family result — the inner Consumer
+    // watching the same provider does not run a second query.
+    final entriesTotal =
+        ref.watch(unsettledEntriesProvider(widget.contactId)).valueOrNull?.length ?? 0;
 
     return Scaffold(
       body: summaryAsync.when(
@@ -28,8 +60,17 @@ class ContactDetailScreen extends ConsumerWidget {
           final contact = summary.contact;
           final balance = summary.balance;
           final isPayable = balance < 0;
-          
-          return CustomScrollView(
+
+          return NotificationListener<ScrollNotification>(
+            onNotification: (n) {
+              maybeLoadMore(
+                n,
+                hasMore: _paging.hasMore(entriesTotal),
+                onLoadMore: () => setState(_paging.loadMore),
+              );
+              return false;
+            },
+            child: CustomScrollView(
             slivers: [
               SliverAppBar(
                 pinned: true,
@@ -108,7 +149,7 @@ class ContactDetailScreen extends ConsumerWidget {
                       if (summary.unsettledCount > 0)
                         FilledButton.tonal(
                           onPressed: () {
-                            final entries = ref.read(unsettledEntriesProvider(contactId)).valueOrNull ?? [];
+                            final entries = ref.read(unsettledEntriesProvider(widget.contactId)).valueOrNull ?? [];
                             showSettleSheet(context, contact: contact, entries: entries);
                           },
                           child: const Text('Settle'),
@@ -120,7 +161,7 @@ class ContactDetailScreen extends ConsumerWidget {
 
               // The actual unsettled entries list
               Consumer(builder: (context, ref, _) {
-                final entriesAsync = ref.watch(unsettledEntriesProvider(contactId));
+                final entriesAsync = ref.watch(unsettledEntriesProvider(widget.contactId));
                 
                 return entriesAsync.when(
                   loading: () => const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator())),
@@ -136,26 +177,47 @@ class ContactDetailScreen extends ConsumerWidget {
                         ),
                       );
                     }
-                    
+
+                    final visible = entries.take(_paging.visibleCount).toList();
                     return SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, i) {
-                          final e = entries[i];
+                          final e = visible[i];
                           final date = DateFormat('dd MMM').format(DateTime.parse(e.entryDate));
                           final isPay = e.direction == 'payable';
                           
-                          return Dismissible(
+                          return Slidable(
                             key: Key(e.id),
-                            direction: DismissDirection.endToStart,
-                            background: Container(
-                              color: cs.error,
-                              alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.only(right: 24),
-                              child: Icon(Icons.delete_rounded, color: cs.onError),
+                            startActionPane: ActionPane(
+                              motion: const DrawerMotion(),
+                              extentRatio: 0.25,
+                              children: [
+                                SlidableAction(
+                                  onPressed: (_) => showAddDueEntrySheet(
+                                      context,
+                                      prefilledContact: contact,
+                                      existingEntry: e),
+                                  backgroundColor: cs.primary,
+                                  foregroundColor: cs.onPrimary,
+                                  icon: Icons.edit_outlined,
+                                  label: 'Edit',
+                                ),
+                              ],
                             ),
-                            onDismissed: (_) {
-                              ref.read(duesRepositoryProvider).deleteEntry(e.id);
-                            },
+                            endActionPane: ActionPane(
+                              motion: const DrawerMotion(),
+                              extentRatio: 0.25,
+                              children: [
+                                SlidableAction(
+                                  onPressed: (_) =>
+                                      _deleteEntry(context, ref, e),
+                                  backgroundColor: appColors.expense,
+                                  foregroundColor: appColors.onExpense,
+                                  icon: Icons.delete_outline_rounded,
+                                  label: 'Delete',
+                                ),
+                              ],
+                            ),
                             child: InkWell(
                               onTap: () => showAddDueEntrySheet(context, prefilledContact: contact, existingEntry: e),
                               child: Padding(
@@ -236,12 +298,23 @@ class ContactDetailScreen extends ConsumerWidget {
                             ),
                           );
                         },
-                        childCount: entries.length,
+                        childCount: visible.length,
                       ),
                     );
                   },
                 );
               }),
+
+              // Load-more fallback for the unsettled entries list.
+              if (_paging.hasMore(entriesTotal))
+                SliverToBoxAdapter(
+                  child: LoadMoreButton(
+                    showing: _paging.visibleCount,
+                    total: entriesTotal,
+                    pageSize: _paging.pageSize,
+                    onTap: () => setState(_paging.loadMore),
+                  ),
+                ),
               
               const SliverToBoxAdapter(child: SizedBox(height: 24)),
               
@@ -261,7 +334,7 @@ class ContactDetailScreen extends ConsumerWidget {
               ),
               
               Consumer(builder: (context, ref, _) {
-                final histAsync = ref.watch(settlementsWithCountProvider(contactId));
+                final histAsync = ref.watch(settlementsWithCountProvider(widget.contactId));
                 
                 return histAsync.when(
                   loading: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
@@ -327,6 +400,7 @@ class ContactDetailScreen extends ConsumerWidget {
               
               SliverToBoxAdapter(child: SizedBox(height: MediaQuery.paddingOf(context).bottom + 100)),
             ],
+          ),
           );
         },
       ),

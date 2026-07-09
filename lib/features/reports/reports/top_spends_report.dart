@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../state/manage_providers.dart';
 import '../../../state/reports_providers.dart';
+import '../../../utils/color_utils.dart';
 import '../widgets/insight_card.dart';
 import '../widgets/report_period_app_bar.dart';
+
+// Expenses-only report — the accent color for rank avatars, progress bars and
+// amounts is the explicit red (0xFFDC2626). cs.error is monochrome in this app
+// (black in light mode), so using it here rendered the amounts as plain text.
+const _expenseColor = Color(0xFFDC2626);
 
 const _months = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -64,10 +69,6 @@ class _TopSpendsReportState extends ConsumerState<TopSpendsReport> {
     final isCurrentOrFuture = _currentYear > now.year || (_currentYear == now.year && _currentMonth >= now.month);
     
     final async = ref.watch(topSpendsProvider((fromIso, toIso)));
-    final catMap = {
-      for (final c in ref.watch(categoriesStreamProvider).valueOrNull ?? [])
-        c.id: c.name
-    };
 
     return Scaffold(
       appBar: ReportPeriodAppBar(
@@ -80,8 +81,8 @@ class _TopSpendsReportState extends ConsumerState<TopSpendsReport> {
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
-        data: (txs) {
-          if (txs.isEmpty) {
+        data: (cats) {
+          if (cats.isEmpty) {
             return Center(
               child: Text('No expenses in $monthLabel',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -89,51 +90,49 @@ class _TopSpendsReportState extends ConsumerState<TopSpendsReport> {
                       )),
             );
           }
-          final maxAmt = txs.first.amount;
+          final maxTotal = cats.first.total;
           return ListView(
             padding: const EdgeInsets.symmetric(vertical: 8),
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 child: InsightCard(
-                  text: 'Your largest expense this month was ₹${_fmt(txs.first.amount)} on ${catMap[txs.first.categoryId] ?? 'Expense'}. Tracking large expenses helps you stick to your budget.',
+                  text: 'Your top expense category this month is ${cats.first.name} (₹${_fmt(cats.first.total)}). Reviewing top categories helps you identify spending patterns and adjust your budget.',
                 ),
               ),
-              ...txs.asMap().entries.map((e) {
+              ...cats.asMap().entries.map((e) {
                 final i = e.key;
-                final tx = e.value;
+                final cat = e.value;
                 final fraction =
-                    maxAmt > 0 ? (tx.amount / maxAmt).clamp(0.0, 1.0) : 0.0;
+                    maxTotal > 0 ? (cat.total / maxTotal).clamp(0.0, 1.0) : 0.0;
+                final catColor = hexToColor(cat.color);
+                // For the progress bar, use the category's color to show which
+                // category contributes most; for rank avatar, use the expense
+                // color so all rows have a consistent "expense" visual language.
+                final rankAvatarColor = i < 3
+                    ? const Color(0xFFDC2626)
+                    : catColor;
                 return Column(
                   children: [
                     ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: cs.errorContainer,
+                        backgroundColor: rankAvatarColor.withValues(alpha: 0.15),
                         child: Text(
                           '${i + 1}',
                           style: TextStyle(
-                              color: cs.onErrorContainer,
+                              color: rankAvatarColor,
                               fontWeight: FontWeight.bold,
                               fontSize: 13),
                         ),
                       ),
                       title: Text(
-                          catMap[tx.categoryId] ?? 'Expense',
+                          cat.name,
                           style: const TextStyle(fontWeight: FontWeight.w500)),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (tx.note.isNotEmpty)
-                            Text(
-                              tx.note,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
                           Text(
-                            tx.transactionDate.substring(0, 10),
+                            '${_fmt(cat.total)} total',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: cs.onSurfaceVariant,
                                 ),
@@ -142,22 +141,22 @@ class _TopSpendsReportState extends ConsumerState<TopSpendsReport> {
                           LinearProgressIndicator(
                             value: fraction,
                             minHeight: 3,
-                            color: cs.error,
-                            backgroundColor: cs.error.withAlpha(20),
+                            color: catColor,
+                            backgroundColor: catColor.withAlpha(20),
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ],
                       ),
                       trailing: Text(
-                        '₹${_fmt(tx.amount)}',
-                        style: TextStyle(
-                            color: cs.error,
+                        '₹${_fmt(cat.total)}',
+                        style: const TextStyle(
+                            color: _expenseColor,
                             fontWeight: FontWeight.bold,
                             fontSize: 15),
                       ),
                       isThreeLine: true,
                     ),
-                    if (i < txs.length - 1)
+                    if (i < cats.length - 1)
                       const Divider(height: 1, indent: 56),
                   ],
                 );

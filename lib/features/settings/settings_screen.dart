@@ -19,7 +19,6 @@ import '../../state/prefs_providers.dart';
 import 'update_check_dialog.dart';
 import '../reports/export/export_service.dart';
 import '../reports/import/import_service.dart';
-import '../../services/database_backup_service.dart';
 import 'manage_backups_screen.dart';
 import 'sheets/feedback_sheet.dart';
 
@@ -643,7 +642,7 @@ class _AboutCardState extends State<_AboutCard> {
           color: cs.surfaceContainerLow,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
-            side: BorderSide(color: cs.outlineVariant.withOpacity(0.5)),
+            side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -655,7 +654,7 @@ class _AboutCardState extends State<_AboutCard> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: cs.shadow.withOpacity(0.08),
+                      color: cs.shadow.withValues(alpha: 0.08),
                       blurRadius: 16,
                       offset: const Offset(0, 8),
                     )
@@ -787,7 +786,7 @@ class _AboutCardState extends State<_AboutCard> {
           child: Text(
             'Made with ☕ and questionable life choices',
             style: tt.bodySmall?.copyWith(
-              color: cs.onSurfaceVariant.withOpacity(0.8),
+              color: cs.onSurfaceVariant.withValues(alpha: 0.8),
               fontWeight: FontWeight.w500,
             ),
           ),

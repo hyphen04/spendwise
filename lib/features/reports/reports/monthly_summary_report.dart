@@ -2,8 +2,10 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_colors.dart';
 import '../../../data/models/report_models.dart';
 import '../../../state/reports_providers.dart';
+import '../../../utils/color_utils.dart';
 import '../widgets/insight_card.dart';
 import '../widgets/report_period_app_bar.dart';
 
@@ -572,18 +574,20 @@ class _MonthTopSpends extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
+    final appColors = Theme.of(context).extension<AppColors>()!;
     final async = ref.watch(topSpendsProvider((fromIso, toIso)));
 
     return async.when(
       loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
       error: (_, __) => const SizedBox(),
-      data: (txs) {
-        if (txs.isEmpty) return Center(child: Text('No transactions recorded', style: TextStyle(color: cs.onSurfaceVariant)));
-        
-        final maxAmt = txs.first.amount;
+      data: (cats) {
+        if (cats.isEmpty) return Center(child: Text('No expense categories recorded', style: TextStyle(color: cs.onSurfaceVariant)));
+
+        final maxTotal = cats.first.total;
         return Column(
-          children: txs.take(5).map((tx) {
-            final fraction = maxAmt > 0 ? (tx.amount / maxAmt).clamp(0.0, 1.0) : 0.0;
+          children: cats.take(5).map((cat) {
+            final fraction = maxTotal > 0 ? (cat.total / maxTotal).clamp(0.0, 1.0) : 0.0;
+            final catColor = hexToColor(cat.color, fallback: cs.outlineVariant);
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Row(
@@ -592,17 +596,17 @@ class _MonthTopSpends extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(tx.note.isEmpty ? 'Expense' : tx.note, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(cat.name, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 6),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(2),
-                          child: LinearProgressIndicator(value: fraction, backgroundColor: cs.outlineVariant, color: cs.primary, minHeight: 4),
+                          child: LinearProgressIndicator(value: fraction, backgroundColor: cs.outlineVariant, color: catColor, minHeight: 4),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Text('₹${_fmtAmt(tx.amount)}', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 15, color: cs.onSurface)),
+                  Text('₹${_fmtAmt(cat.total)}', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 15, color: appColors.expense)),
                 ],
               ),
             );
@@ -613,6 +617,7 @@ class _MonthTopSpends extends ConsumerWidget {
   }
 }
 
+// Helper to convert category color hex to Flutter Color
 String _fmtAmt(double v) {
   if (v >= 10000000) return '${(v / 10000000).toStringAsFixed(1)}Cr';
   if (v >= 100000) return '${(v / 100000).toStringAsFixed(1)}L';

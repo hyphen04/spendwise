@@ -180,20 +180,39 @@ class TransactionsRepository {
     });
   }
 
-  Future<void> duplicate(Transaction tx) async {
-    final now = DateTime.now().millisecondsSinceEpoch;
-    await _db.transactionsDao.upsert(TransactionsCompanion.insert(
-      id: _uuid.v4(),
+  /// Creates a faithful copy of [tx] — same amount/date/account/category/mode/
+  /// note/tags. For transfers, both legs are recreated via [createTransfer].
+  ///
+  /// The original `transactionDate` is preserved; the user can open the new row
+  /// and change the date if they want it "now". Returns the new transaction id
+  /// for plain transactions (empty string for transfers — createTransfer has no
+  /// return value).
+  Future<String> duplicate(Transaction tx) async {
+    if (tx.kind == 'transfer_out' || tx.kind == 'transfer_in') {
+      final pair = await getById(tx.transferPairId!);
+      final from = tx.kind == 'transfer_out' ? tx.accountId : pair!.accountId;
+      final to = tx.kind == 'transfer_out' ? pair!.accountId : tx.accountId;
+      await createTransfer(
+        amount: tx.amount,
+        transactionDate: tx.transactionDate,
+        fromAccountId: from,
+        toAccountId: to,
+        modeId: tx.modeId,
+        note: tx.note,
+      );
+      return '';
+    }
+    final tagIds = await getTagsFor(tx.id);
+    return create(
       amount: tx.amount,
-      transactionDate: DateTime.now().toIso8601String(),
+      transactionDate: tx.transactionDate,
       accountId: tx.accountId,
       categoryId: tx.categoryId,
       modeId: tx.modeId,
-      kind: Value(tx.kind),
-      note: Value(tx.note),
-      createdAt: now,
-      updatedAt: now,
-    ));
+      kind: tx.kind,
+      note: tx.note,
+      tagIds: tagIds.map((t) => t.id).toList(),
+    );
   }
 
   Future<void> delete(String id) async {

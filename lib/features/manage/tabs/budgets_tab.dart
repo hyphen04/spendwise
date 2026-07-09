@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import '../../../app/themes/app_colors.dart';
+import '../../../app/utils/feedback.dart';
+import '../../../app/widgets/confirm_delete_dialog.dart';
 import '../../../data/models/budget_progress.dart';
 import '../../../data/repositories/budgets_repository.dart';
 import '../../../state/home_providers.dart';
@@ -45,83 +49,106 @@ class _BudgetCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
+    final appColors = Theme.of(context).extension<AppColors>()!;
     final repo = ref.read(budgetsRepositoryProvider);
     final color = hexToColor(progress.categoryColor);
     final isOver = progress.isOver;
     final progressColor = isOver ? cs.error : cs.primary;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Slidable(
+      key: ValueKey(progress.budget.id),
+      startActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: 0.25,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: color.withAlpha(30),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: Text(progress.categoryIcon,
-                    style: const TextStyle(fontSize: 18)),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      progress.categoryName,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    Text(
-                      _subtitle(progress),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuButton<_Action>(
-                onSelected: (action) =>
-                    _handle(action, context, ref, repo),
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: _Action.edit, child: Text('Edit')),
-                  PopupMenuItem(value: _Action.delete, child: Text('Delete')),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: LinearProgressIndicator(
-                  value: progress.fraction,
-                  color: progressColor,
-                  backgroundColor: progressColor.withAlpha(30),
-                  minHeight: 6,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '₹${_fmt(progress.spent)} / ₹${_fmt(progress.effectiveAmount)}',
-                style: TextStyle(
-                  color: isOver ? cs.error : cs.onSurfaceVariant,
-                  fontSize: 12,
-                  fontWeight: isOver ? FontWeight.w600 : null,
-                ),
-              ),
-            ],
+          SlidableAction(
+            onPressed: (_) =>
+                showBudgetFormSheet(context, editing: progress.budget),
+            backgroundColor: cs.primary,
+            foregroundColor: cs.onPrimary,
+            icon: Icons.edit_outlined,
+            label: 'Edit',
           ),
         ],
+      ),
+      endActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: 0.25,
+        children: [
+          SlidableAction(
+            onPressed: (_) => _confirmDelete(context, repo),
+            backgroundColor: appColors.expense,
+            foregroundColor: appColors.onExpense,
+            icon: Icons.delete_outline_rounded,
+            label: 'Delete',
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: color.withAlpha(30),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(progress.categoryIcon,
+                      style: const TextStyle(fontSize: 18)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        progress.categoryName,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      Text(
+                        _subtitle(progress),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: LinearProgressIndicator(
+                    value: progress.fraction,
+                    color: progressColor,
+                    backgroundColor: progressColor.withAlpha(30),
+                    minHeight: 6,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '₹${_fmt(progress.spent)} / ₹${_fmt(progress.effectiveAmount)}',
+                  style: TextStyle(
+                    color: isOver ? cs.error : cs.onSurfaceVariant,
+                    fontSize: 12,
+                    fontWeight: isOver ? FontWeight.w600 : null,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -133,44 +160,22 @@ class _BudgetCard extends ConsumerWidget {
     return '$period$acct';
   }
 
-  void _handle(_Action action, BuildContext context, WidgetRef ref,
-      BudgetsRepository repo) {
-    switch (action) {
-      case _Action.edit:
-        showBudgetFormSheet(context, editing: progress.budget);
-      case _Action.delete:
-        _confirmDelete(context, repo);
-    }
-  }
-
   Future<void> _confirmDelete(
       BuildContext context, BudgetsRepository repo) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Delete Budget'),
-        content: Text('Delete budget for "${progress.categoryName}"?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
-          FilledButton(
-            style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+    final ok = await showConfirmDeleteDialog(
+      context,
+      title: 'Delete Budget',
+      message: 'Delete budget for "${progress.categoryName}"?',
     );
-    if (ok == true) await repo.delete(progress.budget.id);
+    if (ok) {
+      await repo.delete(progress.budget.id);
+      if (context.mounted) showFeedbackSnackBar(context, 'Budget deleted');
+    }
   }
 
   static String _fmt(double v) =>
       v == v.truncateToDouble() ? v.toInt().toString() : v.toStringAsFixed(2);
 }
-
-enum _Action { edit, delete }
 
 class _EmptyState extends StatelessWidget {
   const _EmptyState({required this.onAdd});

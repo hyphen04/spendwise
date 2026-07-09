@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/db/app_database.dart';
 import '../../../data/validators.dart';
 import '../../../state/manage_providers.dart';
+import '../../../app/utils/feedback.dart';
 
 Future<void> showModeFormSheet(BuildContext context, {Mode? editing}) {
   return showModalBottomSheet(
@@ -58,7 +59,11 @@ class _ModeFormSheetState extends ConsumerState<_ModeFormSheet> {
           icon: _iconCtrl.text.trim(),
         );
       }
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        showFeedbackSnackBar(
+            context, widget.editing == null ? 'Mode added' : 'Mode updated');
+        Navigator.of(context).pop();
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -40,7 +40,9 @@ final globalSearchProvider =
   if (query.isEmpty) return const GlobalSearchResults.empty();
   final q = query.toLowerCase();
 
-  // Transactions — enriched rows (note, amount, category/account/mode name)
+  // Transactions — enriched rows (note, amount, category/account/mode name).
+  // Full match set is returned; the search sheet paginates client-side so users
+  // can scroll/load-more through all matches instead of a hard 25-row cap.
   final txRows = ref.watch(transactionRowsProvider).valueOrNull ?? [];
   final matchedTx = txRows.where((row) {
     final tx = row.transaction;
@@ -51,7 +53,7 @@ final globalSearchProvider =
     if (row.account?.name.toLowerCase().contains(q) ?? false) return true;
     if (row.mode?.name.toLowerCase().contains(q) ?? false) return true;
     return false;
-  }).take(25).toList();
+  }).toList();
 
   final cats = (ref.watch(categoriesStreamProvider).valueOrNull ?? [])
       .where((c) => !c.isArchived && c.name.toLowerCase().contains(q))

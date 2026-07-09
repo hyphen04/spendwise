@@ -86,3 +86,26 @@ Run this checklist **every time** you modify a Drift table definition:
 8. Click "Publish release"
 
 Users will see the update notification the next time they tap "Check for Update" in Settings.
+
+---
+
+## List Row Interaction Rules
+
+These apply to every screen that lists editable/deletable rows (transactions,
+accounts, categories, modes, budgets, contacts, due entries).
+
+- **Swipe to reveal actions.** Wrap each row in `Slidable` (`flutter_slidable`,
+  already a dependency): `startActionPane` = Edit (+ Duplicate where it exists),
+  `endActionPane` = Delete. Keep secondary actions (archive, set/clear default)
+  in the trailing menu.
+- **Tap = open the edit form.** A plain tap on a row opens the entity's edit
+  sheet prefilled — it does not open a separate read-only detail view.
+- **Always confirm before delete.** Route every delete through the shared
+  `showConfirmDeleteDialog` helper (`lib/app/widgets/confirm_delete_dialog.dart`).
+  Do not inline new confirm dialogs. (The transaction delete keeps its
+  settlement-aware multi-variant dialog via `confirmAndDeleteTransaction` in
+  `lib/features/transactions/transaction_actions.dart`.)
+- **Always show a snackbar after edit and after delete.** Use the shared
+  `showFeedbackSnackBar` helper (`lib/app/utils/feedback.dart`) — "X updated" /
+  "X deleted" / "X duplicated". Never leave a successful edit or delete silent.
+- Reuse the two helpers above; do not duplicate dialog/snackbar code.

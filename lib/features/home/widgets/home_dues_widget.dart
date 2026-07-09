@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../data/db/app_database.dart';
 import '../../../state/dues_providers.dart';
 import '../../../state/prefs_providers.dart';
+import '../../../utils/color_utils.dart';
 import '../../../widgets/swipe_action_button.dart';
 
 import 'package:flutter/services.dart';
@@ -262,10 +263,14 @@ class _DueQuickCardState extends ConsumerState<_DueQuickCard> {
     
     if (widget.balance > 0) {
       balanceText = 'They owe you ₹${fmt.format(widget.balance)}';
-      balanceColor = isDark ? Colors.green.shade400 : Colors.green.shade600;
+      // Green for "they owe you" (a receivable = positive/income direction).
+      balanceColor = isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A);
     } else if (widget.balance < 0) {
       balanceText = 'You owe them ₹${fmt.format(widget.balance.abs())}';
-      balanceColor = cs.error;
+      // Red for "you owe them" (a payable = negative/expense direction).
+      // cs.error is monochrome (black in light mode) so the explicit hex is
+      // used instead, matching the rest of the app.
+      balanceColor = isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626);
     }
 
     return Container(
@@ -283,7 +288,7 @@ class _DueQuickCardState extends ConsumerState<_DueQuickCard> {
             children: [
               CircleAvatar(
                 radius: 22,
-                backgroundColor: Color(int.parse(widget.contact.color.replaceFirst('#', '0xFF'))).withValues(alpha: 0.2),
+                backgroundColor: hexToColor(widget.contact.color).withValues(alpha: 0.2),
                 child: Text(
                   widget.contact.icon,
                   style: const TextStyle(fontSize: 20),

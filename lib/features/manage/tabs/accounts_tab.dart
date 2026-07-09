@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import '../../../app/themes/app_colors.dart';
+import '../../../app/utils/feedback.dart';
+import '../../../app/widgets/confirm_delete_dialog.dart';
 import '../../../data/db/app_database.dart';
 import '../../../data/repositories/accounts_repository.dart';
 import '../../../state/manage_providers.dart';
@@ -47,26 +51,57 @@ class _AccountTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(accountsRepositoryProvider);
+    final appColors = Theme.of(context).extension<AppColors>()!;
     final currencySymbol = _currencySymbol(account.currency);
     final defaultAccountId = ref.watch(defaultAccountIdProvider);
     final isDefault = account.id == defaultAccountId;
     final netBalanceAsync = ref.watch(accountNetBalanceProvider(account));
     final netBalance = netBalanceAsync.valueOrNull ?? account.openingBalance;
 
-    return EntityTile(
-      icon: account.icon,
-      name: account.name,
-      colorHex: account.color,
-      subtitle:
-          '$currencySymbol ${netBalance.toStringAsFixed(2)}',
-      isDefault: isDefault,
-      onEdit: () => showAccountFormSheet(context, editing: account, currentBalance: netBalance),
-      onArchive: () => _confirmArchive(context, repo, account),
-      onDelete: () => _handleDelete(context, ref, repo, account),
-      onSetDefault: () =>
-          ref.read(defaultAccountIdProvider.notifier).set(account.id),
-      onClearDefault: () =>
-          ref.read(defaultAccountIdProvider.notifier).set(null),
+    return Slidable(
+      key: ValueKey(account.id),
+      startActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: 0.25,
+        children: [
+          SlidableAction(
+            onPressed: (_) => showAccountFormSheet(context,
+                editing: account, currentBalance: netBalance),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            icon: Icons.edit_outlined,
+            label: 'Edit',
+          ),
+        ],
+      ),
+      endActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: 0.25,
+        children: [
+          SlidableAction(
+            onPressed: (_) => _handleDelete(context, ref, repo, account),
+            backgroundColor: appColors.expense,
+            foregroundColor: appColors.onExpense,
+            icon: Icons.delete_outline_rounded,
+            label: 'Delete',
+          ),
+        ],
+      ),
+      child: EntityTile(
+        icon: account.icon,
+        name: account.name,
+        colorHex: account.color,
+        subtitle:
+            '$currencySymbol ${netBalance.toStringAsFixed(2)}',
+        isDefault: isDefault,
+        onEdit: () => showAccountFormSheet(context, editing: account, currentBalance: netBalance),
+        onArchive: () => _confirmArchive(context, repo, account),
+        onDelete: () => _handleDelete(context, ref, repo, account),
+        onSetDefault: () =>
+            ref.read(defaultAccountIdProvider.notifier).set(account.id),
+        onClearDefault: () =>
+            ref.read(defaultAccountIdProvider.notifier).set(null),
+      ),
     );
   }
 
@@ -104,25 +139,15 @@ class _AccountTile extends ConsumerWidget {
     if (!context.mounted) return;
 
     if (count == 0) {
-      final ok = await showDialog<bool>(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Delete Account'),
-          content: Text('Permanently delete "${account.name}"?'),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel')),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error),
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Delete'),
-            ),
-          ],
-        ),
+      final ok = await showConfirmDeleteDialog(
+        context,
+        title: 'Delete Account',
+        message: 'Permanently delete "${account.name}"?',
       );
-      if (ok == true) await repo.reassignAndDelete(account.id, account.id);
+      if (ok) {
+        await repo.reassignAndDelete(account.id, account.id);
+        if (context.mounted) showFeedbackSnackBar(context, 'Account deleted');
+      }
       return;
     }
 
@@ -192,6 +217,7 @@ class _AccountTile extends ConsumerWidget {
     );
     if (confirmed == true && target != null) {
       await repo.reassignAndDelete(account.id, target!.id);
+      if (context.mounted) showFeedbackSnackBar(context, 'Account deleted');
     }
   }
 }

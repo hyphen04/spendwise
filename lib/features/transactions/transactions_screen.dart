@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../app/themes/app_colors.dart';
+import '../../app/utils/feedback.dart';
+import '../../app/widgets/load_more_button.dart';
 import '../../app/widgets/screen_header.dart';
+import '../../app/utils/infinite_scroll.dart';
 import '../../data/db/app_database.dart';
 import '../../data/models/transaction_row.dart';
 
@@ -13,7 +16,7 @@ import '../../state/period_providers.dart';
 import '../../state/transactions_providers.dart';
 import 'sheets/add_edit_transaction_sheet.dart';
 import 'sheets/amount_entry_sheet.dart';
-import 'sheets/transaction_detail_sheet.dart';
+import 'transaction_actions.dart';
 import 'widgets/transaction_tile.dart';
 
 // ── Filter state ───────────────────────────────────────────────────────────────
@@ -245,7 +248,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               ).animate().fadeIn(duration: 220.ms),
 
               // ── Scrollable content ───────────────────────────────────
-              Expanded(child: CustomScrollView(
+              Expanded(child: NotificationListener<ScrollNotification>(
+            onNotification: (n) {
+              maybeLoadMore(
+                n,
+                hasMore: _visibleCount < filtered.length,
+                onLoadMore: () => setState(() => _visibleCount += _pageSize),
+              );
+              return false;
+            },
+            child: CustomScrollView(
             slivers: [
 
               // ── Inline stats ─────────────────────────────────────────
@@ -283,7 +295,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 child: SizedBox(height: MediaQuery.paddingOf(context).bottom + 96),
               ),
             ],
-          )),
+          ))),
           ],
         );
         },
@@ -327,7 +339,20 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             final row = list[i];
             return TransactionTile(
               row: row,
-              onTap: () => showTransactionDetailSheet(ctx, row: row),
+              onTap: () => showAddEditTransactionSheet(ctx,
+                  editing: row.transaction,
+                  toAccountId: row.transferPairAccount?.id),
+              onEdit: () => showAddEditTransactionSheet(ctx,
+                  editing: row.transaction,
+                  toAccountId: row.transferPairAccount?.id),
+              onDuplicate: () async {
+                await ref
+                    .read(transactionsRepositoryProvider)
+                    .duplicate(row.transaction);
+                if (!ctx.mounted) return;
+                showFeedbackSnackBar(ctx, 'Transaction duplicated');
+              },
+              onDelete: () => confirmAndDeleteTransaction(ctx, ref, row),
             )
                 .animate(delay: Duration(milliseconds: i * 18))
                 .fadeIn(duration: 180.ms)
@@ -339,9 +364,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
     if (hasMore) {
       slivers.add(SliverToBoxAdapter(
-        child: _LoadMoreButton(
+        child: LoadMoreButton(
           showing: _visibleCount,
           total: rows.length,
+          pageSize: _pageSize,
           onTap: () => setState(() => _visibleCount += _pageSize),
         ),
       ));
@@ -672,40 +698,6 @@ class _GroupHeader extends StatelessWidget {
 }
 
 // ── Load more button ───────────────────────────────────────────────────────────
-
-class _LoadMoreButton extends StatelessWidget {
-  const _LoadMoreButton({
-    required this.showing,
-    required this.total,
-    required this.onTap,
-  });
-  final int showing;
-  final int total;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final remaining = total - showing;
-    final loadNext = remaining > 20 ? 20 : remaining;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-      child: OutlinedButton(
-        onPressed: onTap,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: cs.onSurface,
-          side: BorderSide(color: cs.outlineVariant),
-          minimumSize: const Size(double.infinity, 44),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle:
-              GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w500),
-        ),
-        child: Text('Load $loadNext more  ·  $remaining remaining'),
-      ),
-    );
-  }
-}
 
 // ── Empty state ────────────────────────────────────────────────────────────────
 

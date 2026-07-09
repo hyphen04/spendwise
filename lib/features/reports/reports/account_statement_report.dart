@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_colors.dart';
+import '../../../app/utils/infinite_scroll.dart';
+import '../../../app/widgets/load_more_button.dart';
 import '../../../data/db/app_database.dart';
-
 import '../../../state/manage_providers.dart';
+import '../../../state/prefs_providers.dart';
 import '../../../state/reports_providers.dart';
+import '../../../utils/color_utils.dart';
 import '../widgets/report_period_app_bar.dart';
-
 
 class AccountStatementReport extends ConsumerStatefulWidget {
   const AccountStatementReport({
@@ -61,6 +64,7 @@ class _AccountStatementReportState
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final accsAsync = ref.watch(accountsStreamProvider);
+    final defaultId = ref.watch(defaultAccountIdProvider);
     final from = DateTime(_year, _month).toIso8601String();
     final to = DateTime(_year, _month + 1).toIso8601String();
     final monthLabel = '${_months[_month - 1]} $_year';
@@ -69,8 +73,13 @@ class _AccountStatementReportState
         .where((a) => !a.isArchived)
         .toList();
 
+    // Default to the user's chosen default account; otherwise fall back to the
+    // first non-archived account (matching the prior behavior).
     if (_accountId == null && accounts.isNotEmpty) {
-      _accountId = accounts.first.id;
+      _accountId = accounts.firstWhere(
+        (a) => a.id == defaultId,
+        orElse: () => accounts.first,
+      ).id;
     }
 
     return Scaffold(
@@ -126,7 +135,7 @@ class _AccountStatementReportState
   ];
 }
 
-class _StatementList extends ConsumerWidget {
+class _StatementList extends ConsumerStatefulWidget {
   const _StatementList({
     required this.accountId,
     required this.from,
@@ -137,16 +146,36 @@ class _StatementList extends ConsumerWidget {
   final String to;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_StatementList> createState() => _StatementListState();
+}
+
+class _StatementListState extends ConsumerState<_StatementList> {
+  final _paging = PagingState();
+
+  @override
+  void didUpdateWidget(covariant _StatementList old) {
+    super.didUpdateWidget(old);
+    // Reset paging when the account or period changes so we don't keep a stale
+    // over-count from the previous statement.
+    if (old.accountId != widget.accountId ||
+        old.from != widget.from ||
+        old.to != widget.to) {
+      _paging.reset();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final async = ref.watch(accountStatementProvider((accountId, from, to)));
-    final balanceAsync = ref.watch(accountBalanceProvider(accountId));
-    final periodBalancesAsync = ref.watch(accountStatementBalancesProvider((accountId, from, to)));
-    
-    final catMap = {
-      for (final c in ref.watch(categoriesStreamProvider).valueOrNull ?? [])
-        c.id: c.name
-    };
+    final appColors = Theme.of(context).extension<AppColors>()!;
+    final async = ref.watch(accountStatementProvider((widget.accountId, widget.from, widget.to)));
+    final balanceAsync = ref.watch(accountBalanceProvider(widget.accountId));
+    final periodBalancesAsync = ref.watch(accountStatementBalancesProvider((widget.accountId, widget.from, widget.to)));
+
+    // Build a lookup keyed by category id so each row can pull its own color
+    // (and name) without re-walking the categories list per row.
+    final categories = ref.watch(categoriesStreamProvider).valueOrNull ?? const [];
+    final catById = {for (final c in categories) c.id: c};
 
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -163,8 +192,27 @@ class _StatementList extends ConsumerWidget {
         }
         final netFlow = monthIncome - monthExpense;
 
-        return ListView.builder(
-          itemCount: txs.isEmpty ? 2 : txs.length + 2,
+        // Summary/flow use the full set; only the transactions list is paged.
+        final visible = txs.take(_paging.visibleCount).toList();
+        final hasMore = _paging.hasMore(txs.length);
+        final showEmpty = txs.isEmpty;
+        // [0] = summary card, [1] = count/flow row (or empty state),
+        // then `visible.length` transaction rows, then an optional LoadMoreButton.
+        final itemCount = showEmpty
+            ? 2
+            : visible.length + 2 + (hasMore ? 1 : 0);
+
+        return NotificationListener<ScrollNotification>(
+          onNotification: (n) {
+            maybeLoadMore(
+              n,
+              hasMore: hasMore,
+              onLoadMore: () => setState(_paging.loadMore),
+            );
+            return false;
+          },
+          child: ListView.builder(
+          itemCount: itemCount,
           itemBuilder: (ctx, i) {
             if (i == 0) {
               return Padding(
@@ -183,7 +231,7 @@ class _StatementList extends ConsumerWidget {
               );
             }
             if (i == 1) {
-              if (txs.isEmpty) {
+              if (showEmpty) {
                 return Padding(
                   padding: const EdgeInsets.all(32.0),
                   child: Center(
@@ -208,8 +256,8 @@ class _StatementList extends ConsumerWidget {
                           style: TextStyle(
                               fontWeight: FontWeight.w600,
                               color: netFlow >= 0
-                                  ? cs.onSurface
-                                  : cs.error),
+                                  ? appColors.income
+                                  : appColors.expense),
                         ),
                       ],
                     ),
@@ -218,36 +266,53 @@ class _StatementList extends ConsumerWidget {
                 ],
               );
             }
-            
-            final tx = txs[i - 2];
+
+            // Load-more fallback button is the last item when more remain.
+            if (hasMore && i == visible.length + 2) {
+              return LoadMoreButton(
+                showing: _paging.visibleCount,
+                total: txs.length,
+                pageSize: _paging.pageSize,
+                onTap: () => setState(_paging.loadMore),
+              );
+            }
+
+            final tx = visible[i - 2];
             final isIncome = tx.kind == 'income' || tx.kind == 'transfer_in';
             final isTransfer = tx.kind.startsWith('transfer');
+            final cat = catById[tx.categoryId];
+            // Avatar fill = the category's own color (when present). Transfers
+            // and un-categorized rows use the AppColors container tokens.
+            final Color avatarBg = isTransfer
+                ? appColors.transferContainer
+                : (isIncome
+                    ? (cat != null
+                        ? hexToColor(cat.color).withValues(alpha: 0.18)
+                        : appColors.incomeContainer)
+                    : (cat != null
+                        ? hexToColor(cat.color).withValues(alpha: 0.18)
+                        : appColors.expenseContainer));
+            final Color avatarFg = isTransfer
+                ? appColors.transfer
+                : appColors.forKind(tx.kind);
+            final IconData avatarIcon = isTransfer
+                ? Icons.swap_horiz_rounded
+                : (isIncome ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded);
             return Column(
               children: [
                 ListTile(
                   dense: true,
                   leading: CircleAvatar(
                     radius: 16,
-                    backgroundColor: isTransfer
-                        ? cs.onSurface.withAlpha(20)
-                        : (isIncome
-                            ? cs.onSurface.withAlpha(20)
-                            : cs.errorContainer),
-                    child: Text(
-                      isTransfer ? '⇄' : (isIncome ? '↑' : '↓'),
-                      style: TextStyle(
-                        color: isTransfer
-                            ? cs.onSurface
-                            : (isIncome
-                                ? cs.onSurface
-                                : cs.onErrorContainer),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
+                    backgroundColor: avatarBg,
+                    child: Icon(
+                      avatarIcon,
+                      size: 16,
+                      color: avatarFg,
                     ),
                   ),
                   title: Text(
-                      catMap[tx.categoryId] ?? (isTransfer ? 'Transfer' : tx.kind),
+                      cat?.name ?? (isTransfer ? 'Transfer' : tx.kind),
                       style: const TextStyle(fontSize: 14)),
                   subtitle: tx.note.isNotEmpty
                       ? Column(
@@ -270,22 +335,22 @@ class _StatementList extends ConsumerWidget {
                     '${isIncome ? '+' : '-'}₹${_fmt(tx.amount)}',
                     style: TextStyle(
                         color: isIncome
-                            ? cs.onSurface
-                            : cs.error,
+                            ? appColors.income
+                            : appColors.expense,
                         fontWeight: FontWeight.w600,
                         fontSize: 14),
                   ),
                 ),
-                if (i - 2 < txs.length - 1)
+                if (i - 2 < visible.length - 1)
                   const Divider(height: 1, indent: 56),
               ],
             );
           },
+        ),
         );
-        },
-      );
+      },
+    );
   }
-
 }
 
 class _StatementSummaryCard extends StatelessWidget {
@@ -305,6 +370,7 @@ class _StatementSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final appColors = Theme.of(context).extension<AppColors>()!;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -318,15 +384,15 @@ class _StatementSummaryCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.5)),
           ),
-          _FlowRow(label: 'In (+)', amount: income, color: const Color(0xFF16A34A), prefix: '+ '),
+          _FlowRow(label: 'In (+)', amount: income, color: appColors.income, prefix: '+ '),
           const SizedBox(height: 12),
-          _FlowRow(label: 'Out (-)', amount: expense, color: const Color(0xFFDC2626), prefix: '- '),
+          _FlowRow(label: 'Out (-)', amount: expense, color: appColors.expense, prefix: '- '),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.5)),
           ),
           _FlowRow(label: 'Closing Balance', amount: closing, color: cs.onSurface, isBold: true),
-          
+
           // Current Balance (As of Today)
           Padding(
             padding: const EdgeInsets.only(top: 16),
@@ -350,7 +416,7 @@ class _StatementSummaryCard extends StatelessWidget {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: balance >= 0 ? cs.onPrimaryContainer : cs.error,
+                        color: balance >= 0 ? appColors.income : appColors.expense,
                       ),
                     ),
                   ),
@@ -366,8 +432,8 @@ class _StatementSummaryCard extends StatelessWidget {
 
 class _FlowRow extends StatelessWidget {
   const _FlowRow({
-    required this.label, 
-    required this.amount, 
+    required this.label,
+    required this.amount,
     required this.color,
     this.prefix = '',
     this.isBold = false,
