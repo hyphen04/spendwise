@@ -3,6 +3,17 @@
 All notable changes to SpendWise are listed here.
 Format: `## vX.X.X — YYYY-MM-DD` with Added / Changed / Fixed sections.
 
+## v2.14.0 — 2026-07-09
+
+### Added
+- **What's New viewer**: Settings → "What's New" opens a sheet showing the changelog for the currently installed version. The notes are bundled as an offline asset (`CHANGELOG.md`), so it works without a network on both Android and iOS — letting users revisit what changed after updating.
+- **Rendered changelog in the update sheet**: When an update is available, release notes now appear as formatted Markdown (headings, nested/numbered lists, bold, inline code, tappable links) in a roomier bottom sheet, instead of raw Markdown text in a dialog.
+- **Lightweight changelog Markdown parser**: A small dependency-free parser (`lib/app/widgets/changelog_markdown.dart`) renders the "what's new" content — headings, bullets, numbered lists, blockquotes, horizontal rules, and inline `**bold**` / `~~strike~~` / `` `code` `` / `[links](url)`.
+
+### Changed
+- **Smaller release APK**: Release builds now target arm64 and split per-ABI, reducing the download from ~70 MB to ~25 MB.
+- Removed unused platform folders (macOS, Linux, Windows, Web) and dependencies (`phosphor_flutter`, `showcaseview`, `xml`, `printing`) to slim the app and repository.
+
 ## v2.13.0 — 2026-07-09
 
 ### Added
