@@ -17,7 +17,7 @@ import '../../state/update_provider.dart';
 import '../../state/prefs_providers.dart';
 import '../../app/utils/feedback.dart';
 import '../search/search_sheet.dart';
-import '../settings/update_check_dialog.dart';
+import '../settings/update_sheet.dart';
 import '../transactions/sheets/add_edit_transaction_sheet.dart';
 import '../transactions/sheets/amount_entry_sheet.dart';
 import '../transactions/transaction_actions.dart';
@@ -524,11 +524,9 @@ class _UpdateBanner extends ConsumerWidget {
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            onPressed: () => showDialog<void>(
+            onPressed: () => showUpdateSheet(
               context: context,
-              barrierDismissible: false,
-              builder: (_) =>
-                  UpdateCheckDialog(currentVersion: info.version),
+              currentVersion: info.version,
             ),
             child: const Text('Update'),
           ),

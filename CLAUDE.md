@@ -29,17 +29,71 @@ When the user says **"release vX.X.X"** or **"approve release X.X.X"** or simila
    ```
    git push origin main --tags
    ```
-6. **Build release APK**:
+6. **Build release APK** (arm64-only, split, to keep the APK small for GitHub distribution):
    ```
-   flutter build apk --release
+   flutter build apk --release --target-platform android-arm64 --split-per-abi
    ```
-7. **Tell the user** (do NOT upload automatically):
-   > "APK is ready at `build/app/outputs/flutter-apk/app-release.apk`
+   This produces a single ~25 MB APK at
+   `build/app/outputs/flutter-apk/app-arm64-v8a-release.apk` covering modern
+   64-bit Android devices.
+
+   > **Why split/arm64-only:** A plain `flutter build apk --release` produces a
+   > ~70 MB fat APK bundling `x86_64` (emulators only) and `armeabi-v7a` (legacy
+   > 32-bit) native libs. `--target-platform android-arm64` alone only filters
+   > Flutter's engine — plugin `.so` files (sqlite3, dartjni) still slip in for
+   > all ABIs. `--split-per-abi` forces per-ABI packaging so the output contains
+   > only `arm64-v8a` libs. Do NOT add `ndk { abiFilters }` in `build.gradle` —
+   > it conflicts with `--split-per-abi` and breaks the build.
+
+7. **Rename the APK** to a clean canonical name (recommended):
+   ```
+   cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build/app/outputs/flutter-apk/app-release.apk
+   ```
+   The updater selects the **first `.apk` asset** on the release
+   (`UpdateService.checkForUpdate` uses `endsWith('.apk')`), so the exact name
+   is not required by the code — but `app-release.apk` is the project
+   convention. Upload **only one** `.apk` per release so the updater can't
+   pick the wrong one.
+
+8. **Tell the user** (do NOT upload automatically):
+   > "APK is ready at `build/app/outputs/flutter-apk/app-release.apk` (renamed from
+   > `app-arm64-v8a-release.apk`, ~25 MB).
    > Go to https://github.com/hyphen04/spendwise/releases/new, select tag vX.X.X,
    > paste the CHANGELOG entry as description, and upload the APK as an asset.
-   > **The asset filename must be `app-release.apk`** — the in-app updater looks for this exact name."
+   > Use the filename `app-release.apk` and upload only one `.apk`."
 
-8. **STOP** — do NOT create the GitHub release automatically. The user uploads the APK manually.
+9. **STOP** — do NOT create the GitHub release automatically. The user uploads the APK manually.
+
+---
+
+## Changelog Format Rules (for the changelog parser)
+
+The GitHub release body is pasted from the `CHANGELOG.md` entry, and both the
+update sheet and the Settings → "What's New" sheet render it with a small
+custom Markdown parser (`lib/app/widgets/changelog_markdown.dart`) — **not** a
+full Markdown engine. The parser is forgiving (unsupported syntax degrades to
+plain text rather than showing literal markers), but sticking to the supported
+set keeps "what's new" clean.
+
+**Supported:**
+- `#`–`####` headings. `## vX.X.X — YYYY-MM-DD` is the version heading (one per
+  entry, at the top); `### Added` / `### Changed` / `### Fixed` are section
+  labels; `####` for minor sub-headings.
+- `- ` or `* ` bullets, plus numbered lists (`1.`, `2.`). Up to **one level of
+  nesting** (indent a child by 2 spaces). Deeper nesting is flattened.
+- `**bold**`, `~~strikethrough~~`, `` `inline code` ``.
+- `[text](url)` links — rendered as tappable text that opens externally.
+- `![alt](url)` images — rendered as the alt text (no remote image loading).
+- `> blockquote` for notes/callouts.
+- `---` horizontal rules.
+- Blank lines between blocks for spacing.
+
+**NOT supported (avoid):**
+- Tables, more than one level of bullet/list nesting.
+- HTML, `# ##### ` (5+ hashes), fenced code blocks (` ``` `).
+
+If you need richer formatting, extend `changelog_markdown.dart` first — don't
+rely on syntax the parser doesn't handle.
 
 ---
 
@@ -70,13 +124,15 @@ Run this checklist **every time** you modify a Drift table definition:
 - Repo: `spendwise`
 - Releases: https://github.com/hyphen04/spendwise/releases
 - Update API: https://api.github.com/repos/hyphen04/spendwise/releases/latest
-- APK asset name: **must be `app-release.apk`** (hardcoded in `UpdateService`)
+- APK asset name: `app-release.apk` is the convention. The updater picks the
+  first `.apk` asset on the release (`UpdateService` uses `endsWith('.apk')`),
+  so the exact name is not required — but upload **only one** `.apk` per release.
 
 ---
 
 ## Creating a GitHub Release (step-by-step for future reference)
 
-1. Complete steps 1–6 of the Release Workflow above
+1. Complete steps 1–7 of the Release Workflow above (build + rename to `app-release.apk`)
 2. Go to https://github.com/hyphen04/spendwise/releases/new
 3. Under "Choose a tag", select `vX.X.X` from the dropdown
 4. Set title: `SpendWise vX.X.X`

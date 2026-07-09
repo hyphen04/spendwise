@@ -32,22 +32,18 @@ dependencies:
   google_fonts: ^6.0.0
   dynamic_color: ^1.7.0
   flutter_animate: ^4.5.0
-  phosphor_flutter: ^2.1.0
 
   # --- Export / Import (new) ---
   excel: ^4.0.0
   archive: ^3.6.1
-  xml: ^6.6.1
   csv: ^6.0.0
   pdf: ^3.10.0
-  printing: ^5.13.0
 
   # --- Notifications / Security (new) ---
   permission_handler: ^11.3.0
   local_auth: ^2.3.0
   flutter_secure_storage: ^9.2.0
   image_picker: ^1.1.0
-  showcaseview: ^3.0.0
 
   # --- Legacy (kept while old code still exists) ---
   sqflite: ^2.4.1
@@ -85,3 +81,4 @@ flutter:
   assets:
     - assets/logo/
     - .env
+    - CHANGELOG.md

@@ -16,7 +16,8 @@ import '../../services/biometric_service.dart';
 import '../../services/secure_storage_service.dart';
 import '../../state/database_provider.dart';
 import '../../state/prefs_providers.dart';
-import 'update_check_dialog.dart';
+import 'update_sheet.dart';
+import 'changelog_sheet.dart';
 import '../reports/export/export_service.dart';
 import '../reports/import/import_service.dart';
 import 'manage_backups_screen.dart';
@@ -541,16 +542,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                     leading: const Icon(Icons.system_update_outlined),
                     title: const Text('Check for Update'),
                     trailing: const Icon(Icons.chevron_right_rounded),
-                    onTap: () => showDialog<void>(
+                    onTap: () => showUpdateSheet(
                       context: context,
-                      barrierDismissible: false,
-                      builder: (_) => UpdateCheckDialog(
-                        currentVersion: _appVersion,
-                      ),
+                      currentVersion: _appVersion,
                     ),
                   ),
                   const Divider(height: 1),
                 ],
+                ListTile(
+                  leading: const Icon(Icons.new_releases_outlined),
+                  title: const Text("What's New"),
+                  subtitle: const Text('Changelog for this version'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () =>
+                      showWhatsNewSheet(context, version: _appVersion),
+                ),
+                const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.bug_report_outlined),
                   title: const Text('Send Feedback'),
