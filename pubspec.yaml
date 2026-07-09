@@ -1,7 +1,7 @@
 name: spendwise
 description: SpendWise — smart expense tracker.
 publish_to: 'none'
-version: 2.12.0+17
+version: 2.13.0+18
 
 environment:
   sdk: '>=3.5.0 <4.0.0'

@@ -3,6 +3,29 @@
 All notable changes to SpendWise are listed here.
 Format: `## vX.X.X — YYYY-MM-DD` with Added / Changed / Fixed sections.
 
+## v2.13.0 — 2026-07-09
+
+### Added
+- **Swipe-to-Reveal Row Actions**: Every entity list (transactions, accounts, categories, modes, budgets, contacts, due entries) now supports swipe-to-reveal Edit / Duplicate / Delete actions via `flutter_slidable`, with secondary actions (archive, set/clear default) kept in the trailing menu.
+- **Tap = Edit**: A plain tap on any row now opens the entity's edit form prefilled — the read-only transaction detail sheet has been removed.
+- **Transaction Duplicate**: Swipe a transaction to duplicate it (copies amount, date, account, category, mode, note, and tags; transfers are duplicated as a linked pair).
+- **Always Confirm Before Delete**: Every delete now routes through a shared confirmation dialog (`showConfirmDeleteDialog`), including the previously instant, no-prompt due-entry delete.
+- **Always Show Feedback**: A snackbar now appears after every edit and every delete (`showFeedbackSnackBar` — "X updated" / "X deleted" / "X duplicated"); no successful change is silent anymore.
+- **Current-Month Recent Activity**: The home "recent activity" feed is now scoped to the current month (newest-first), with infinite scroll and a "View all history →" button that navigates to the transactions screen for older months.
+- **Destructive Red Styling**: Delete swipe buttons, confirmation dialogs, and error snackbars now render in the app's destructive red (`AppColors.expense`), since `ColorScheme.error` is repurposed to a monochrome token in this theme.
+- **Search Pagination**: Global search now returns the full match set with client-side infinite scroll instead of a hard 25-row cap.
+
+### Changed
+- **Top Spends Report**: Now groups expenses by category (ranked category totals with icon/color) instead of listing individual transactions, and renders amounts in the destructive red.
+- **Net Worth / Reports**: Archived accounts are now excluded from the base-balance and prior-period net calculations in reports, so archived accounts no longer skew totals.
+- **Home Dues Widget**: Balance text now uses explicit green ("they owe you") / red ("you owe them") colors instead of the monochrome `cs.error`, and contact avatar colors use the shared `hexToColor` util.
+- **Edit Contact Sheet**: Made compact and safe-area aware so it no longer overlaps the status bar; added a drag handle and themed surface; removed the now-redundant in-sheet Delete button (delete is available via swipe).
+- **Transactions Screen**: Now infinite-scrolls and uses the swipe/tap=edit interactions consistent with the rest of the app.
+- **App Icons**: Refreshed launcher icons; removed unused web icon assets.
+- Replaced deprecated `withOpacity()` calls with `withValues(alpha:)` and removed a few unused imports.
+
+---
+
 ## v2.12.0 — 2026-07-07
 
 ### Added
