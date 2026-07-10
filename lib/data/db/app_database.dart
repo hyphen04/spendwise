@@ -59,7 +59,7 @@ class AppDatabase extends _$AppDatabase {
   static const kTransferCategoryId = 'system-transfer-cat-0000-000000000001';
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -113,6 +113,34 @@ class AppDatabase extends _$AppDatabase {
               UPDATE transactions SET kind = 'transfer_in'
               WHERE kind = 'transfer'
             ''');
+          }
+          if (from < 10) {
+            // Device-contact enrichment: add phone / photoPath / deviceContactId
+            // to due_contacts. All nullable, so no DEFAULT is needed and existing
+            // rows are untouched. Guard each column so re-runs are safe.
+            final cols = await customSelect('PRAGMA table_info(due_contacts)').get();
+            final names = cols.map((r) => r.data['name'] as String).toSet();
+            if (!names.contains('phone')) {
+              await m.addColumn(dueContacts, dueContacts.phone);
+            }
+            if (!names.contains('photo_path')) {
+              await m.addColumn(dueContacts, dueContacts.photoPath);
+            }
+            if (!names.contains('device_contact_id')) {
+              await m.addColumn(dueContacts, dueContacts.deviceContactId);
+            }
+          }
+          if (from < 11) {
+            // Multi-number support: add `phones` (JSON array of {number, label})
+            // so a contact can keep every number from a device contact and the
+            // user picks which to call/WhatsApp at action time. Nullable → no
+            // DEFAULT needed; the legacy `phone` column stays as the primary.
+            final cols =
+                await customSelect('PRAGMA table_info(due_contacts)').get();
+            final names = cols.map((r) => r.data['name'] as String).toSet();
+            if (!names.contains('phones')) {
+              await m.addColumn(dueContacts, dueContacts.phones);
+            }
           }
         },
       );

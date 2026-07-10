@@ -114,7 +114,8 @@ class HeaderIconButton extends StatelessWidget {
         foregroundColor: cs.onSurface,
         fixedSize: const Size(40, 40),
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12)),
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: cs.outlineVariant)),
         padding: EdgeInsets.zero,
       ),
     );

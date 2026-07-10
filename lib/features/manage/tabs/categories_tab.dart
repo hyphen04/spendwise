@@ -161,6 +161,21 @@ class _CategoryTile extends ConsumerWidget {
     final count = await repo.countTransactions(cat.id);
     if (!context.mounted) return;
 
+    // A budget's category is semantic (it scopes the budget) and can't be
+    // silently reassigned, so budgets block deletion outright — the user must
+    // edit or delete those budgets first. `budgets.category_id` is RESTRICT,
+    // so this guard also prevents a raw Drift exception from surfacing.
+    final budgetCount = await repo.countBudgets(cat.id);
+    if (!context.mounted) return;
+    if (budgetCount > 0) {
+      await showCannotDeleteDialog(
+        context,
+        message:
+            '"${cat.name}" is used by $budgetCount budget(s). Delete or change those budgets first.',
+      );
+      return;
+    }
+
     if (count == 0) {
       final ok = await showConfirmDeleteDialog(
         context,
@@ -168,7 +183,16 @@ class _CategoryTile extends ConsumerWidget {
         message: 'Permanently delete "${cat.name}"?',
       );
       if (ok) {
-        await repo.reassignAndDelete(cat.id, cat.id);
+        try {
+          await repo.reassignAndDelete(cat.id, cat.id);
+        } catch (_) {
+          if (context.mounted) {
+            showFeedbackSnackBar(context,
+                'Cannot delete category — it is still referenced.',
+                error: true);
+          }
+          return;
+        }
         if (context.mounted) showFeedbackSnackBar(context, 'Category deleted');
       }
       return;
@@ -183,18 +207,10 @@ class _CategoryTile extends ConsumerWidget {
         .toList();
 
     if (others.isEmpty) {
-      await showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Cannot Delete'),
-          content: Text(
-              '"${cat.name}" has $count transaction(s). Create another category first, then reassign.'),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK')),
-          ],
-        ),
+      await showCannotDeleteDialog(
+        context,
+        message:
+            '"${cat.name}" has $count transaction(s). Create another category first, then reassign.',
       );
       return;
     }
@@ -231,7 +247,8 @@ class _CategoryTile extends ConsumerWidget {
                 child: const Text('Cancel')),
             FilledButton(
               style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(ctx).colorScheme.error),
+                  backgroundColor:
+                      Theme.of(ctx).extension<AppColors>()!.expense),
               onPressed:
                   target == null ? null : () => Navigator.pop(ctx, true),
               child: const Text('Reassign & Delete'),
@@ -241,7 +258,16 @@ class _CategoryTile extends ConsumerWidget {
       ),
     );
     if (confirmed == true && target != null) {
-      await repo.reassignAndDelete(cat.id, target!.id);
+      try {
+        await repo.reassignAndDelete(cat.id, target!.id);
+      } catch (_) {
+        if (context.mounted) {
+          showFeedbackSnackBar(context,
+              'Cannot delete category — it is still referenced.',
+              error: true);
+        }
+        return;
+      }
       if (context.mounted) showFeedbackSnackBar(context, 'Category deleted');
     }
   }

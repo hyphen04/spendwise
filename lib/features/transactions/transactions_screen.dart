@@ -301,6 +301,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'fab_transactions',
         onPressed: () => showAmountEntrySheet(context),
         tooltip: 'Add Transaction',
         child: const Icon(Icons.add_rounded),
@@ -1025,6 +1026,9 @@ class _KindRow extends StatelessWidget {
               decoration: BoxDecoration(
                 color: active ? cs.primary : cs.surfaceContainer,
                 borderRadius: BorderRadius.circular(12),
+                border: active
+                    ? null
+                    : Border.all(color: cs.outlineVariant),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1093,6 +1097,9 @@ class _DateRangeGrid extends StatelessWidget {
               decoration: BoxDecoration(
                 color: active ? cs.primary : cs.surfaceContainer,
                 borderRadius: BorderRadius.circular(10),
+                border: active
+                    ? null
+                    : Border.all(color: cs.outlineVariant),
               ),
               child: Text(
                 label,
@@ -1115,6 +1122,9 @@ class _DateRangeGrid extends StatelessWidget {
                   ? cs.primary
                   : cs.surfaceContainer,
               borderRadius: BorderRadius.circular(10),
+              border: selected == _DateRange.custom
+                  ? null
+                  : Border.all(color: cs.outlineVariant),
             ),
             child: Text(
               customLabel ?? 'Custom…',
@@ -1178,8 +1188,7 @@ class _MultiSelect<T> extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               border: active
                   ? null
-                  : Border.all(
-                      color: cs.outlineVariant.withValues(alpha: 0.5)),
+                  : Border.all(color: cs.outline),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -1226,7 +1235,7 @@ class _AmountField extends StatelessWidget {
         filled: true,
         fillColor: cs.surfaceContainer,
         border: OutlineInputBorder(
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: cs.outlineVariant),
           borderRadius: BorderRadius.circular(12),
         ),
         contentPadding:

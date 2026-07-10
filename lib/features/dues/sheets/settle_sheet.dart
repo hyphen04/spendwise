@@ -36,11 +36,16 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
   late Set<String> _selectedEntryIds;
   bool _createExpense = false;
   late final TextEditingController _noteCtrl;
-  
+
+  /// The settlement date — also the posting date of the linked transaction, so
+  /// reports count that transaction on this date. Defaults to today; the user
+  /// can back-date it (e.g. recording a settlement that happened yesterday).
+  late DateTime _selectedDate;
+
   String? _accountId;
   String? _categoryId;
   String? _modeId;
-  
+
   int _step = 0;
 
   @override
@@ -49,11 +54,31 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
     _selectedEntryIds = widget.entries.map((e) => e.id).toSet();
     _createExpense = true; // default enabled
     _noteCtrl = TextEditingController(text: 'Settled dues for ${widget.contact.name}');
-    
+    _selectedDate = DateTime.now();
+
     // Set default account, mode, and category
     _accountId = ref.read(defaultAccountIdProvider);
     _modeId = ref.read(defaultModeIdProvider);
     _categoryId = widget.contact.defaultCategoryId;
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) setState(() => _selectedDate = picked);
+  }
+
+  String _formatDate(DateTime d) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(d.year, d.month, d.day);
+    if (day == today) return 'Today';
+    if (day == today.subtract(const Duration(days: 1))) return 'Yesterday';
+    return DateFormat('d MMM yyyy').format(d);
   }
 
   @override
@@ -99,7 +124,10 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
       entryIds: _selectedEntryIds.toList(),
       totalAmount: amt.abs(),
       note: _noteCtrl.text.trim(),
-      date: DateTime.now(),
+      // Day-only normalization (drops any time component) — this date is used
+      // for both the settlement's settledDate and the linked transaction's
+      // posting date, which reports group by.
+      date: DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day),
       createLinkedTransaction: _createExpense,
       accountId: _accountId,
       categoryId: _categoryId,
@@ -219,6 +247,27 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
               ],
 
               if (_step == 1) ...[
+                // Settlement date — always shown, since it sets the
+                // settlement's settledDate regardless of whether a linked
+                // transaction is created. Tapping opens the date picker
+                // (back-dateable to 2000, ≤ today, matching the rest of the app).
+                InkWell(
+                  onTap: _pickDate,
+                  borderRadius: BorderRadius.circular(12),
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: 'Settlement date',
+                      suffixIcon: const Icon(Icons.calendar_today_outlined),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(_formatDate(_selectedDate),
+                        style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 SwitchListTile(
                   title: const Text('Add to Transactions'),
                   subtitle: const Text('Creates a linked income/expense'),

@@ -4,6 +4,8 @@
 <dict>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Use Face ID to unlock SpendWise</string>
+	<key>NSContactsUsageDescription</key>
+	<string>SpendWise uses your contacts to quickly add people and vendors to your Dues &amp; Tabs. Your contact data never leaves your device.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

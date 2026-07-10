@@ -1837,7 +1837,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   /// FK → modes.id
   final String modeId;
 
-  /// 'expense' | 'income' | 'transfer'
+  /// Kind: 'expense' | 'income' | 'transfer_out' | 'transfer_in'
   final String kind;
   final String note;
   final String? receiptPath;
@@ -2944,6 +2944,28 @@ class $DueContactsTable extends DueContacts
   late final GeneratedColumn<String> defaultCategoryId =
       GeneratedColumn<String>('default_category_id', aliasedName, true,
           type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _phoneMeta = const VerificationMeta('phone');
+  @override
+  late final GeneratedColumn<String> phone = GeneratedColumn<String>(
+      'phone', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _photoPathMeta =
+      const VerificationMeta('photoPath');
+  @override
+  late final GeneratedColumn<String> photoPath = GeneratedColumn<String>(
+      'photo_path', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _deviceContactIdMeta =
+      const VerificationMeta('deviceContactId');
+  @override
+  late final GeneratedColumn<String> deviceContactId = GeneratedColumn<String>(
+      'device_contact_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _phonesMeta = const VerificationMeta('phones');
+  @override
+  late final GeneratedColumn<String> phones = GeneratedColumn<String>(
+      'phones', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _isArchivedMeta =
       const VerificationMeta('isArchived');
   @override
@@ -2976,6 +2998,10 @@ class $DueContactsTable extends DueContacts
         defaultAmount,
         defaultNote,
         defaultCategoryId,
+        phone,
+        photoPath,
+        deviceContactId,
+        phones,
         isArchived,
         createdAt,
         updatedAt
@@ -3035,6 +3061,24 @@ class $DueContactsTable extends DueContacts
           defaultCategoryId.isAcceptableOrUnknown(
               data['default_category_id']!, _defaultCategoryIdMeta));
     }
+    if (data.containsKey('phone')) {
+      context.handle(
+          _phoneMeta, phone.isAcceptableOrUnknown(data['phone']!, _phoneMeta));
+    }
+    if (data.containsKey('photo_path')) {
+      context.handle(_photoPathMeta,
+          photoPath.isAcceptableOrUnknown(data['photo_path']!, _photoPathMeta));
+    }
+    if (data.containsKey('device_contact_id')) {
+      context.handle(
+          _deviceContactIdMeta,
+          deviceContactId.isAcceptableOrUnknown(
+              data['device_contact_id']!, _deviceContactIdMeta));
+    }
+    if (data.containsKey('phones')) {
+      context.handle(_phonesMeta,
+          phones.isAcceptableOrUnknown(data['phones']!, _phonesMeta));
+    }
     if (data.containsKey('is_archived')) {
       context.handle(
           _isArchivedMeta,
@@ -3078,6 +3122,14 @@ class $DueContactsTable extends DueContacts
           .read(DriftSqlType.string, data['${effectivePrefix}default_note']),
       defaultCategoryId: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}default_category_id']),
+      phone: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}phone']),
+      photoPath: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}photo_path']),
+      deviceContactId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}device_contact_id']),
+      phones: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}phones']),
       isArchived: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_archived'])!,
       createdAt: attachedDatabase.typeMapping
@@ -3102,6 +3154,10 @@ class DueContact extends DataClass implements Insertable<DueContact> {
   final double? defaultAmount;
   final String? defaultNote;
   final String? defaultCategoryId;
+  final String? phone;
+  final String? photoPath;
+  final String? deviceContactId;
+  final String? phones;
   final bool isArchived;
   final int createdAt;
   final int updatedAt;
@@ -3114,6 +3170,10 @@ class DueContact extends DataClass implements Insertable<DueContact> {
       this.defaultAmount,
       this.defaultNote,
       this.defaultCategoryId,
+      this.phone,
+      this.photoPath,
+      this.deviceContactId,
+      this.phones,
       required this.isArchived,
       required this.createdAt,
       required this.updatedAt});
@@ -3133,6 +3193,18 @@ class DueContact extends DataClass implements Insertable<DueContact> {
     }
     if (!nullToAbsent || defaultCategoryId != null) {
       map['default_category_id'] = Variable<String>(defaultCategoryId);
+    }
+    if (!nullToAbsent || phone != null) {
+      map['phone'] = Variable<String>(phone);
+    }
+    if (!nullToAbsent || photoPath != null) {
+      map['photo_path'] = Variable<String>(photoPath);
+    }
+    if (!nullToAbsent || deviceContactId != null) {
+      map['device_contact_id'] = Variable<String>(deviceContactId);
+    }
+    if (!nullToAbsent || phones != null) {
+      map['phones'] = Variable<String>(phones);
     }
     map['is_archived'] = Variable<bool>(isArchived);
     map['created_at'] = Variable<int>(createdAt);
@@ -3156,6 +3228,16 @@ class DueContact extends DataClass implements Insertable<DueContact> {
       defaultCategoryId: defaultCategoryId == null && nullToAbsent
           ? const Value.absent()
           : Value(defaultCategoryId),
+      phone:
+          phone == null && nullToAbsent ? const Value.absent() : Value(phone),
+      photoPath: photoPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(photoPath),
+      deviceContactId: deviceContactId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceContactId),
+      phones:
+          phones == null && nullToAbsent ? const Value.absent() : Value(phones),
       isArchived: Value(isArchived),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -3175,6 +3257,10 @@ class DueContact extends DataClass implements Insertable<DueContact> {
       defaultNote: serializer.fromJson<String?>(json['defaultNote']),
       defaultCategoryId:
           serializer.fromJson<String?>(json['defaultCategoryId']),
+      phone: serializer.fromJson<String?>(json['phone']),
+      photoPath: serializer.fromJson<String?>(json['photoPath']),
+      deviceContactId: serializer.fromJson<String?>(json['deviceContactId']),
+      phones: serializer.fromJson<String?>(json['phones']),
       isArchived: serializer.fromJson<bool>(json['isArchived']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
@@ -3192,6 +3278,10 @@ class DueContact extends DataClass implements Insertable<DueContact> {
       'defaultAmount': serializer.toJson<double?>(defaultAmount),
       'defaultNote': serializer.toJson<String?>(defaultNote),
       'defaultCategoryId': serializer.toJson<String?>(defaultCategoryId),
+      'phone': serializer.toJson<String?>(phone),
+      'photoPath': serializer.toJson<String?>(photoPath),
+      'deviceContactId': serializer.toJson<String?>(deviceContactId),
+      'phones': serializer.toJson<String?>(phones),
       'isArchived': serializer.toJson<bool>(isArchived),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
@@ -3207,6 +3297,10 @@ class DueContact extends DataClass implements Insertable<DueContact> {
           Value<double?> defaultAmount = const Value.absent(),
           Value<String?> defaultNote = const Value.absent(),
           Value<String?> defaultCategoryId = const Value.absent(),
+          Value<String?> phone = const Value.absent(),
+          Value<String?> photoPath = const Value.absent(),
+          Value<String?> deviceContactId = const Value.absent(),
+          Value<String?> phones = const Value.absent(),
           bool? isArchived,
           int? createdAt,
           int? updatedAt}) =>
@@ -3222,6 +3316,12 @@ class DueContact extends DataClass implements Insertable<DueContact> {
         defaultCategoryId: defaultCategoryId.present
             ? defaultCategoryId.value
             : this.defaultCategoryId,
+        phone: phone.present ? phone.value : this.phone,
+        photoPath: photoPath.present ? photoPath.value : this.photoPath,
+        deviceContactId: deviceContactId.present
+            ? deviceContactId.value
+            : this.deviceContactId,
+        phones: phones.present ? phones.value : this.phones,
         isArchived: isArchived ?? this.isArchived,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
@@ -3241,6 +3341,12 @@ class DueContact extends DataClass implements Insertable<DueContact> {
       defaultCategoryId: data.defaultCategoryId.present
           ? data.defaultCategoryId.value
           : this.defaultCategoryId,
+      phone: data.phone.present ? data.phone.value : this.phone,
+      photoPath: data.photoPath.present ? data.photoPath.value : this.photoPath,
+      deviceContactId: data.deviceContactId.present
+          ? data.deviceContactId.value
+          : this.deviceContactId,
+      phones: data.phones.present ? data.phones.value : this.phones,
       isArchived:
           data.isArchived.present ? data.isArchived.value : this.isArchived,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -3259,6 +3365,10 @@ class DueContact extends DataClass implements Insertable<DueContact> {
           ..write('defaultAmount: $defaultAmount, ')
           ..write('defaultNote: $defaultNote, ')
           ..write('defaultCategoryId: $defaultCategoryId, ')
+          ..write('phone: $phone, ')
+          ..write('photoPath: $photoPath, ')
+          ..write('deviceContactId: $deviceContactId, ')
+          ..write('phones: $phones, ')
           ..write('isArchived: $isArchived, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -3267,8 +3377,22 @@ class DueContact extends DataClass implements Insertable<DueContact> {
   }
 
   @override
-  int get hashCode => Object.hash(id, name, icon, color, type, defaultAmount,
-      defaultNote, defaultCategoryId, isArchived, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+      id,
+      name,
+      icon,
+      color,
+      type,
+      defaultAmount,
+      defaultNote,
+      defaultCategoryId,
+      phone,
+      photoPath,
+      deviceContactId,
+      phones,
+      isArchived,
+      createdAt,
+      updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3281,6 +3405,10 @@ class DueContact extends DataClass implements Insertable<DueContact> {
           other.defaultAmount == this.defaultAmount &&
           other.defaultNote == this.defaultNote &&
           other.defaultCategoryId == this.defaultCategoryId &&
+          other.phone == this.phone &&
+          other.photoPath == this.photoPath &&
+          other.deviceContactId == this.deviceContactId &&
+          other.phones == this.phones &&
           other.isArchived == this.isArchived &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -3295,6 +3423,10 @@ class DueContactsCompanion extends UpdateCompanion<DueContact> {
   final Value<double?> defaultAmount;
   final Value<String?> defaultNote;
   final Value<String?> defaultCategoryId;
+  final Value<String?> phone;
+  final Value<String?> photoPath;
+  final Value<String?> deviceContactId;
+  final Value<String?> phones;
   final Value<bool> isArchived;
   final Value<int> createdAt;
   final Value<int> updatedAt;
@@ -3308,6 +3440,10 @@ class DueContactsCompanion extends UpdateCompanion<DueContact> {
     this.defaultAmount = const Value.absent(),
     this.defaultNote = const Value.absent(),
     this.defaultCategoryId = const Value.absent(),
+    this.phone = const Value.absent(),
+    this.photoPath = const Value.absent(),
+    this.deviceContactId = const Value.absent(),
+    this.phones = const Value.absent(),
     this.isArchived = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -3322,6 +3458,10 @@ class DueContactsCompanion extends UpdateCompanion<DueContact> {
     this.defaultAmount = const Value.absent(),
     this.defaultNote = const Value.absent(),
     this.defaultCategoryId = const Value.absent(),
+    this.phone = const Value.absent(),
+    this.photoPath = const Value.absent(),
+    this.deviceContactId = const Value.absent(),
+    this.phones = const Value.absent(),
     this.isArchived = const Value.absent(),
     required int createdAt,
     required int updatedAt,
@@ -3341,6 +3481,10 @@ class DueContactsCompanion extends UpdateCompanion<DueContact> {
     Expression<double>? defaultAmount,
     Expression<String>? defaultNote,
     Expression<String>? defaultCategoryId,
+    Expression<String>? phone,
+    Expression<String>? photoPath,
+    Expression<String>? deviceContactId,
+    Expression<String>? phones,
     Expression<bool>? isArchived,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
@@ -3355,6 +3499,10 @@ class DueContactsCompanion extends UpdateCompanion<DueContact> {
       if (defaultAmount != null) 'default_amount': defaultAmount,
       if (defaultNote != null) 'default_note': defaultNote,
       if (defaultCategoryId != null) 'default_category_id': defaultCategoryId,
+      if (phone != null) 'phone': phone,
+      if (photoPath != null) 'photo_path': photoPath,
+      if (deviceContactId != null) 'device_contact_id': deviceContactId,
+      if (phones != null) 'phones': phones,
       if (isArchived != null) 'is_archived': isArchived,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -3371,6 +3519,10 @@ class DueContactsCompanion extends UpdateCompanion<DueContact> {
       Value<double?>? defaultAmount,
       Value<String?>? defaultNote,
       Value<String?>? defaultCategoryId,
+      Value<String?>? phone,
+      Value<String?>? photoPath,
+      Value<String?>? deviceContactId,
+      Value<String?>? phones,
       Value<bool>? isArchived,
       Value<int>? createdAt,
       Value<int>? updatedAt,
@@ -3384,6 +3536,10 @@ class DueContactsCompanion extends UpdateCompanion<DueContact> {
       defaultAmount: defaultAmount ?? this.defaultAmount,
       defaultNote: defaultNote ?? this.defaultNote,
       defaultCategoryId: defaultCategoryId ?? this.defaultCategoryId,
+      phone: phone ?? this.phone,
+      photoPath: photoPath ?? this.photoPath,
+      deviceContactId: deviceContactId ?? this.deviceContactId,
+      phones: phones ?? this.phones,
       isArchived: isArchived ?? this.isArchived,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -3418,6 +3574,18 @@ class DueContactsCompanion extends UpdateCompanion<DueContact> {
     if (defaultCategoryId.present) {
       map['default_category_id'] = Variable<String>(defaultCategoryId.value);
     }
+    if (phone.present) {
+      map['phone'] = Variable<String>(phone.value);
+    }
+    if (photoPath.present) {
+      map['photo_path'] = Variable<String>(photoPath.value);
+    }
+    if (deviceContactId.present) {
+      map['device_contact_id'] = Variable<String>(deviceContactId.value);
+    }
+    if (phones.present) {
+      map['phones'] = Variable<String>(phones.value);
+    }
     if (isArchived.present) {
       map['is_archived'] = Variable<bool>(isArchived.value);
     }
@@ -3444,6 +3612,10 @@ class DueContactsCompanion extends UpdateCompanion<DueContact> {
           ..write('defaultAmount: $defaultAmount, ')
           ..write('defaultNote: $defaultNote, ')
           ..write('defaultCategoryId: $defaultCategoryId, ')
+          ..write('phone: $phone, ')
+          ..write('photoPath: $photoPath, ')
+          ..write('deviceContactId: $deviceContactId, ')
+          ..write('phones: $phones, ')
           ..write('isArchived: $isArchived, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -7253,6 +7425,10 @@ typedef $$DueContactsTableCreateCompanionBuilder = DueContactsCompanion
   Value<double?> defaultAmount,
   Value<String?> defaultNote,
   Value<String?> defaultCategoryId,
+  Value<String?> phone,
+  Value<String?> photoPath,
+  Value<String?> deviceContactId,
+  Value<String?> phones,
   Value<bool> isArchived,
   required int createdAt,
   required int updatedAt,
@@ -7268,6 +7444,10 @@ typedef $$DueContactsTableUpdateCompanionBuilder = DueContactsCompanion
   Value<double?> defaultAmount,
   Value<String?> defaultNote,
   Value<String?> defaultCategoryId,
+  Value<String?> phone,
+  Value<String?> photoPath,
+  Value<String?> deviceContactId,
+  Value<String?> phones,
   Value<bool> isArchived,
   Value<int> createdAt,
   Value<int> updatedAt,
@@ -7342,6 +7522,19 @@ class $$DueContactsTableFilterComposer
   ColumnFilters<String> get defaultCategoryId => $composableBuilder(
       column: $table.defaultCategoryId,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get phone => $composableBuilder(
+      column: $table.phone, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get photoPath => $composableBuilder(
+      column: $table.photoPath, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get deviceContactId => $composableBuilder(
+      column: $table.deviceContactId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get phones => $composableBuilder(
+      column: $table.phones, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get isArchived => $composableBuilder(
       column: $table.isArchived, builder: (column) => ColumnFilters(column));
@@ -7430,6 +7623,19 @@ class $$DueContactsTableOrderingComposer
       column: $table.defaultCategoryId,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get phone => $composableBuilder(
+      column: $table.phone, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get photoPath => $composableBuilder(
+      column: $table.photoPath, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get deviceContactId => $composableBuilder(
+      column: $table.deviceContactId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get phones => $composableBuilder(
+      column: $table.phones, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get isArchived => $composableBuilder(
       column: $table.isArchived, builder: (column) => ColumnOrderings(column));
 
@@ -7472,6 +7678,18 @@ class $$DueContactsTableAnnotationComposer
 
   GeneratedColumn<String> get defaultCategoryId => $composableBuilder(
       column: $table.defaultCategoryId, builder: (column) => column);
+
+  GeneratedColumn<String> get phone =>
+      $composableBuilder(column: $table.phone, builder: (column) => column);
+
+  GeneratedColumn<String> get photoPath =>
+      $composableBuilder(column: $table.photoPath, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceContactId => $composableBuilder(
+      column: $table.deviceContactId, builder: (column) => column);
+
+  GeneratedColumn<String> get phones =>
+      $composableBuilder(column: $table.phones, builder: (column) => column);
 
   GeneratedColumn<bool> get isArchived => $composableBuilder(
       column: $table.isArchived, builder: (column) => column);
@@ -7556,6 +7774,10 @@ class $$DueContactsTableTableManager extends RootTableManager<
             Value<double?> defaultAmount = const Value.absent(),
             Value<String?> defaultNote = const Value.absent(),
             Value<String?> defaultCategoryId = const Value.absent(),
+            Value<String?> phone = const Value.absent(),
+            Value<String?> photoPath = const Value.absent(),
+            Value<String?> deviceContactId = const Value.absent(),
+            Value<String?> phones = const Value.absent(),
             Value<bool> isArchived = const Value.absent(),
             Value<int> createdAt = const Value.absent(),
             Value<int> updatedAt = const Value.absent(),
@@ -7570,6 +7792,10 @@ class $$DueContactsTableTableManager extends RootTableManager<
             defaultAmount: defaultAmount,
             defaultNote: defaultNote,
             defaultCategoryId: defaultCategoryId,
+            phone: phone,
+            photoPath: photoPath,
+            deviceContactId: deviceContactId,
+            phones: phones,
             isArchived: isArchived,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -7584,6 +7810,10 @@ class $$DueContactsTableTableManager extends RootTableManager<
             Value<double?> defaultAmount = const Value.absent(),
             Value<String?> defaultNote = const Value.absent(),
             Value<String?> defaultCategoryId = const Value.absent(),
+            Value<String?> phone = const Value.absent(),
+            Value<String?> photoPath = const Value.absent(),
+            Value<String?> deviceContactId = const Value.absent(),
+            Value<String?> phones = const Value.absent(),
             Value<bool> isArchived = const Value.absent(),
             required int createdAt,
             required int updatedAt,
@@ -7598,6 +7828,10 @@ class $$DueContactsTableTableManager extends RootTableManager<
             defaultAmount: defaultAmount,
             defaultNote: defaultNote,
             defaultCategoryId: defaultCategoryId,
+            phone: phone,
+            photoPath: photoPath,
+            deviceContactId: deviceContactId,
+            phones: phones,
             isArchived: isArchived,
             createdAt: createdAt,
             updatedAt: updatedAt,

@@ -17,8 +17,14 @@ final unsettledEntriesProvider = StreamProvider.family<List<DueEntry>, String>((
 });
 
 final contactSummaryProvider = FutureProvider.family<DueContactSummary, String>((ref, contactId) async {
-  // Watch entries so it updates when they change
+  // Watch entries so it updates when entries change.
   ref.watch(unsettledEntriesProvider(contactId));
+  // Watch the contacts list so edits to the contact itself (name, icon, color,
+  // and the device-contact link: phone / photoPath / deviceContactId) trigger a
+  // refetch. Without this, linking a device contact from the edit sheet saves
+  // to the DB but the detail screen keeps showing the stale contact — so the
+  // call pill / photo avatar never appear until you leave and come back.
+  ref.watch(dueContactsStreamProvider);
   return ref.watch(duesRepositoryProvider).getContactSummary(contactId);
 });
 

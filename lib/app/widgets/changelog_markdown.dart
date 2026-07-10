@@ -318,7 +318,7 @@ class ChangelogMarkdown extends StatelessWidget {
       } else if (match.group(7) != null) {
         spans.add(TextSpan(
           text: match.group(7),
-          style: GoogleFonts.jetBrainsMono(
+          style: GoogleFonts.spaceGrotesk(
             fontSize: (base.fontSize ?? 14) * 0.9,
             color: cs.primary,
             backgroundColor: cs.surfaceContainer,

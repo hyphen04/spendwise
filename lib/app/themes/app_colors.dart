@@ -63,7 +63,7 @@ class AppColors extends ThemeExtension<AppColors> {
         onExpenseContainer: Color(0xFFF87171),
         transfer: Color(0xFFF5F5F5),
         onTransfer: Color(0xFF0A0A0A),
-        transferContainer: Color(0xFF1C1C1E),
+        transferContainer: Color(0xFF262629),
         onTransferContainer: Color(0xFFF5F5F5),
       );
 

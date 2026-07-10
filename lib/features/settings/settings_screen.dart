@@ -4,12 +4,14 @@ import '../../data/db/app_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import '../../app/utils/feedback.dart';
 import '../../app/widgets/mono_numpad.dart';
 import '../../app/widgets/screen_header.dart';
 import '../../services/biometric_service.dart';
@@ -41,6 +43,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
         .then((v) { if (mounted) setState(() => _biometricAvailable = v); });
     PackageInfo.fromPlatform()
         .then((info) { if (mounted) setState(() => _appVersion = info.version); });
+  }
+
+  // ── Contact access toggle ──────────────────────────────────────────────────
+
+  /// User-intent toggle for the Dues "Import from phone" flow. Turning ON
+  /// requests the OS contacts permission; we only persist the pref true when
+  /// granted. Turning OFF just gates future picker access — already-imported
+  /// data is kept (non-destructive). Contacts are read-only and on-device.
+  Future<void> _onContactAccessToggled(bool v) async {
+    if (!v) {
+      await ref.read(contactAccessProvider.notifier).set(false);
+      return;
+    }
+    // Use flutter_contacts' own native permission API (CNContactStore on iOS,
+    // READ_CONTACTS on Android) — avoids the permission_handler iOS
+    // compile-flag mechanism that was failing to prompt on iOS.
+    final status = await FlutterContacts.permissions.request(PermissionType.read);
+    if (status == PermissionStatus.granted ||
+        status == PermissionStatus.limited) {
+      await ref.read(contactAccessProvider.notifier).set(true);
+      return;
+    }
+    if (status == PermissionStatus.permanentlyDenied ||
+        status == PermissionStatus.restricted) {
+      if (!mounted) return;
+      showFeedbackSnackBar(context, 'Contact permission needed — opening settings');
+      await FlutterContacts.permissions.openSettings();
+    } else {
+      if (!mounted) return;
+      showFeedbackSnackBar(context, 'Contact permission denied', error: true);
+    }
+    // Leave the pref as-is (still off) — the switch re-reads the provider.
   }
 
   // ── PIN helpers ─────────────────────────────────────────────────────────────
@@ -306,6 +340,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                   secondary: const Icon(Icons.flash_on_rounded),
                   value: ref.watch(showQuickDuesProvider),
                   onChanged: (v) => ref.read(showQuickDuesProvider.notifier).set(v),
+                ),
+                const Divider(height: 1),
+                SwitchListTile(
+                  title: const Text('Contact Access'),
+                  subtitle: const Text(
+                      'Import people & vendors from your phone book. '
+                      'Contacts are read on-device and never uploaded.'),
+                  secondary: const Icon(Icons.contact_page_rounded),
+                  value: ref.watch(contactAccessProvider),
+                  onChanged: _onContactAccessToggled,
                 ),
               ],
             ),

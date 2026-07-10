@@ -3,6 +3,32 @@
 All notable changes to SpendWise are listed here.
 Format: `## vX.X.X — YYYY-MM-DD` with Added / Changed / Fixed sections.
 
+## v2.15.0 — 2026-07-10
+
+### Added
+- **Device-contacts enrichment for Dues & Tabs**: When adding or editing a Dues contact, an "Import from phone" button opens the native contact picker and fills in the person/vendor's real name, phone number(s), and photo (with your consent). The contact detail screen now shows the photo avatar and **Call + WhatsApp action buttons** (Call dials via the system dialer; WhatsApp opens the chat with that number directly via the `whatsapp://` scheme, falling back to `wa.me`); list rows show the photo thumbnail. A phone-based dedup guard prompts you to open an existing contact instead of creating a duplicate. Contacts are read **on-device only and never uploaded** (the app has no server).
+- **Multiple numbers per contact**: importing a device contact now keeps *all* its numbers (mobile / home / work), each with its label, instead of forcing a choice at import time. When you tap **Call** or **WhatsApp** and the contact has more than one number, a chooser sheet lets you pick which to use; with a single number it acts directly. The detail card shows the primary number with a `+N` badge when there are more. Dedup matches any of a contact's numbers, not just the primary.
+- **Settings → Contact Access toggle** with a privacy subtitle stating contacts are read on-device and never uploaded. The OS contacts permission is requested when you turn it on or when you first import.
+- **Phone normalization, dedup & a `ContactPhone` model** (`lib/app/utils/phone_utils.dart`): numbers are normalized to a last-10-digit key so `+91…`, `091…`, and bare 10-digit forms match; the multi-number list is stored as JSON in `due_contacts.phones`.
+- **Shared `ContactAvatar` widget** for the photo-vs-emoji fallback, reused by the detail screen, list rows, and the import preview.
+- **Delete contact** from the contact detail screen's app bar (beside Edit), with the same confirm-dialog + "settle or delete entries first" guard as the list swipe-delete.
+- **Settlement date in the Settle sheet**: you can now pick the date a settlement was posted (defaults to today; back-dateable to 2000). That date is used for both the settlement's record *and* the linked transaction's posting date, so Reports count the settlement transaction on the settlement date — not necessarily today.
+- **Edit settlement date**: on the settlement detail sheet, an edit-calendar action (and the tappable date) lets you re-date an existing settlement. It updates the settlement record and its linked transaction together, so an old settlement logged on the wrong day can be moved into the right report month without deleting and re-settling. No migration — existing settlements keep their original date and stay valid.
+
+### Changed
+- **Redesigned contact detail screen**: the hero is now a single flat contact card (avatar, name, tappable phone, person/vendor tag, balance with ↑/↓ direction, and Call + WhatsApp actions) matching the app's surface + thin-outline card language; tighter spacing throughout. Section headers use the lowercase label + count style from the home screen.
+- **DB schema v9 → v10 → v11**: v10 added nullable `phone`, `photo_path`, and `device_contact_id` columns to `due_contacts`; v11 added a nullable `phones` JSON column holding the full number list. Additive migrations; no data loss, no `DEFAULT` required.
+- **Referential-integrity guards on delete** — deleting a record that other rows still reference now blocks with a clear "N records bound to it" message instead of failing silently or with a raw error:
+  - **Transaction linked to a Dues settlement**: cannot be deleted directly — undo or delete the settlement first (from the contact's Settlement history), which removes the linked transaction with it. (Previously a "Delete Tx Only" option orphaned the settlement.)
+  - **Settled due entry**: cannot be deleted while part of a settlement — undo the settlement first. (Previously deleted silently and desynced the settlement's entry count.)
+  - **Contact with entries/settlements**: the block now states the exact counts ("1 entry and 2 settlements bound to it") instead of a generic message.
+  - Account / Category / Mode deletes already blocked on linked transactions and forced reassignment — unchanged.
+
+### Fixed
+- **Category delete no longer crashes when the category is used by a budget**: a category referenced by one or more budgets now blocks with "used by N budget(s). Delete or change those budgets first" instead of surfacing a raw database `RESTRICT` exception. The destructive accent now uses the app's real red (`AppColors.expense`) in this dialog too.
+
+> **Backup caveat**: The database backup ZIP includes `expenses.db` (so the `phone` / `device_contact_id` / `photo_path` / `phones` columns are backed up and restored) but not the `contact_photos/` files in the app documents directory. After a restore, imported contacts keep their name and all numbers, but the photo falls back to the emoji avatar (no crash). A future release may bundle the photo files into the backup.
+
 ## v2.14.0 — 2026-07-09
 
 ### Added

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/themes/app_colors.dart';
+import '../../../app/utils/feedback.dart';
 import '../../../data/db/app_database.dart';
 import '../../../state/dues_providers.dart';
 
@@ -16,14 +17,43 @@ void showSettlementDetailSheet(BuildContext context, DueSettlement settlement) {
   );
 }
 
-class SettlementDetailSheet extends ConsumerWidget {
+class SettlementDetailSheet extends ConsumerStatefulWidget {
   const SettlementDetailSheet({super.key, required this.settlement});
   final DueSettlement settlement;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettlementDetailSheet> createState() =>
+      _SettlementDetailSheetState();
+}
+
+class _SettlementDetailSheetState extends ConsumerState<SettlementDetailSheet> {
+  /// Held in state so the displayed date refreshes in place after an edit,
+  /// without having to pop/reopen the sheet. Day-only — the settlement date is a
+  /// posting day, not a moment.
+  late DateTime _date = DateTime.parse(widget.settlement.settledDate);
+
+  Future<void> _editDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked == null || !mounted) return;
+    await ref
+        .read(duesRepositoryProvider)
+        .updateSettlementDate(widget.settlement.id, picked);
+    if (!mounted) return;
+    setState(() => _date = picked);
+    showFeedbackSnackBar(context, 'Settlement date updated');
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final entriesAsync = ref.watch(settlementEntriesProvider(settlement.id));
+    final appColors = Theme.of(context).extension<AppColors>()!;
+    final danger = appColors.expense;
+    final entriesAsync = ref.watch(settlementEntriesProvider(widget.settlement.id));
 
     return DraggableScrollableSheet(
       initialChildSize: 0.6,
@@ -35,66 +65,90 @@ class SettlementDetailSheet extends ConsumerWidget {
           children: [
             const SizedBox(height: 12),
             Container(
-              width: 40, 
-              height: 4, 
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
-                color: cs.outlineVariant, 
-                borderRadius: BorderRadius.circular(2)
-              )
+                color: cs.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const SizedBox(width: 40), // Balance the icon width
-                  Text(
-                    'Settlement Details', 
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 20, 
-                      fontWeight: FontWeight.w800,
-                      color: cs.onSurface,
-                      letterSpacing: -0.5,
-                    )
+                  // Edit settlement date — re-dates both the settlement record
+                  // and its linked transaction so reports count it on the new
+                  // day. Balances the delete icon on the right.
+                  IconButton(
+                    icon: const Icon(Icons.edit_calendar_rounded),
+                    tooltip: 'Edit settlement date',
+                    onPressed: _editDate,
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        'Settlement Details',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: cs.onSurface,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.delete_outline_rounded, color: cs.error),
-                    onPressed: () => _showDeleteDialog(context, ref, cs),
+                    icon: Icon(Icons.delete_outline_rounded, color: danger),
+                    onPressed: () => _showDeleteDialog(context, ref),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
             Text(
-              '₹${settlement.totalAmount.toStringAsFixed(0)}', 
+              '₹${widget.settlement.totalAmount.toStringAsFixed(0)}',
               style: GoogleFonts.plusJakartaSans(
-                fontSize: 36, 
-                fontWeight: FontWeight.w800, 
+                fontSize: 36,
+                fontWeight: FontWeight.w800,
                 fontFeatures: const [FontFeature.tabularFigures()],
                 color: cs.onSurface,
-              )
+              ),
             ),
             const SizedBox(height: 4),
-            Text(
-              DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.parse(settlement.settledDate)), 
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                color: cs.onSurfaceVariant,
-              )
+            InkWell(
+              onTap: _editDate,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      DateFormat('dd MMM yyyy').format(_date),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(Icons.edit_rounded,
+                        size: 13, color: cs.onSurfaceVariant),
+                  ],
+                ),
+              ),
             ),
-            if (settlement.note.isNotEmpty) ...[
+            if (widget.settlement.note.isNotEmpty) ...[
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest, 
-                  borderRadius: BorderRadius.circular(8)
+                  color: cs.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
-                  settlement.note, 
-                  style: GoogleFonts.plusJakartaSans(color: cs.onSurfaceVariant)
-                ),
+                child: Text(widget.settlement.note,
+                    style: GoogleFonts.plusJakartaSans(color: cs.onSurfaceVariant)),
               ),
             ],
             const SizedBox(height: 24),
@@ -106,26 +160,26 @@ class SettlementDetailSheet extends ConsumerWidget {
                     data: (entries) => Text(
                       '${entries.length} Entries Included',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16, 
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: cs.onSurface,
-                      )
+                      ),
                     ),
                     loading: () => Text(
                       'Entries Included',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16, 
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: cs.onSurface,
-                      )
+                      ),
                     ),
                     error: (_, __) => Text(
                       'Entries Included',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16, 
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: cs.onSurface,
-                      )
+                      ),
                     ),
                   ),
                 ],
@@ -143,24 +197,31 @@ class SettlementDetailSheet extends ConsumerWidget {
                     itemCount: entries.length,
                     itemBuilder: (context, index) {
                       final e = entries[index];
-                      final date = DateFormat('dd MMM').format(DateTime.parse(e.entryDate));
+                      final date =
+                          DateFormat('dd MMM').format(DateTime.parse(e.entryDate));
                       final isPay = e.direction == 'payable';
-                      
+
                       return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 13),
                         child: Row(
                           children: [
                             Container(
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: isPay ? Theme.of(context).extension<AppColors>()!.expense.withValues(alpha: 0.1) : Theme.of(context).extension<AppColors>()!.income.withValues(alpha: 0.1),
+                                color: isPay
+                                    ? appColors.expense.withValues(alpha: 0.1)
+                                    : appColors.income.withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               alignment: Alignment.center,
                               child: Icon(
-                                isPay ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
-                                color: isPay ? Theme.of(context).extension<AppColors>()!.expense : Theme.of(context).extension<AppColors>()!.income,
+                                isPay
+                                    ? Icons.arrow_downward_rounded
+                                    : Icons.arrow_upward_rounded,
+                                color:
+                                    isPay ? appColors.expense : appColors.income,
                                 size: 20,
                               ),
                             ),
@@ -185,22 +246,31 @@ class SettlementDetailSheet extends ConsumerWidget {
                                       Text(
                                         date,
                                         style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 12, 
+                                          fontSize: 12,
                                           fontWeight: FontWeight.w400,
-                                          color: cs.onSurfaceVariant
+                                          color: cs.onSurfaceVariant,
                                         ),
                                       ),
                                       if (e.mealSlot != null) ...[
-                                        Text(' • ', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: cs.onSurfaceVariant)),
+                                        Text(' • ',
+                                            style: GoogleFonts.plusJakartaSans(
+                                                fontSize: 12,
+                                                color: cs.onSurfaceVariant)),
                                         Icon(
-                                          e.mealSlot == 'lunch' ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded,
+                                          e.mealSlot == 'lunch'
+                                              ? Icons.wb_sunny_rounded
+                                              : Icons.nights_stay_rounded,
                                           size: 12,
                                           color: cs.onSurfaceVariant,
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          e.mealSlot == 'lunch' ? 'Lunch' : 'Dinner',
-                                          style: GoogleFonts.plusJakartaSans(fontSize: 12, color: cs.onSurfaceVariant),
+                                          e.mealSlot == 'lunch'
+                                              ? 'Lunch'
+                                              : 'Dinner',
+                                          style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 12,
+                                              color: cs.onSurfaceVariant),
                                         ),
                                       ],
                                     ],
@@ -232,7 +302,9 @@ class SettlementDetailSheet extends ConsumerWidget {
     );
   }
 
-  Future<void> _showDeleteDialog(BuildContext context, WidgetRef ref, ColorScheme cs) async {
+  Future<void> _showDeleteDialog(BuildContext context, WidgetRef ref) async {
+    final danger = Theme.of(context).extension<AppColors>()!.expense;
+    final onDanger = Theme.of(context).extension<AppColors>()!.onExpense;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -248,7 +320,8 @@ class SettlementDetailSheet extends ConsumerWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: cs.error, foregroundColor: cs.onError),
+            style: FilledButton.styleFrom(
+                backgroundColor: danger, foregroundColor: onDanger),
             child: const Text('Delete'),
           ),
         ],
@@ -256,7 +329,7 @@ class SettlementDetailSheet extends ConsumerWidget {
     );
 
     if (confirm == true && context.mounted) {
-      await ref.read(duesRepositoryProvider).deleteSettlement(settlement.id);
+      await ref.read(duesRepositoryProvider).deleteSettlement(widget.settlement.id);
       if (context.mounted) Navigator.pop(context); // Close the sheet
     }
   }

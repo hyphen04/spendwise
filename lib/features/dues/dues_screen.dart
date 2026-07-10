@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../app/themes/app_colors.dart';
+import '../../app/widgets/contact_avatar.dart';
 import '../../data/db/app_database.dart';
 import '../../app/utils/feedback.dart';
 import '../../app/utils/infinite_scroll.dart';
@@ -28,6 +29,33 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
   final _paging = PagingState();
 
   Future<void> _deleteContact(BuildContext context, DueContact contact) async {
+    final repo = ref.read(duesRepositoryProvider);
+    // Pre-count so the user is told exactly what blocks deletion (entries and/or
+    // settlements), instead of a generic caught-exception message. Both FKs are
+    // RESTRICT, so the count is authoritative; the try/catch below is the net.
+    final entries = await repo.countEntriesByContact(contact.id);
+    final settlements = await repo.countSettlementsByContact(contact.id);
+    if (!context.mounted) return;
+    if (entries > 0 || settlements > 0) {
+      final parts = <String>[];
+      if (entries == 1) {
+        parts.add('1 entry');
+      } else if (entries > 1) {
+        parts.add('$entries entries');
+      }
+      if (settlements == 1) {
+        parts.add('1 settlement');
+      } else if (settlements > 1) {
+        parts.add('$settlements settlements');
+      }
+      await showCannotDeleteDialog(
+        context,
+        message:
+            '"${contact.name}" has ${parts.join(' and ')} bound to it. Settle or delete them first.',
+      );
+      return;
+    }
+
     final ok = await showConfirmDeleteDialog(
       context,
       title: 'Delete Contact',
@@ -35,7 +63,7 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
     );
     if (!ok) return;
     try {
-      await ref.read(duesRepositoryProvider).deleteContact(contact.id);
+      await repo.deleteContact(contact.id);
       if (!context.mounted) return;
       showFeedbackSnackBar(context, 'Contact deleted');
     } catch (_) {
@@ -276,15 +304,12 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
                                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
                                     child: Row(
                                       children: [
-                                        Container(
-                                          width: 46,
-                                          height: 46,
-                                          decoration: BoxDecoration(
-                                            color: Color(int.parse(contact.color.replaceFirst('#', '0xFF'))).withValues(alpha: 0.15),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          alignment: Alignment.center,
-                                          child: Text(contact.icon, style: const TextStyle(fontSize: 22)),
+                                        ContactAvatar(
+                                          photoPath: contact.photoPath,
+                                          emoji: contact.icon,
+                                          colorHex: contact.color,
+                                          size: 46,
+                                          emojiFontSize: 22,
                                         ),
                                         const SizedBox(width: 14),
                                         Expanded(
@@ -378,6 +403,7 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'fab_dues',
         onPressed: () => showAddContactSheet(context),
         tooltip: 'Add Contact',
         child: const Icon(Icons.person_add_alt_1_rounded),

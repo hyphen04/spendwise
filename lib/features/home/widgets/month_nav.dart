@@ -228,6 +228,9 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
                               ? Colors.transparent
                               : cs.surfaceContainer,
                       borderRadius: BorderRadius.circular(10),
+                      border: isSelected || isFuture
+                          ? null
+                          : Border.all(color: cs.outlineVariant),
                     ),
                     alignment: Alignment.center,
                     child: Text(

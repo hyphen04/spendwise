@@ -80,46 +80,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // Brand wordmark: "spendwise" set in Space Grotesk — the same
+                // geometric typeface the app uses for the net-worth number —
+                // so the brand ties itself to the money/numeric identity with
+                // no ornament. "wise" in the brand color.
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     RichText(
                       text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: 'spend',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w500,
-                          color: cs.onSurface,
-                          height: 1.0,
-                          letterSpacing: -0.3,
-                        ),
+                        children: [
+                          TextSpan(
+                            text: 'spend',
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w500,
+                              color: cs.onSurface,
+                              height: 1.0,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          TextSpan(
+                            text: 'wise',
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              color: cs.primary,
+                              height: 1.0,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
                       ),
-                      TextSpan(
-                        text: 'wise',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          color: cs.primary,
-                          height: 1.0,
-                          letterSpacing: -0.3,
-                        ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      _greeting(),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        color: cs.onSurfaceVariant,
+                        fontWeight: FontWeight.w400,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  _greeting(),
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    color: cs.onSurfaceVariant,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
             const Spacer(),
             // Search Button in Header
             IconButton(
@@ -363,6 +367,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   ],
 ),
 floatingActionButton: FloatingActionButton(
+        heroTag: 'fab_home',
         onPressed: () => showAmountEntrySheet(context),
         tooltip: 'Add Transaction',
         child: const Icon(Icons.add_rounded),

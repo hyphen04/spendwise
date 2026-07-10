@@ -66,4 +66,12 @@ class PrefsService {
 
   bool get showQuickDuesWidget => _prefs.getBool('show_quick_dues') ?? true;
   Future<void> setShowQuickDuesWidget(bool v) => _prefs.setBool('show_quick_dues', v);
+
+  /// Whether the user has enabled device-contact access for the Dues import
+  /// flow. This is a *user intent* toggle (Settings → Contact Access): it gates
+  /// whether the "Import from phone" affordance is offered. The actual OS
+  /// permission is still requested at pick time. Contacts are read on-device
+  /// only and never uploaded.
+  bool get contactAccess => _prefs.getBool('contact_access') ?? false;
+  Future<void> setContactAccess(bool v) => _prefs.setBool('contact_access', v);
 }

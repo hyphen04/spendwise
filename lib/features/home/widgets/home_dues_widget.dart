@@ -185,68 +185,81 @@ class _DueQuickCardState extends ConsumerState<_DueQuickCard> {
     showDialog(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          title: Text(
-            'Add Entry',
-            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: actionColor),
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-              Text(
-                'Logging a new ${isPayable ? 'Payable (You Owe)' : 'Receivable (They Owe)'} for ${widget.contact.name}.',
-                style: GoogleFonts.plusJakartaSans(color: cs.onSurfaceVariant, fontSize: 14),
+        // Rebuild the dialog as the amount changes so the swipe slider's
+        // `enabled` state tracks amount validity in real time. The controller
+        // is a ValueListenable<String>, so this needs no extra listener plumbing.
+        return ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _amountController,
+          builder: (ctx, value, _) {
+            final amt = double.tryParse(value.text);
+            final canAdd = amt != null && amt > 0;
+            return AlertDialog(
+              title: Text(
+                'Add Entry',
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: actionColor),
               ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _amountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                autofocus: false,
-                cursorColor: actionColor,
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 16),
-                decoration: InputDecoration(
-                  labelText: 'Amount',
-                  floatingLabelStyle: TextStyle(color: actionColor, fontWeight: FontWeight.w600),
-                  prefixText: '₹ ',
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: actionColor, width: 2),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                  Text(
+                    'Logging a new ${isPayable ? 'Payable (You Owe)' : 'Receivable (They Owe)'} for ${widget.contact.name}.',
+                    style: GoogleFonts.plusJakartaSans(color: cs.onSurfaceVariant, fontSize: 14),
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: _amountController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    autofocus: false,
+                    cursorColor: actionColor,
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 16),
+                    decoration: InputDecoration(
+                      labelText: 'Amount',
+                      floatingLabelStyle: TextStyle(color: actionColor, fontWeight: FontWeight.w600),
+                      prefixText: '₹ ',
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: actionColor, width: 2),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              SwipeActionButton(
-                label: 'Swipe to Add',
-                color: actionColor,
-                enabled: true,
-                onAction: () async {
-                  final amt = double.tryParse(_amountController.text);
-                  if (amt == null || amt <= 0) return;
+                  const SizedBox(height: 24),
+                  SwipeActionButton(
+                    label: 'Swipe to Add',
+                    color: actionColor,
+                    // Disabled until a valid amount is entered — the slider
+                    // dims to 0.5 and ignores drags; a thumb dragged out before
+                    // the field empties snaps back (see SwipeActionButton).
+                    enabled: canAdd,
+                    onAction: () async {
+                      final amt = double.tryParse(_amountController.text);
+                      if (amt == null || amt <= 0) return;
 
-                  final repo = ref.read(duesRepositoryProvider);
-                  await repo.addEntry(
-                    contactId: widget.contact.id,
-                    amount: amt,
-                    direction: direction,
-                    date: DateTime.now(),
-                  );
-                  if (ctx.mounted) {
-                    Navigator.pop(ctx);
-                  }
-                  _amountController.clear();
-                  if (widget.onLogged != null) {
-                    widget.onLogged!(amt);
-                  }
-                },
+                      final repo = ref.read(duesRepositoryProvider);
+                      await repo.addEntry(
+                        contactId: widget.contact.id,
+                        amount: amt,
+                        direction: direction,
+                        date: DateTime.now(),
+                      );
+                      if (ctx.mounted) {
+                        Navigator.pop(ctx);
+                      }
+                      _amountController.clear();
+                      if (widget.onLogged != null) {
+                        widget.onLogged!(amt);
+                      }
+                    },
+                  ),
+                ],
               ),
-            ],
-          ),
-          ),
+            ),
+            );
+          },
         );
       },
     );

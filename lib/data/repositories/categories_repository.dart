@@ -60,6 +60,22 @@ class CategoriesRepository {
     return (row.data['cnt'] as int?) ?? 0;
   }
 
+  /// Number of budgets that reference this category. A budget's category is
+  /// semantic (it scopes the budget), so unlike transactions it can't be
+  /// silently reassigned — the user must edit/delete those budgets first. The
+  /// `budgets.category_id` FK is `onDelete: RESTRICT`, so deleting a category
+  /// with a live budget throws at the DB level; counting here lets us block
+  /// cleanly in the UI instead of surfacing a raw exception.
+  Future<int> countBudgets(String id) async {
+    final row = await _db
+        .customSelect(
+          'SELECT COUNT(*) AS cnt FROM budgets WHERE category_id = ?',
+          variables: [Variable.withString(id)],
+        )
+        .getSingle();
+    return (row.data['cnt'] as int?) ?? 0;
+  }
+
   Future<void> reassignAndDelete(String oldId, String newId) =>
       _db.transaction(() async {
         await _db.customStatement(

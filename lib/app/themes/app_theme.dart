@@ -44,27 +44,39 @@ class AppTheme {
   }
 
   static ThemeData dark({required Color seedColor, bool oled = false}) {
-    final bg = oled ? const Color(0xFF000000) : const Color(0xFF0F172A);
+    // Graphite palette — a single cohesive warm-neutral gray hue family so the
+    // scaffold, cards, chips and inputs all read as one design system (the old
+    // navy `surface` + gray containers looked mismatched). The container
+    // ladder is widened so each step is visible, and `outline` is decoupled
+    // from the containers so bordered chips/pills/inputs keep a crisp edge.
+    // OLED keeps a pure-black surface with the same graphite containers.
+    final bg = oled ? const Color(0xFF000000) : const Color(0xFF17171A);
     final base = ColorScheme.fromSeed(
       seedColor: seedColor,
       brightness: Brightness.dark,
     );
-    // If the user picked a dark seed (e.g. Monochrome Black), using it as
-    // `primary` makes the button background blend into the dark surface and
-    // the button text (onPrimary) is set to a dark color too — the result
-    // is invisible. Invert to a light neutral in that case so primary
-    // surfaces stay readable; keep the seed for seeds that are already light
-    // (Cyan, Amber, etc.) so brand identity carries through.
+    // Brand seed handling. Only a *near-black* seed (the Monochrome Black
+    // default) needs inverting — using it as `primary` on a dark surface makes
+    // the button invisible. Every actual brand swatch (Indigo, Emerald, Rose,
+    // Amber, Cyan, Violet) is light enough to show on graphite, so we keep it
+    // verbatim and let the brand color carry through in dark mode too.
+    //
+    // `onPrimary`/`onPrimaryContainer` are picked per-seed for legible button
+    // text: white on darker saturated seeds (Indigo, Violet, Rose), graphite on
+    // brighter seeds (Emerald, Cyan, Amber).
     final seedLuminance = seedColor.computeLuminance();
-    final isDarkSeed = seedLuminance < 0.4;
-    final primary = isDarkSeed ? const Color(0xFFF5F5F5) : seedColor;
-    final onPrimary = const Color(0xFF0F172A);
-    final primaryContainer = isDarkSeed
-        ? const Color(0xFF2A2A2C)
+    final isNearBlackSeed = seedLuminance < 0.1;
+    final useLightOnPrimary = !isNearBlackSeed && seedLuminance < 0.35;
+    final primary = isNearBlackSeed ? const Color(0xFFF5F5F5) : seedColor;
+    final onPrimary = isNearBlackSeed
+        ? const Color(0xFF17171A)
+        : (useLightOnPrimary ? const Color(0xFFFFFFFF) : const Color(0xFF17171A));
+    final primaryContainer = isNearBlackSeed
+        ? const Color(0xFF2E2E33)
         : seedColor;
-    final onPrimaryContainer = isDarkSeed
+    final onPrimaryContainer = isNearBlackSeed
         ? const Color(0xFFF5F5F5)
-        : const Color(0xFF0F172A);
+        : (useLightOnPrimary ? const Color(0xFFFFFFFF) : const Color(0xFF17171A));
 
     final cs = base.copyWith(
       primary: primary,
@@ -73,29 +85,30 @@ class AppTheme {
       onPrimaryContainer: onPrimaryContainer,
       secondary: const Color(0xFFF5F5F5),
       onSecondary: const Color(0xFF0A0A0A),
-      secondaryContainer: const Color(0xFF1C1C1E),
+      secondaryContainer: const Color(0xFF262629),
       onSecondaryContainer: const Color(0xFFF5F5F5),
       tertiary: const Color(0xFFF5F5F5),
       onTertiary: const Color(0xFF0A0A0A),
-      tertiaryContainer: const Color(0xFF1C1C1E),
+      tertiaryContainer: const Color(0xFF262629),
       onTertiaryContainer: const Color(0xFFF5F5F5),
       error: const Color(0xFFF5F5F5),
       onError: const Color(0xFF0A0A0A),
-      errorContainer: const Color(0xFF1C1C1E),
+      errorContainer: const Color(0xFF262629),
       onErrorContainer: const Color(0xFFF5F5F5),
       surface: bg,
-      onSurface: const Color(0xFFF5F5F5),
+      onSurface: const Color(0xFFF4F4F5),
       surfaceContainerLowest: bg,
-      surfaceContainerLow: oled ? const Color(0xFF0F0F0F) : const Color(0xFF151517),
-      surfaceContainer: const Color(0xFF1C1C1E),
-      surfaceContainerHigh: const Color(0xFF2A2A2C),
-      surfaceContainerHighest: const Color(0xFF333335),
-      onSurfaceVariant: const Color(0xFF8E8E93),
-      outline: const Color(0xFF2A2A2C),
-      outlineVariant: const Color(0xFF1F1F21),
+      surfaceContainerLow:
+          oled ? const Color(0xFF0E0E10) : const Color(0xFF1E1E21),
+      surfaceContainer: const Color(0xFF262629),
+      surfaceContainerHigh: const Color(0xFF2E2E33),
+      surfaceContainerHighest: const Color(0xFF38383E),
+      onSurfaceVariant: const Color(0xFFA1A1AA),
+      outline: const Color(0xFF3A3A3F),
+      outlineVariant: const Color(0xFF2A2A2E),
       inverseSurface: const Color(0xFFF5F5F5),
       onInverseSurface: const Color(0xFF0A0A0A),
-      inversePrimary: isDarkSeed ? const Color(0xFF0A0A0A) : seedColor,
+      inversePrimary: isNearBlackSeed ? const Color(0xFF0A0A0A) : seedColor,
     );
     return _buildTheme(cs: cs, appColors: AppColors.dark());
   }
@@ -131,13 +144,13 @@ class AppTheme {
           side: BorderSide(color: cs.outline),
         ),
         clipBehavior: Clip.antiAlias,
-        color: cs.surface,
+        color: cs.surfaceContainerLow,
         margin: EdgeInsets.zero,
       ),
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
         height: 64,
-        backgroundColor: cs.surface,
+        backgroundColor: cs.surfaceContainerLow,
         indicatorColor: Colors.transparent,
         overlayColor: const WidgetStatePropertyAll(Colors.transparent),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
@@ -153,7 +166,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: cs.surfaceContainerLow,
+        fillColor: cs.surfaceContainer,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: cs.outline),
@@ -272,7 +285,7 @@ class AppTheme {
       chipTheme: ChipThemeData(
         shape: const StadiumBorder(),
         side: BorderSide(color: cs.outline),
-        backgroundColor: cs.surface,
+        backgroundColor: cs.surfaceContainerLow,
         selectedColor: cs.primary,
         // Unselected: dark text on light background
         labelStyle: GoogleFonts.plusJakartaSans(

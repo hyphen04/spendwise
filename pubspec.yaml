@@ -45,6 +45,9 @@ dependencies:
   flutter_secure_storage: ^9.2.0
   image_picker: ^1.1.0
 
+  # --- Contacts (device address book, read-only) ---
+  flutter_contacts: ^2.2.2
+
   # --- Legacy (kept while old code still exists) ---
   sqflite: ^2.4.1
   path: ^1.9.0

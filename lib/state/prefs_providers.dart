@@ -181,3 +181,19 @@ class ShowQuickDuesNotifier extends StateNotifier<bool> {
     state = v;
   }
 }
+
+// ── Contact Access (Dues import) ───────────────────────────────────────────
+
+final contactAccessProvider =
+    StateNotifierProvider<ContactAccessNotifier, bool>(
+        (ref) => ContactAccessNotifier(ref.watch(prefsServiceProvider)));
+
+class ContactAccessNotifier extends StateNotifier<bool> {
+  ContactAccessNotifier(this._prefs) : super(_prefs.contactAccess);
+  final PrefsService _prefs;
+
+  Future<void> set(bool v) async {
+    await _prefs.setContactAccess(v);
+    state = v;
+  }
+}
