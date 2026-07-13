@@ -393,4 +393,35 @@ void main() {
       expect(ctx.legend.values, contains('Fuel'));
     });
   });
+
+  group('AiPayloadBuilder — labelToId (Phase 2)', () {
+    final b = AiPayloadBuilder();
+
+    test('labelToId maps every emitted label back to its real entity id', () {
+      final ctx = b.buildAskContext(
+        summary: _summary(topCats: const []),
+        budgets: const [],
+        cashflow: const [],
+        period: '2026-07',
+        allCategories: const [(id: 'c-fuel', name: 'Fuel'), (id: 'c-food', name: 'Food')],
+        allModes: const [(id: 'm-upi', name: 'UPI')],
+        allTags: const [(id: 't-work', name: 'work')],
+        accountBalances: const [(id: 'a1', name: 'HDFC', balance: 1000)],
+        goals: const [
+          (id: 'g1', name: 'Phone', target: 60000, saved: 15000, monthsLeft: 10, monthlyCommitment: 4500),
+        ],
+        recurringBills: const [
+          (id: 'b1', name: 'Netflix', amount: 649, cadence: 'monthly', nextDueInDays: 5, source: 'manual'),
+        ],
+      );
+      // The JSON's category labels (cat_N) must round-trip to the real ids.
+      final cats = (ctx.json['categories']! as List).cast<Map>();
+      for (final c in cats) {
+        final label = c['id'] as String;
+        expect(ctx.labelToId[label], isNotNull);
+        expect(ctx.labelToId[label]!.startsWith('c-'), isTrue);
+      }
+      expect(ctx.labelToId.values, containsAll(const ['m-upi', 't-work', 'a1', 'g1', 'b1']));
+    });
+  });
 }

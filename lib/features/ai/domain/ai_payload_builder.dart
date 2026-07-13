@@ -155,6 +155,7 @@ class AiPayloadBuilder {
         if (shareNames && labeler.legend.isNotEmpty) 'legend': labeler.legend,
       },
       legend: labeler.legend,
+      labelToId: labeler.labelToId,
     );
   }
 
@@ -259,6 +260,7 @@ class AiPayloadBuilder {
         if (shareNames && labeler.legend.isNotEmpty) 'legend': labeler.legend,
       },
       legend: labeler.legend,
+      labelToId: labeler.labelToId,
     );
   }
 
@@ -547,6 +549,31 @@ class _Labeler {
       _key(_goalKeys, 'goal', _goalN, id, name, () => _goalN++);
   String bill(String id, String name) =>
       _key(_billKeys, 'bill', _billN, id, name, () => _billN++);
+
+  /// Inverse of all six `_*Keys` maps: `label → real id`. On-device only; the
+  /// executor uses it to resolve labels the LLM emits back to real ids.
+  Map<String, String> get labelToId {
+    final out = <String, String>{};
+    for (final e in _catKeys.entries) {
+      out[e.value] = e.key;
+    }
+    for (final e in _accKeys.entries) {
+      out[e.value] = e.key;
+    }
+    for (final e in _modeKeys.entries) {
+      out[e.value] = e.key;
+    }
+    for (final e in _tagKeys.entries) {
+      out[e.value] = e.key;
+    }
+    for (final e in _goalKeys.entries) {
+      out[e.value] = e.key;
+    }
+    for (final e in _billKeys.entries) {
+      out[e.value] = e.key;
+    }
+    return out;
+  }
 
   String _key(Map<String, String> map, String prefix, int n, String id,
       String name, void Function() bump) {
