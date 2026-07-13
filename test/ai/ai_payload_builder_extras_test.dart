@@ -5,7 +5,6 @@ import 'package:spendwise/data/models/budget_progress.dart';
 import 'package:spendwise/data/models/report_models.dart';
 import 'package:spendwise/data/db/app_database.dart';
 import 'package:spendwise/features/ai/domain/ai_payload_builder.dart';
-import 'package:spendwise/features/ai/domain/ai_mention_resolver.dart';
 
 // Fixtures shared in shape with the other payload builder tests.
 

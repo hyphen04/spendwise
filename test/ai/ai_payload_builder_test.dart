@@ -293,6 +293,13 @@ void main() {
       // 0-spend category still got a label and is in the legend.
       final fuelEntry = cats.firstWhere((c) => c['amount'] == 0.0);
       expect(fuelEntry['id'], startsWith('cat_'));
+      // Privacy: with shareNames off (default), no real category name — including
+      // the 0-spend one — leaves the device, and no legend is embedded.
+      expect(payload.containsKey('legend'), isFalse);
+      final serialized = jsonEncode(payload);
+      expect(serialized, isNot(contains('Fuel')));
+      expect(serialized, isNot(contains('Food & Dining')));
+      expect(serialized, isNot(contains('Home Rent')));
     });
 
     test('each category has a uniform trend_3mo (zeros when no 3-mo data)', () {
