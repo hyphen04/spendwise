@@ -54,3 +54,8 @@ key.properties
 switch_fonts.py
 .env
 DESIGN.md
+
+# Claude Code scratch worktrees + local state (do not commit)
+.claude/worktrees/
+.claude/settings.local.json
+.superpowers/

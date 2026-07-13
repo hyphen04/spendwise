@@ -4,6 +4,7 @@ import '../../../data/db/app_database.dart';
 import '../../../data/validators.dart';
 import '../../../state/manage_providers.dart';
 import '../../../app/utils/feedback.dart';
+import '../../../app/widgets/spendwise_sheet.dart';
 import '../widgets/color_picker_row.dart';
 
 Future<void> showCategoryFormSheet(
@@ -11,10 +12,8 @@ Future<void> showCategoryFormSheet(
   Category? editing,
   String initialKind = 'expense',
 }) {
-  return showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
+  return showSpendWiseSheet(
+    context,
     builder: (_) => _CategoryFormSheet(
       editing: editing,
       initialKind: initialKind,
@@ -96,7 +95,6 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final isEditing = widget.editing != null;
 
     return Padding(
@@ -110,17 +108,6 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: cs.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
               Text(
                 isEditing ? 'Edit Category' : 'New Category',
                 style: Theme.of(context).textTheme.titleLarge,

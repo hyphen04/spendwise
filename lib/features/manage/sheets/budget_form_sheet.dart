@@ -5,15 +5,14 @@ import '../../../state/home_providers.dart';
 import '../../../state/manage_providers.dart';
 import '../../../utils/amount_input_formatter.dart';
 import '../../../app/utils/feedback.dart';
+import '../../../app/widgets/spendwise_sheet.dart';
 
 Future<void> showBudgetFormSheet(
   BuildContext context, {
   Budget? editing,
 }) {
-  return showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
+  return showSpendWiseSheet(
+    context,
     builder: (_) => _BudgetFormSheet(editing: editing),
   );
 }
@@ -97,7 +96,6 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final isEditing = widget.editing != null;
     final catsAsync = ref.watch(categoriesStreamProvider);
     final accsAsync = ref.watch(accountsStreamProvider);
@@ -121,17 +119,6 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: cs.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
               Text(
                 isEditing ? 'Edit Budget' : 'New Budget',
                 style: Theme.of(context).textTheme.titleLarge,

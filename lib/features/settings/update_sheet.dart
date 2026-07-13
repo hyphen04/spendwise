@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../app/widgets/changelog_markdown.dart';
+import '../../app/widgets/spendwise_sheet.dart';
 import '../../services/update_service.dart';
 
 /// Opens the SpendWise update sheet — checks GitHub for a newer release and,
@@ -12,10 +13,8 @@ Future<void> showUpdateSheet({
   required BuildContext context,
   required String currentVersion,
 }) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
+  return showSpendWiseSheet<void>(
+    context,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -156,40 +155,22 @@ class _UpdateSheetState extends State<_UpdateSheet> {
 
     return PopScope(
       canPop: canDismiss,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
-        ),
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Drag handle
-              Padding(
-                padding: const EdgeInsets.only(top: 12, bottom: 4),
-                child: Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: cs.outlineVariant,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-              ),
-              _buildHeader(cs, tt),
-              const Divider(height: 1),
-              Flexible(child: _buildBody(cs, tt)),
-              _buildFooter(cs, canDismiss),
-            ],
-          ),
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildHeader(cs, tt),
+          const Divider(height: 1),
+          Flexible(child: _buildBody(cs, tt)),
+          _buildFooter(cs, canDismiss),
+        ],
       ),
     );
   }
 
   Widget _buildHeader(ColorScheme cs, TextTheme tt) {
+    // In-content close button (in the title row, well below the status bar).
+    // Disabled while a download/install is in flight — the sheet's PopScope
+    // also blocks barrier/drag dismiss in those states.
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 14, 12, 14),
       child: Row(

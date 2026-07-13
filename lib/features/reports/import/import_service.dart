@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
+import '../../../app/widgets/spendwise_sheet.dart';
 import '../../../data/db/app_database.dart';
 import 'import_models.dart';
 import 'import_preview_sheet.dart';
@@ -16,10 +17,9 @@ import 'template_generator.dart';
 class ImportService {
   static Future<void> showImportSheet(
       BuildContext context, AppDatabase db) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
+    await showSpendWiseSheet<void>(
+      context,
+      showChrome: false,
       builder: (_) => _ImportOptionsSheet(db: db),
     );
   }
@@ -235,7 +235,8 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
             'The file only contains the example rows from the template. '
                 'Delete those rows, add your transactions, then import again.',
           '__JSON_PARSE_ERROR__' => 'Invalid JSON file.',
-          '__JSON_NOT_OBJECT__' => 'JSON must be an object with a "transactions" array.',
+          '__JSON_NOT_OBJECT__' =>
+            'JSON must be an object with a "transactions" array.',
           '__NO_TRANSACTIONS_KEY__' =>
             'JSON must contain a "transactions" array.',
           _ => 'Unrecognised file format.',
@@ -334,109 +335,133 @@ class _ImportOptionsSheetState extends State<_ImportOptionsSheet> {
       minChildSize: 0.4,
       maxChildSize: 0.75,
       builder: (_, controller) {
-        if (_step == _Step.loading) {
-          return SizedBox.expand(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text(_loadingMessage,
-                    style: tt.bodyMedium
-                        ?.copyWith(color: cs.onSurfaceVariant)),
-              ],
-            ),
-          );
-        }
+        return SafeArea(
+          top: true,
+          bottom: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SpendWiseSheetChrome(),
+              Expanded(
+                child: _step == _Step.loading
+                    ? SizedBox.expand(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 16),
+                            Text(_loadingMessage,
+                                style: tt.bodyMedium
+                                    ?.copyWith(color: cs.onSurfaceVariant)),
+                          ],
+                        ),
+                      )
+                    : ListView(
+                        controller: controller,
+                        padding: EdgeInsets.fromLTRB(
+                          20,
+                          4,
+                          20,
+                          MediaQuery.paddingOf(context).bottom + 24,
+                        ),
+                        children: [
+                          // Title
+                          Text(
+                            'Import Transactions',
+                            style: tt.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Pick a file format, download the template, fill it in, then import.',
+                            style: tt.bodySmall
+                                ?.copyWith(color: cs.onSurfaceVariant),
+                          ),
+                          const SizedBox(height: 20),
 
-        return ListView(
-          controller: controller,
-          padding: EdgeInsets.fromLTRB(
-            20,
-            4,
-            20,
-            MediaQuery.paddingOf(context).bottom + 24,
-          ),
-          children: [
-            // Title
-            Text(
-              'Import Transactions',
-              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Pick a file format, download the template, fill it in, then import.',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: 20),
+                          // ── Format ───────────────────────────────────────────────────
+                          _sectionLabel('Format', cs, tt),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              for (final (fmt, label, icon) in [
+                                (
+                                  ImportFormat.json,
+                                  'JSON',
+                                  Icons.data_object_outlined
+                                ),
+                                (
+                                  ImportFormat.rawDbZip,
+                                  'Raw DB Zip',
+                                  Icons.folder_zip_outlined
+                                ),
+                              ])
+                                _chip(
+                                  label: label,
+                                  icon: Icon(icon, size: 16),
+                                  selected: _format == fmt,
+                                  onSelected: () =>
+                                      setState(() => _format = fmt),
+                                  cs: cs,
+                                  tt: tt,
+                                ),
+                            ],
+                          ),
 
-            // ── Format ───────────────────────────────────────────────────
-            _sectionLabel('Format', cs, tt),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final (fmt, label, icon) in [
-                  (ImportFormat.json, 'JSON', Icons.data_object_outlined),
-                  (ImportFormat.rawDbZip, 'Raw DB Zip', Icons.folder_zip_outlined),
-                ])
-                  _chip(
-                    label: label,
-                    icon: Icon(icon, size: 16),
-                    selected: _format == fmt,
-                    onSelected: () => setState(() => _format = fmt),
-                    cs: cs,
-                    tt: tt,
-                  ),
-              ],
-            ),
+                          const SizedBox(height: 8),
 
-            const SizedBox(height: 8),
+                          // Format hint
+                          Text(
+                            switch (_format) {
+                              ImportFormat.json =>
+                                'Full envelope format with a reference section. Great for round-tripping data.',
+                              ImportFormat.rawDbZip =>
+                                'Restores your entire database directly from a raw backup zip file. Flexible and handles migrations natively.',
+                            },
+                            style: tt.bodySmall
+                                ?.copyWith(color: cs.onSurfaceVariant),
+                          ),
 
-            // Format hint
-            Text(
-              switch (_format) {
-                ImportFormat.json =>
-                  'Full envelope format with a reference section. Great for round-tripping data.',
-                ImportFormat.rawDbZip =>
-                  'Restores your entire database directly from a raw backup zip file. Flexible and handles migrations natively.',
-              },
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
+                          const SizedBox(height: 24),
 
-            const SizedBox(height: 24),
+                          // ── Actions ───────────────────────────────────────────────────
+                          _sectionLabel('Actions', cs, tt),
+                          const SizedBox(height: 10),
 
-            // ── Actions ───────────────────────────────────────────────────
-            _sectionLabel('Actions', cs, tt),
-            const SizedBox(height: 10),
+                          if (_format != ImportFormat.rawDbZip) ...[
+                            OutlinedButton.icon(
+                              onPressed: _downloadTemplate,
+                              icon:
+                                  const Icon(Icons.download_outlined, size: 18),
+                              label: const Text('Download Template'),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                          FilledButton.icon(
+                            onPressed: _pickAndImport,
+                            icon:
+                                const Icon(Icons.upload_file_rounded, size: 18),
+                            label: const Text('Pick File & Import'),
+                          ),
 
-            if (_format != ImportFormat.rawDbZip) ...[
-              OutlinedButton.icon(
-                onPressed: _downloadTemplate,
-                icon: const Icon(Icons.download_outlined, size: 18),
-                label: const Text('Download Template'),
+                          const SizedBox(height: 20),
+                          Text(
+                            '• Required columns: date, amount, kind, account, category, mode\n'
+                            '• kind must be "expense" or "income"\n'
+                            '• date format: YYYY-MM-DD or ISO-8601\n'
+                            '• Missing accounts/categories/modes are created automatically',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              height: 1.6,
+                            ),
+                          ),
+                        ],
+                      ),
               ),
-              const SizedBox(height: 10),
             ],
-            FilledButton.icon(
-              onPressed: _pickAndImport,
-              icon: const Icon(Icons.upload_file_rounded, size: 18),
-              label: const Text('Pick File & Import'),
-            ),
-
-            const SizedBox(height: 20),
-            Text(
-              '• Required columns: date, amount, kind, account, category, mode\n'
-              '• kind must be "expense" or "income"\n'
-              '• date format: YYYY-MM-DD or ISO-8601\n'
-              '• Missing accounts/categories/modes are created automatically',
-              style: tt.bodySmall?.copyWith(
-                color: cs.onSurfaceVariant,
-                height: 1.6,
-              ),
-            ),
-          ],
+          ),
         );
       },
     );
@@ -489,9 +514,7 @@ ImportPreview _resolveAndValidate(
   final categoryMap = {
     for (final c in categories) c.name.trim().toLowerCase(): c.id
   };
-  final modeMap = {
-    for (final m in modes) m.name.trim().toLowerCase(): m.id
-  };
+  final modeMap = {for (final m in modes) m.name.trim().toLowerCase(): m.id};
 
   final validRows = <ResolvedRow>[];
   final errors = <ImportError>[];
@@ -515,15 +538,18 @@ ImportPreview _resolveAndValidate(
       continue;
     }
     if (rawAmount.isEmpty) {
-      errors.add(ImportError(rowIndex: row.rowIndex, message: 'Missing amount'));
+      errors
+          .add(ImportError(rowIndex: row.rowIndex, message: 'Missing amount'));
       continue;
     }
     if (account.isEmpty) {
-      errors.add(ImportError(rowIndex: row.rowIndex, message: 'Missing account'));
+      errors
+          .add(ImportError(rowIndex: row.rowIndex, message: 'Missing account'));
       continue;
     }
     if (category.isEmpty) {
-      errors.add(ImportError(rowIndex: row.rowIndex, message: 'Missing category'));
+      errors.add(
+          ImportError(rowIndex: row.rowIndex, message: 'Missing category'));
       continue;
     }
     if (mode.isEmpty) {
@@ -544,8 +570,7 @@ ImportPreview _resolveAndValidate(
     final amount = double.tryParse(rawAmount.replaceAll(',', ''));
     if (amount == null || amount <= 0) {
       errors.add(ImportError(
-          rowIndex: row.rowIndex,
-          message: 'Invalid amount "$rawAmount".'));
+          rowIndex: row.rowIndex, message: 'Invalid amount "$rawAmount".'));
       continue;
     }
     if (amount > 10000000) {
@@ -576,8 +601,8 @@ ImportPreview _resolveAndValidate(
     final categoryId = categoryMap[category.toLowerCase()];
     if (categoryId == null) {
       newCategoryNames.add(category);
-      final usage = categoryKindUsage
-          .putIfAbsent(category.toLowerCase(), () => {});
+      final usage =
+          categoryKindUsage.putIfAbsent(category.toLowerCase(), () => {});
       usage[kind] = (usage[kind] ?? 0) + 1;
     }
 
@@ -635,10 +660,20 @@ DateTime? _parseDate(String rawDate, String? rawTime) {
 // ── Atomic bulk insert ─────────────────────────────────────────────────────
 
 const _accountColors = [
-  '#0284C7', '#059669', '#DC2626', '#D97706', '#7C3AED', '#EC4899'
+  '#0284C7',
+  '#059669',
+  '#DC2626',
+  '#D97706',
+  '#7C3AED',
+  '#EC4899'
 ];
 const _categoryColors = [
-  '#DC2626', '#D97706', '#059669', '#0284C7', '#7C3AED', '#EC4899'
+  '#DC2626',
+  '#D97706',
+  '#059669',
+  '#0284C7',
+  '#7C3AED',
+  '#EC4899'
 ];
 
 Future<(int imported, int skipped)> _performImport(

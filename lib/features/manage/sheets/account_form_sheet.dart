@@ -4,6 +4,7 @@ import '../../../data/db/app_database.dart';
 import '../../../data/validators.dart';
 import '../../../state/manage_providers.dart';
 import '../../../app/utils/feedback.dart';
+import '../../../app/widgets/spendwise_sheet.dart';
 import '../widgets/color_picker_row.dart';
 
 Future<void> showAccountFormSheet(
@@ -11,10 +12,8 @@ Future<void> showAccountFormSheet(
   Account? editing,
   double? currentBalance,
 }) {
-  return showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
+  return showSpendWiseSheet(
+    context,
     builder: (_) => _AccountFormSheet(editing: editing, currentBalance: currentBalance),
   );
 }
@@ -123,17 +122,6 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: cs.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
               Text(
                 isEditing ? 'Edit Account' : 'New Account',
                 style: Theme.of(context).textTheme.titleLarge,

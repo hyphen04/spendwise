@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/widgets/date_strip.dart';
 import '../../../app/widgets/mono_numpad.dart';
 import '../../../app/widgets/mono_pill.dart';
+import '../../../app/widgets/spendwise_sheet.dart';
 import '../../../data/db/app_database.dart';
 import '../../../state/manage_providers.dart';
 import '../../../state/prefs_providers.dart';
@@ -12,10 +13,8 @@ Future<void> showAmountEntrySheet(
   BuildContext context, {
   String initialKind = 'expense',
 }) {
-  return showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
+  return showSpendWiseSheet(
+    context,
     builder: (_) => _AmountEntrySheet(initialKind: initialKind),
   );
 }
@@ -240,19 +239,6 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Drag handle
-        const SizedBox(height: 12),
-        Center(
-          child: Container(
-            width: 36, height: 4,
-            decoration: BoxDecoration(
-              color: cs.outlineVariant,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
-
         // Kind toggle — MonoPill row
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -457,18 +443,6 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Drag handle
-            Center(
-              child: Container(
-                width: 36, height: 4,
-                decoration: BoxDecoration(
-                  color: cs.outlineVariant,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
             // ── Amount chip — tap to edit ──────────────────────────────────
             GestureDetector(
               onTap: () => setState(() => _step = 0),

@@ -6,6 +6,7 @@ import '../../../state/manage_providers.dart';
 import '../../../state/transactions_providers.dart';
 import '../../../utils/amount_input_formatter.dart';
 import '../../../app/utils/feedback.dart';
+import '../../../app/widgets/spendwise_sheet.dart';
 import 'amount_entry_sheet.dart';
 
 // ── Mode filtering helpers ────────────────────────────────────────────────────
@@ -33,12 +34,10 @@ Future<void> showAddEditTransactionSheet(
   if (editing == null) {
     return showAmountEntrySheet(context, initialKind: initialKind);
   }
-  return showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
+  return showSpendWiseSheet(
+    context,
     builder: (_) => _AddEditSheet(
-      editing: editing, 
+      editing: editing,
       initialKind: initialKind,
       toAccountId: toAccountId,
     ),
@@ -232,7 +231,6 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final accounts = ref.watch(accountsStreamProvider).valueOrNull ?? [];
     final categories = ref.watch(
           categoriesByKindProvider(_kind == 'income' ? 'income' : 'expense'),
@@ -256,18 +254,6 @@ class _AddEditSheetState extends ConsumerState<_AddEditSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: cs.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
               Text(
                 _isEditing ? 'Edit Transaction' : 'New Transaction',
                 style: Theme.of(context).textTheme.titleLarge,

@@ -33,6 +33,10 @@ dependencies:
   dynamic_color: ^1.7.0
   flutter_animate: ^4.5.0
 
+  # --- AI markdown rendering (rich chat replies + report narrative) ---
+  flutter_markdown: ^0.7.0
+  markdown: ^7.0.0
+
   # --- Export / Import (new) ---
   excel: ^4.0.0
   archive: ^3.6.1

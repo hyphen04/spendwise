@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../app/widgets/spendwise_sheet.dart';
 import '../../../state/home_providers.dart';
 import '../../../state/period_providers.dart';
 
@@ -81,9 +82,8 @@ class MonthNav extends ConsumerWidget {
     WidgetRef ref,
     ({int year, int month}) current,
   ) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
+    showSpendWiseSheet<void>(
+      context,
       builder: (_) => _MonthPickerSheet(
         current: current,
         onSelect: (y, m) =>
@@ -155,18 +155,6 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: cs.outlineVariant,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
             // Year stepper
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

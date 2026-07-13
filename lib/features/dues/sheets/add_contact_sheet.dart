@@ -11,23 +11,23 @@ import 'package:path_provider/path_provider.dart';
 import '../../../app/utils/feedback.dart';
 import '../../../app/utils/phone_utils.dart';
 import '../../../app/widgets/contact_avatar.dart';
+import '../../../app/widgets/spendwise_sheet.dart';
 import '../../../data/db/app_database.dart';
 import '../../../state/dues_providers.dart';
 import '../../../state/manage_providers.dart';
 import '../../../state/prefs_providers.dart';
 
 Future<void> showAddContactSheet(BuildContext context, {DueContact? existingContact}) {
-  final cs = Theme.of(context).colorScheme;
-  return showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: cs.surface,
-    // Keep the sheet compact so it never grows under the status bar — content
-    // scrolls internally within this cap instead of filling the screen.
-    constraints: BoxConstraints(
-      maxHeight: MediaQuery.sizeOf(context).height * 0.88,
-    ),
+  // Cap the sheet to a fraction of the vertical *safe* area (screen height
+  // minus the status-bar/notch inset) so it can never grow up under the status
+  // bar, regardless of how tall the form gets — content scrolls within this
+  // cap. The component's own SafeArea(top) then insets the chrome below the
+  // status bar for double protection.
+  final safeHeight =
+      MediaQuery.sizeOf(context).height - MediaQuery.paddingOf(context).top;
+  return showSpendWiseSheet(
+    context,
+    constraints: BoxConstraints(maxHeight: safeHeight * 0.92),
     builder: (context) => _AddContactSheet(existingContact: existingContact),
   );
 }
@@ -49,6 +49,10 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
   late String _icon;
   late String _color;
   String? _defaultCategoryId;
+
+  // Two-step form: 0 = identity, 1 = defaults. Keeps each screen short so the
+  // sheet stays compact and never crowds the status bar.
+  int _step = 0;
 
   // Device-contact enrichment (nullable; only set via "Import from phone").
   String? _phone; // primary, stored normalized (last-10-digit key)
@@ -363,209 +367,343 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
     final cs = Theme.of(context).colorScheme;
     final botPad = MediaQuery.viewInsetsOf(context).bottom;
     final isUpdate = widget.existingContact != null;
+    final nameReady = _nameCtrl.text.trim().isNotEmpty;
 
     return Padding(
       padding: EdgeInsets.only(bottom: botPad),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Drag handle
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: cs.outlineVariant,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            Text(
-              isUpdate ? 'Edit Contact' : 'New Contact',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: cs.onSurface,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Type toggle
-            Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Title + step counter.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
+            child: Row(
               children: [
-                Expanded(
-                  child: _TypeToggle(
-                    label: 'Person',
-                    icon: Icons.person_rounded,
-                    isSelected: _type == 'person',
-                    onTap: () => setState(() => _type = 'person'),
+                Text(
+                  isUpdate ? 'Edit Contact' : 'New Contact',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: cs.onSurface,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _TypeToggle(
-                    label: 'Vendor',
-                    icon: Icons.storefront_rounded,
-                    isSelected: _type == 'vendor',
-                    onTap: () => setState(() {
-                      _type = 'vendor';
-                      if (_icon == '👤') _icon = '🍱';
-                    }),
+                const Spacer(),
+                Text(
+                  'Step ${_step + 1} of 2',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-
-            TextField(
-              controller: _nameCtrl,
-              textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(
-                labelText: 'Name',
-                prefixIcon: Center(
-                  widthFactor: 1,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 12, right: 8),
-                    child: Text(_icon, style: const TextStyle(fontSize: 22)),
-                  ),
+          ),
+          const SizedBox(height: 10),
+          // Two-segment progress indicator.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: _StepProgress(step: _step),
+          ),
+          const SizedBox(height: 12),
+          // Step body — scrolls within the sheet cap if it overflows.
+          Flexible(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 240),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: Offset(_step == 1 ? 0.04 : -0.04, 0),
+                    end: Offset.zero,
+                  ).animate(anim),
+                  child: child,
                 ),
               ),
-              onChanged: (_) => setState(() {}),
+              child: _step == 0
+                  ? KeyedSubtree(
+                      key: const ValueKey('identity'),
+                      child: _buildIdentityStep(cs),
+                    )
+                  : KeyedSubtree(
+                      key: const ValueKey('defaults'),
+                      child: _buildDefaultsStep(),
+                    ),
             ),
-            const SizedBox(height: 12),
+          ),
+          const SizedBox(height: 12),
+          // Navigation — Next on step 0, Back + Save on step 1.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 4),
+            child: _buildNavButtons(isUpdate, nameReady),
+          ),
+        ],
+      ),
+    );
+  }
 
-            // Import from device address book (read-only, on-device).
-            _ImportButton(onTap: _importFromPhone),
-            if (_phone != null || _photoPath != null) ...[
-              const SizedBox(height: 12),
-              _ImportPreview(
-                photoPath: _photoPath,
-                emoji: _icon,
-                colorHex: _color,
-                phone: _phone,
-                phoneCount: _phones.length,
-                onRemove: _removeImportedInfo,
+  // Step 1 — who the contact is: type, name, device import, icon & color.
+  Widget _buildIdentityStep(ColorScheme cs) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 4, 24, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Type toggle
+          Row(
+            children: [
+              Expanded(
+                child: _TypeToggle(
+                  label: 'Person',
+                  icon: Icons.person_rounded,
+                  isSelected: _type == 'person',
+                  onTap: () => setState(() => _type = 'person'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _TypeToggle(
+                  label: 'Vendor',
+                  icon: Icons.storefront_rounded,
+                  isSelected: _type == 'vendor',
+                  onTap: () => setState(() {
+                    _type = 'vendor';
+                    if (_icon == '👤') _icon = '🍱';
+                  }),
+                ),
               ),
             ],
-            const SizedBox(height: 12),
+          ),
+          const SizedBox(height: 16),
 
-            // Icon Picker
-            SizedBox(
-              height: 44,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _icons.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, i) {
-                  final icon = _icons[i];
-                  final isSelected = icon == _icon;
-                  return GestureDetector(
-                    onTap: () => setState(() => _icon = icon),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: isSelected ? cs.primaryContainer : cs.surfaceContainerHighest,
-                        shape: BoxShape.circle,
-                        border: isSelected ? Border.all(color: cs.primary, width: 2) : null,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(icon, style: const TextStyle(fontSize: 22)),
+          TextField(
+            controller: _nameCtrl,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(
+              labelText: 'Name',
+              prefixIcon: Center(
+                widthFactor: 1,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 12, right: 8),
+                  child: Text(_icon, style: const TextStyle(fontSize: 22)),
+                ),
+              ),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 12),
+
+          // Import from device address book (read-only, on-device).
+          _ImportButton(onTap: _importFromPhone),
+          if (_phone != null || _photoPath != null) ...[
+            const SizedBox(height: 12),
+            _ImportPreview(
+              photoPath: _photoPath,
+              emoji: _icon,
+              colorHex: _color,
+              phone: _phone,
+              phoneCount: _phones.length,
+              onRemove: _removeImportedInfo,
+            ),
+          ],
+          const SizedBox(height: 16),
+
+          // Icon picker
+          Text(
+            'Icon',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 44,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _icons.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, i) {
+                final icon = _icons[i];
+                final isSelected = icon == _icon;
+                return GestureDetector(
+                  onTap: () => setState(() => _icon = icon),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: isSelected ? cs.primaryContainer : cs.surfaceContainerHighest,
+                      shape: BoxShape.circle,
+                      border: isSelected ? Border.all(color: cs.primary, width: 2) : null,
                     ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Color Picker
-            SizedBox(
-              height: 36,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _colors.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 12),
-                itemBuilder: (context, i) {
-                  final colorHex = _colors[i];
-                  final color = Color(int.parse(colorHex.replaceFirst('#', '0xFF')));
-                  final isSelected = colorHex == _color;
-                  return GestureDetector(
-                    onTap: () => setState(() => _color = colorHex),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        border: isSelected ? Border.all(color: cs.onSurface, width: 2) : null,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            TextField(
-              controller: _amtCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Default Amount (Optional)',
-                prefixText: '₹ ',
-                helperText: 'Quick-fill for recurring entries (e.g. tiffin cost)',
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            TextField(
-              controller: _noteCtrl,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                labelText: 'Default Note (Optional)',
-                helperText: 'Quick-fill for recurring entries (e.g. "Dinner")',
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            Builder(
-              builder: (context) {
-                final categories = (ref.watch(categoriesStreamProvider).valueOrNull ?? [])
-                    .where((c) => !c.isArchived)
-                    .toList();
-
-                // Ensure selected ID still exists in the list
-                if (categories.isNotEmpty && _defaultCategoryId != null && !categories.any((c) => c.id == _defaultCategoryId)) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) setState(() => _defaultCategoryId = null);
-                  });
-                }
-
-                return DropdownButtonFormField<String>(
-                  initialValue: _defaultCategoryId,
-                  decoration: const InputDecoration(
-                    labelText: 'Default Category (Optional)',
-                    helperText: 'Auto-selects this category when settling dues',
+                    alignment: Alignment.center,
+                    child: Text(icon, style: const TextStyle(fontSize: 22)),
                   ),
-                  items: [
-                    const DropdownMenuItem<String>(value: null, child: Text('None')),
-                    ...categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))),
-                  ],
-                  onChanged: (v) => setState(() => _defaultCategoryId = v),
                 );
               },
             ),
-            const SizedBox(height: 20),
+          ),
+          const SizedBox(height: 16),
 
-            FilledButton(
-              onPressed: _nameCtrl.text.trim().isNotEmpty ? _save : null,
-              child: Text(isUpdate ? 'Save Changes' : 'Create Contact'),
+          // Color picker
+          Text(
+            'Color',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: cs.onSurfaceVariant,
             ),
-          ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 36,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _colors.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, i) {
+                final colorHex = _colors[i];
+                final color = Color(int.parse(colorHex.replaceFirst('#', '0xFF')));
+                final isSelected = colorHex == _color;
+                return GestureDetector(
+                  onTap: () => setState(() => _color = colorHex),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: isSelected ? Border.all(color: cs.onSurface, width: 2) : null,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Step 2 — optional quick-fill defaults for recurring entries.
+  Widget _buildDefaultsStep() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 4, 24, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _amtCtrl,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              labelText: 'Default Amount (Optional)',
+              prefixText: '₹ ',
+              helperText: 'Quick-fill for recurring entries (e.g. tiffin cost)',
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _noteCtrl,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              labelText: 'Default Note (Optional)',
+              helperText: 'Quick-fill for recurring entries (e.g. "Dinner")',
+            ),
+          ),
+          const SizedBox(height: 12),
+          Builder(
+            builder: (context) {
+              final categories = (ref.watch(categoriesStreamProvider).valueOrNull ?? [])
+                  .where((c) => !c.isArchived)
+                  .toList();
+
+              // Ensure selected ID still exists in the list
+              if (categories.isNotEmpty &&
+                  _defaultCategoryId != null &&
+                  !categories.any((c) => c.id == _defaultCategoryId)) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) setState(() => _defaultCategoryId = null);
+                });
+              }
+
+              return DropdownButtonFormField<String>(
+                initialValue: _defaultCategoryId,
+                decoration: const InputDecoration(
+                  labelText: 'Default Category (Optional)',
+                  helperText: 'Auto-selects this category when settling dues',
+                ),
+                items: [
+                  const DropdownMenuItem<String>(value: null, child: Text('None')),
+                  ...categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))),
+                ],
+                onChanged: (v) => setState(() => _defaultCategoryId = v),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavButtons(bool isUpdate, bool nameReady) {
+    if (_step == 0) {
+      return FilledButton(
+        onPressed: nameReady ? () => setState(() => _step = 1) : null,
+        child: const Text('Next'),
+      );
+    }
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () => setState(() => _step = 0),
+            child: const Text('Back'),
+          ),
         ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 2,
+          child: FilledButton(
+            onPressed: nameReady ? _save : null,
+            child: Text(isUpdate ? 'Save Changes' : 'Create Contact'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Two-segment progress bar for the contact form's two steps.
+class _StepProgress extends StatelessWidget {
+  const _StepProgress({required this.step});
+  final int step;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Expanded(child: _segment(cs, active: step >= 0)),
+        const SizedBox(width: 6),
+        Expanded(child: _segment(cs, active: step >= 1)),
+      ],
+    );
+  }
+
+  Widget _segment(ColorScheme cs, {required bool active}) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      height: 4,
+      decoration: BoxDecoration(
+        color: active ? cs.primary : cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(2),
       ),
     );
   }

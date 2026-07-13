@@ -14,6 +14,7 @@ import 'package:path/path.dart' as p;
 import '../../app/utils/feedback.dart';
 import '../../app/widgets/mono_numpad.dart';
 import '../../app/widgets/screen_header.dart';
+import '../../app/widgets/spendwise_sheet.dart';
 import '../../services/biometric_service.dart';
 import '../../services/secure_storage_service.dart';
 import '../../state/database_provider.dart';
@@ -80,9 +81,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
   // ── PIN helpers ─────────────────────────────────────────────────────────────
 
   Future<bool> _showPinSetup(BuildContext context) async {
-    return await showModalBottomSheet<bool>(
-          context: context,
-          isScrollControlled: true,
+    return await showSpendWiseSheet<bool>(
+          context,
           isDismissible: false,
           enableDrag: false,
           builder: (_) => const _PinSetupSheet(),
@@ -91,9 +91,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
   }
 
   Future<bool> _showPinVerify(BuildContext context, String title) async {
-    return await showModalBottomSheet<bool>(
-          context: context,
-          isScrollControlled: true,
+    return await showSpendWiseSheet<bool>(
+          context,
           isDismissible: false,
           enableDrag: false,
           builder: (_) => _PinVerifySheet(title: title),
@@ -190,9 +189,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
       0xFF8B5CF6, // Violet
     ];
 
-    showModalBottomSheet(
-      context: context,
-      useSafeArea: true,
+    showSpendWiseSheet(
+      context,
       builder: (context) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         return Padding(
@@ -334,6 +332,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                   onTap: () => context.push('/manage'),
                 ),
                 const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.receipt_long_rounded),
+                  title: const Text('Bills & Subscriptions'),
+                  subtitle: const Text('Track recurring bills & see what\'s due soon'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push('/bills'),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.flag_rounded),
+                  title: const Text('Savings Goals'),
+                  subtitle: const Text('Save toward a target & track progress'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push('/goals'),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.summarize_rounded),
+                  title: const Text('Weekly Digest'),
+                  subtitle: const Text('Your week at a glance — computed on-device'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push('/digest'),
+                ),
+                const Divider(height: 1),
                 SwitchListTile(
                   title: const Text('Quick Dues Widget'),
                   subtitle: const Text('Show quick dues entry on home screen'),
@@ -458,6 +480,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
 
                 ],
               ],
+            ),
+          ),
+
+          // ── AI Copilot ──────────────────────────────────────────────────────
+          // AI config lives on its own dedicated screen (feature-scoped) so this
+          // list stays lean — just an entry point here.
+          _sectionHeader('AI Copilot', context),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.auto_awesome_rounded),
+              title: const Text('AI Copilot'),
+              subtitle: const Text('API key, provider, privacy'),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => context.push('/ai/settings'),
             ),
           ),
 

@@ -10,11 +10,11 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../app/widgets/spendwise_sheet.dart';
+
 Future<void> showFeedbackSheet(BuildContext context) async {
-  return showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
+  return showSpendWiseSheet(
+    context,
     builder: (_) => const _FeedbackSheet(),
   );
 }
@@ -258,18 +258,6 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Handle
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: cs.outlineVariant,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
                 Text(
                   'Send Feedback',
                   style: GoogleFonts.plusJakartaSans(

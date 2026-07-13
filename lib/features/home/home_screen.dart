@@ -23,6 +23,7 @@ import '../transactions/sheets/amount_entry_sheet.dart';
 import '../transactions/transaction_actions.dart';
 import '../transactions/widgets/transaction_tile.dart';
 import 'widgets/home_dues_widget.dart';
+import 'widgets/home_forecast_card.dart';
 
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -268,10 +269,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
 
-          // ── Divider ────────────────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: Divider(height: 1, thickness: 0.8, color: cs.outline),
-          ),
+          // ── This month at a glance (run-rate forecast) ───────────────────
+          const SliverToBoxAdapter(child: HomeForecastCard()),
 
           // ── "Recent transactions" header with totals ───────────────────────
           SliverToBoxAdapter(

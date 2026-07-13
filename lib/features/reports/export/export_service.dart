@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../app/widgets/spendwise_sheet.dart';
 import '../../../data/db/app_database.dart';
 import '../../../services/database_backup_service.dart';
 import '../../../state/manage_providers.dart';
@@ -13,7 +14,14 @@ import 'xlsx_exporter.dart';
 
 enum ExportFormat { pdf, xlsx, csv, json, zip }
 
-enum ExportDateRange { thisMonth, lastMonth, last3Months, last6Months, thisYear, custom }
+enum ExportDateRange {
+  thisMonth,
+  lastMonth,
+  last3Months,
+  last6Months,
+  thisYear,
+  custom
+}
 
 enum ExportEntity {
   transactions,
@@ -54,14 +62,18 @@ class ExportConfig {
     DateTime? referenceDate,
     Set<ExportEntity>? entities,
   })  : columns = columns != null ? Set.of(columns) : Set.of(_defaultColumns),
-        entities = entities != null ? Set.of(entities) : (format == ExportFormat.json ? ExportEntity.values.toSet() : {ExportEntity.transactions}),
+        entities = entities != null
+            ? Set.of(entities)
+            : (format == ExportFormat.json
+                ? ExportEntity.values.toSet()
+                : {ExportEntity.transactions}),
         _ref = referenceDate ?? DateTime.now();
 
   ExportDateRange dateRange;
   DateTime? customFrom;
   DateTime? customTo;
-  String? kindFilter;          // null = all, 'income', 'expense'
-  Set<String>? accountIds;     // null = all accounts
+  String? kindFilter; // null = all, 'income', 'expense'
+  Set<String>? accountIds; // null = all accounts
   Set<ExportColumn> columns;
   Set<ExportEntity> entities;
   ExportFormat format;
@@ -85,7 +97,8 @@ class ExportConfig {
       case ExportDateRange.thisYear:
         return DateTime(_ref.year).toIso8601String();
       case ExportDateRange.custom:
-        return (customFrom ?? DateTime(_ref.year, _ref.month)).toIso8601String();
+        return (customFrom ?? DateTime(_ref.year, _ref.month))
+            .toIso8601String();
     }
   }
 
@@ -135,8 +148,18 @@ class ExportConfig {
   static String _fmtDate(DateTime d) =>
       '${d.day} ${_months[d.month - 1]} ${d.year}';
   static const _months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 }
 
@@ -159,10 +182,9 @@ class ExportService {
       accountIds: presetAccountId != null ? {presetAccountId} : null,
     );
 
-    final config = await showModalBottomSheet<ExportConfig>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
+    final config = await showSpendWiseSheet<ExportConfig>(
+      context,
+      showChrome: false,
       builder: (_) => _ExportOptionsSheet(config: initialConfig),
     );
     if (config == null || !context.mounted) return;
@@ -273,261 +295,277 @@ class _ExportOptionsSheetState extends ConsumerState<_ExportOptionsSheet> {
       initialChildSize: 0.85,
       minChildSize: 0.5,
       maxChildSize: 0.95,
-      builder: (_, controller) => Column(
-        children: [
-          // Sheet title
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-            child: Text(
-              isAccountLocked
-                  ? 'Export — ${_cfg.presetAccountName ?? 'Account Statement'}'
-                  : 'Export Transactions',
-              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      builder: (_, controller) => SafeArea(
+        top: true,
+        bottom: false,
+        child: Column(
+          children: [
+            const SpendWiseSheetChrome(),
+            // Sheet title
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              child: Text(
+                isAccountLocked
+                    ? 'Export — ${_cfg.presetAccountName ?? 'Account Statement'}'
+                    : 'Export Transactions',
+                style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
             ),
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: ListView(
-              controller: controller,
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              children: [
-                // ── Format ──────────────────────────────────────────────
-                _sectionLabel('Format', cs, tt),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final entry in [
-                      (ExportFormat.csv, 'CSV', Icons.view_list_outlined),
-                      (ExportFormat.xlsx, 'Excel', Icons.table_chart_outlined),
-                      (ExportFormat.pdf, 'PDF', Icons.picture_as_pdf_outlined),
-                      (ExportFormat.json, 'JSON', Icons.data_object_outlined),
-                      (ExportFormat.zip, 'Full DB (ZIP)', Icons.archive_outlined),
-                    ])
-                      _chip(
-                        label: entry.$2,
-                        selected: _cfg.format == entry.$1,
-                        onSelected: () => setState(() {
-                              _cfg.format = entry.$1;
-                              if (entry.$1 == ExportFormat.json) {
-                                _cfg.entities = ExportEntity.values.toSet();
-                              } else if (entry.$1 != ExportFormat.zip &&
-                                  _cfg.entities.length > 1) {
-                                // If switching away from JSON or ZIP, restrict to one entity
-                                _cfg.entities = {ExportEntity.transactions};
-                              }
-                            }),
-                        avatar: Icon(
-                          entry.$3,
-                          size: 16,
-                          color: _cfg.format == entry.$1
-                              ? cs.onPrimary
-                              : cs.onSurface,
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                if (_cfg.format != ExportFormat.zip) ...[
-                  // ── Date Range ──────────────────────────────────────────
-                  _sectionLabel('Date Range', cs, tt),
+            const Divider(height: 1),
+            Expanded(
+              child: ListView(
+                controller: controller,
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                children: [
+                  // ── Format ──────────────────────────────────────────────
+                  _sectionLabel('Format', cs, tt),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: ExportDateRange.values.map((r) {
-                      final label = switch (r) {
-                        ExportDateRange.thisMonth => 'This Month',
-                        ExportDateRange.lastMonth => 'Last Month',
-                        ExportDateRange.last3Months => 'Last 3M',
-                        ExportDateRange.last6Months => 'Last 6M',
-                        ExportDateRange.thisYear => 'This Year',
-                        ExportDateRange.custom => 'Custom',
-                      };
-                      return _chip(
-                        label: label,
-                        selected: _cfg.dateRange == r,
-                        onSelected: () => setState(() => _cfg.dateRange = r),
-                      );
-                    }).toList(),
-                  ),
-                  if (_cfg.dateRange == ExportDateRange.custom) ...[
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            icon: const Icon(Icons.calendar_today_outlined,
-                                size: 16),
-                            label: Text(_cfg.customFrom != null
-                                ? _fmtDate(_cfg.customFrom!)
-                                : 'From'),
-                            onPressed: _pickCustomFrom,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            icon: const Icon(Icons.calendar_today_outlined,
-                                size: 16),
-                            label: Text(_cfg.customTo != null
-                                ? _fmtDate(_cfg.customTo!)
-                                : 'To'),
-                            onPressed: _pickCustomTo,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-
-                  const SizedBox(height: 20),
-
-                  // ── Transaction Type ────────────────────────────────────
-                  _sectionLabel('Transaction Type', cs, tt),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
                     children: [
                       for (final entry in [
-                        (null, 'All'),
-                        ('income', 'Income'),
-                        ('expense', 'Expense'),
+                        (ExportFormat.csv, 'CSV', Icons.view_list_outlined),
+                        (
+                          ExportFormat.xlsx,
+                          'Excel',
+                          Icons.table_chart_outlined
+                        ),
+                        (
+                          ExportFormat.pdf,
+                          'PDF',
+                          Icons.picture_as_pdf_outlined
+                        ),
+                        (ExportFormat.json, 'JSON', Icons.data_object_outlined),
+                        (
+                          ExportFormat.zip,
+                          'Full DB (ZIP)',
+                          Icons.archive_outlined
+                        ),
                       ])
                         _chip(
                           label: entry.$2,
-                          selected: _cfg.kindFilter == entry.$1,
-                          onSelected: () =>
-                              setState(() => _cfg.kindFilter = entry.$1),
+                          selected: _cfg.format == entry.$1,
+                          onSelected: () => setState(() {
+                            _cfg.format = entry.$1;
+                            if (entry.$1 == ExportFormat.json) {
+                              _cfg.entities = ExportEntity.values.toSet();
+                            } else if (entry.$1 != ExportFormat.zip &&
+                                _cfg.entities.length > 1) {
+                              // If switching away from JSON or ZIP, restrict to one entity
+                              _cfg.entities = {ExportEntity.transactions};
+                            }
+                          }),
+                          avatar: Icon(
+                            entry.$3,
+                            size: 16,
+                            color: _cfg.format == entry.$1
+                                ? cs.onPrimary
+                                : cs.onSurface,
+                          ),
                         ),
                     ],
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // ── Accounts ────────────────────────────────────────────
-                  if (accounts.isNotEmpty) ...[
-                    _sectionLabel('Accounts', cs, tt),
-                    const SizedBox(height: 4),
-                    if (!isAccountLocked) ...[
-                      CheckboxListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('All accounts'),
-                        value: _cfg.accountIds == null,
-                        onChanged: (_) =>
-                            setState(() => _cfg.accountIds = null),
-                      ),
-                      ...accounts.map((a) => CheckboxListTile(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            secondary:
-                                Text(a.icon, style: const TextStyle(fontSize: 18)),
-                            title: Text(a.name),
-                            value: _cfg.accountIds?.contains(a.id) ?? false,
-                            onChanged: (v) {
-                              setState(() {
-                                final current =
-                                    Set<String>.from(_cfg.accountIds ?? {});
-                                if (v == true) {
-                                  current.add(a.id);
-                                } else {
-                                  current.remove(a.id);
-                                }
-                                _cfg.accountIds =
-                                    current.isEmpty ? null : current;
-                              });
-                            },
-                          )),
-                    ] else
-                      ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        leading: Text(
-                          accounts
-                                  .where((a) =>
-                                      a.id == _cfg.presetAccountId)
-                                  .firstOrNull
-                                  ?.icon ??
-                              '🏦',
-                          style: const TextStyle(fontSize: 18),
-                        ),
-                        title: Text(_cfg.presetAccountName ?? ''),
-                        trailing: Icon(Icons.lock_outline,
-                            size: 16, color: cs.onSurfaceVariant),
-                      ),
-                    const SizedBox(height: 20),
-                  ],
-
-                  const SizedBox(height: 20),
-
-                  // ── Entities (JSON ONLY allows multiple) ─────────────────
-                  _sectionLabel('Data to Export', cs, tt),
-                  const SizedBox(height: 4),
-                  Text(
-                    _cfg.format == ExportFormat.json
-                        ? 'Select multiple entities for JSON backup.'
-                        : 'CSV/Excel/PDF only support exporting one entity at a time.',
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: ExportEntity.values.map((ent) {
-                      final label = switch (ent) {
-                        ExportEntity.transactions => 'Transactions',
-                        ExportEntity.dues => 'Dues & Tabs',
-                        ExportEntity.accounts => 'Accounts',
-                        ExportEntity.categories => 'Categories',
-                        ExportEntity.modes => 'Modes',
-                        ExportEntity.budgets => 'Budgets',
-                        ExportEntity.tags => 'Tags',
-                      };
-                      final selected = _cfg.entities.contains(ent);
-                      final isOnlyOne = _cfg.entities.length == 1 && selected;
-                      return _chip(
-                        label: label,
-                        selected: selected,
-                        onSelected: () => setState(() {
-                          if (_cfg.format != ExportFormat.json) {
-                            // Force single selection
-                            _cfg.entities = {ent};
-                          } else {
-                            // Multi-selection for JSON
-                            if (selected) {
-                              if (!isOnlyOne) _cfg.entities.remove(ent);
-                            } else {
-                              _cfg.entities.add(ent);
-                            }
-                          }
-                        }),
-                      );
-                    }).toList(),
-                  ),
                   const SizedBox(height: 24),
-                ],
-              ],
-            ),
-          ),
 
-          // ── Export button ──────────────────────────────────────────────
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-                20, 8, 20, MediaQuery.paddingOf(context).bottom + 16),
-            child: SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                icon: const Icon(Icons.ios_share_outlined),
-                label: Text(_cfg.format == ExportFormat.zip
-                    ? 'Export Full DB (ZIP)'
-                    : 'Export · ${_cfg.rangeLabel}'),
-                onPressed: () => Navigator.pop(context, _cfg),
+                  if (_cfg.format != ExportFormat.zip) ...[
+                    // ── Date Range ──────────────────────────────────────────
+                    _sectionLabel('Date Range', cs, tt),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: ExportDateRange.values.map((r) {
+                        final label = switch (r) {
+                          ExportDateRange.thisMonth => 'This Month',
+                          ExportDateRange.lastMonth => 'Last Month',
+                          ExportDateRange.last3Months => 'Last 3M',
+                          ExportDateRange.last6Months => 'Last 6M',
+                          ExportDateRange.thisYear => 'This Year',
+                          ExportDateRange.custom => 'Custom',
+                        };
+                        return _chip(
+                          label: label,
+                          selected: _cfg.dateRange == r,
+                          onSelected: () => setState(() => _cfg.dateRange = r),
+                        );
+                      }).toList(),
+                    ),
+                    if (_cfg.dateRange == ExportDateRange.custom) ...[
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.calendar_today_outlined,
+                                  size: 16),
+                              label: Text(_cfg.customFrom != null
+                                  ? _fmtDate(_cfg.customFrom!)
+                                  : 'From'),
+                              onPressed: _pickCustomFrom,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.calendar_today_outlined,
+                                  size: 16),
+                              label: Text(_cfg.customTo != null
+                                  ? _fmtDate(_cfg.customTo!)
+                                  : 'To'),
+                              onPressed: _pickCustomTo,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+
+                    const SizedBox(height: 20),
+
+                    // ── Transaction Type ────────────────────────────────────
+                    _sectionLabel('Transaction Type', cs, tt),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        for (final entry in [
+                          (null, 'All'),
+                          ('income', 'Income'),
+                          ('expense', 'Expense'),
+                        ])
+                          _chip(
+                            label: entry.$2,
+                            selected: _cfg.kindFilter == entry.$1,
+                            onSelected: () =>
+                                setState(() => _cfg.kindFilter = entry.$1),
+                          ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ── Accounts ────────────────────────────────────────────
+                    if (accounts.isNotEmpty) ...[
+                      _sectionLabel('Accounts', cs, tt),
+                      const SizedBox(height: 4),
+                      if (!isAccountLocked) ...[
+                        CheckboxListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('All accounts'),
+                          value: _cfg.accountIds == null,
+                          onChanged: (_) =>
+                              setState(() => _cfg.accountIds = null),
+                        ),
+                        ...accounts.map((a) => CheckboxListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              secondary: Text(a.icon,
+                                  style: const TextStyle(fontSize: 18)),
+                              title: Text(a.name),
+                              value: _cfg.accountIds?.contains(a.id) ?? false,
+                              onChanged: (v) {
+                                setState(() {
+                                  final current =
+                                      Set<String>.from(_cfg.accountIds ?? {});
+                                  if (v == true) {
+                                    current.add(a.id);
+                                  } else {
+                                    current.remove(a.id);
+                                  }
+                                  _cfg.accountIds =
+                                      current.isEmpty ? null : current;
+                                });
+                              },
+                            )),
+                      ] else
+                        ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: Text(
+                            accounts
+                                    .where((a) => a.id == _cfg.presetAccountId)
+                                    .firstOrNull
+                                    ?.icon ??
+                                '🏦',
+                            style: const TextStyle(fontSize: 18),
+                          ),
+                          title: Text(_cfg.presetAccountName ?? ''),
+                          trailing: Icon(Icons.lock_outline,
+                              size: 16, color: cs.onSurfaceVariant),
+                        ),
+                      const SizedBox(height: 20),
+                    ],
+
+                    const SizedBox(height: 20),
+
+                    // ── Entities (JSON ONLY allows multiple) ─────────────────
+                    _sectionLabel('Data to Export', cs, tt),
+                    const SizedBox(height: 4),
+                    Text(
+                      _cfg.format == ExportFormat.json
+                          ? 'Select multiple entities for JSON backup.'
+                          : 'CSV/Excel/PDF only support exporting one entity at a time.',
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: ExportEntity.values.map((ent) {
+                        final label = switch (ent) {
+                          ExportEntity.transactions => 'Transactions',
+                          ExportEntity.dues => 'Dues & Tabs',
+                          ExportEntity.accounts => 'Accounts',
+                          ExportEntity.categories => 'Categories',
+                          ExportEntity.modes => 'Modes',
+                          ExportEntity.budgets => 'Budgets',
+                          ExportEntity.tags => 'Tags',
+                        };
+                        final selected = _cfg.entities.contains(ent);
+                        final isOnlyOne = _cfg.entities.length == 1 && selected;
+                        return _chip(
+                          label: label,
+                          selected: selected,
+                          onSelected: () => setState(() {
+                            if (_cfg.format != ExportFormat.json) {
+                              // Force single selection
+                              _cfg.entities = {ent};
+                            } else {
+                              // Multi-selection for JSON
+                              if (selected) {
+                                if (!isOnlyOne) _cfg.entities.remove(ent);
+                              } else {
+                                _cfg.entities.add(ent);
+                              }
+                            }
+                          }),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ],
               ),
             ),
-          ),
-        ],
+
+            // ── Export button ──────────────────────────────────────────────
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                  20, 8, 20, MediaQuery.paddingOf(context).bottom + 16),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  icon: const Icon(Icons.ios_share_outlined),
+                  label: Text(_cfg.format == ExportFormat.zip
+                      ? 'Export Full DB (ZIP)'
+                      : 'Export · ${_cfg.rangeLabel}'),
+                  onPressed: () => Navigator.pop(context, _cfg),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -544,7 +582,17 @@ class _ExportOptionsSheetState extends ConsumerState<_ExportOptionsSheet> {
   static String _fmtDate(DateTime d) =>
       '${d.day} ${_months[d.month - 1]} ${d.year}';
   static const _months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 }

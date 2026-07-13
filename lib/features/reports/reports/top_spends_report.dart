@@ -72,7 +72,7 @@ class _TopSpendsReportState extends ConsumerState<TopSpendsReport> {
 
     return Scaffold(
       appBar: ReportPeriodAppBar(
-        title: 'Top Spends',
+        title: 'Top Categories',
         subtitle: monthLabel,
         onPrevious: _previousMonth,
         onNext: _nextMonth,

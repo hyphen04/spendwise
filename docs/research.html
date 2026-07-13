@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpendWise — Indian Personal-Finance Research Report (July 2026)</title>
+<style>
+  :root {
+    --bg: #0b1220;
+    --surface: #121c2e;
+    --surface-2: #0f1828;
+    --text: #e7ecf5;
+    --muted: #9aa7bd;
+    --accent: #34d399;
+    --accent-2: #60a5fa;
+    --warn: #fbbf24;
+    --danger: #f87171;
+    --border: #1f2d44;
+    --link: #7dd3fc;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6; font-size: 16px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 40px 24px 120px; }
+  header { padding: 48px 0 32px; border-bottom: 1px solid var(--border); }
+  h1 { font-size: 2.1rem; margin: 0 0 8px; letter-spacing: -0.02em; }
+  h1 .sub { display:block; font-size: 1rem; color: var(--muted); font-weight: 400; margin-top: 6px; }
+  h2 { font-size: 1.45rem; margin: 48px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); letter-spacing: -0.01em; }
+  h3 { font-size: 1.12rem; margin: 28px 0 8px; color: #d7e0f0; }
+  h4 { font-size: 0.98rem; margin: 20px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  p { margin: 10px 0; }
+  a { color: var(--link); text-decoration: none; border-bottom: 1px solid rgba(125,211,252,0.35); }
+  a:hover { border-bottom-color: var(--link); }
+  ul, ol { padding-left: 22px; }
+  li { margin: 6px 0; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--surface-2); padding: 2px 6px; border-radius: 4px; font-size: 0.86em; color: #cdd9ee; }
+  blockquote { margin: 14px 0; padding: 12px 16px; border-left: 3px solid var(--accent); background: var(--surface-2); border-radius: 0 8px 8px 0; color: #c5d0e4; }
+  .stat { display: inline-block; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin: 6px 8px 6px 0; }
+  .stat b { color: var(--accent); font-size: 1.25rem; display: block; }
+  .stat span { color: var(--muted); font-size: 0.82rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
+  .rank { counter-reset: rank; list-style: none; padding-left: 0; }
+  .rank li { counter-increment: rank; position: relative; padding: 14px 16px 14px 56px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin: 10px 0; }
+  .rank li::before { content: counter(rank); position: absolute; left: 14px; top: 14px; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: #052b1f; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; }
+  .tag { display:inline-block; font-size:0.74rem; padding:2px 8px; border-radius:999px; background:var(--surface-2); color:var(--muted); border:1px solid var(--border); margin-right:6px; }
+  .pill-build { background: rgba(52,211,153,0.12); color: var(--accent); border-color: rgba(52,211,153,0.4); }
+  .map { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .map .row { display: grid; grid-template-columns: 110px 1fr; gap: 12px; align-items: start; padding: 10px 12px; background: var(--surface-2); border-radius: 8px; border: 1px solid var(--border); }
+  .map .row .ph { font-weight: 700; color: var(--accent); font-size: 0.86rem; white-space: nowrap; }
+  .footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.86rem; }
+  .toc { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin: 24px 0; }
+  .toc a { border-bottom: none; }
+  .toc ul { margin: 6px 0; }
+  .note { font-size: 0.84rem; color: var(--muted); }
+  .danger { color: var(--danger); }
+  .warn { color: var(--warn); }
+  .ok { color: var(--accent); }
+  @media print {
+    body { background: #fff; color: #111; }
+    .wrap { max-width: 100%; padding: 0; }
+    a { color: #1a5fb4; }
+    .card, .rank li, .toc, .stat, .map .row { background: #f7f7f7 !important; border-color: #ccc !important; color: #111 !important; }
+    .rank li::before { background: #111 !important; color: #fff !important; }
+    .footer, .note { color: #444; }
+    h2 { border-color: #ccc; }
+    blockquote { background: #f2f2f2; color: #222; border-left-color: #111; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>SpendWise — Ground-Level Personal-Finance Research
+    <span class="sub">Indian audience survey · competitor reviews · retention evidence · SaaS-fatigue · citations · prepared July 2026</span>
+  </h1>
+  <p style="color:var(--muted); max-width:680px;">
+    This report informed SpendWise's product rethink: move from "another AI integration"
+    to a user-owned, local-first tool that solves <em>real</em> Indian ground-level money
+    problems. Sources are cited inline and clickable. Where a claim could not be sourced,
+    it is flagged rather than invented. The companion plan lives in the repo at
+    <code>.claude/plans/</code>.
+  </p>
+  <div class="toc">
+    <strong>Contents</strong>
+    <ul>
+      <li><a href="#summary">Executive summary</a></li>
+      <li><a href="#competitors">1. Competitor app reviews (Indian audience)</a></li>
+      <li><a href="#reality">2. Indian spending &amp; saving reality</a></li>
+      <li><a href="#problems">3. Ground-level problems to solve (Top 15, ranked)</a></li>
+      <li><a href="#retention">4. Retention &amp; habit formation</a></li>
+      <li><a href="#tone">5. No-shame tone (design principle)</a></li>
+      <li><a href="#antipatterns">6. Anti-patterns to avoid</a></li>
+      <li><a href="#saas">7. SaaS fatigue &amp; the local-first appeal</a></li>
+      <li><a href="#build">8. What we'll build (problem → phase mapping)</a></li>
+      <li><a href="#gaps">Notes on source quality &amp; gaps</a></li>
+    </ul>
+  </div>
+</header>
+
+<section id="summary">
+  <h2>Executive summary</h2>
+  <p>
+    India's money reality in 2026 is defined by <strong>UPI fragmenting spending into hundreds
+    of tiny transactions</strong>, a <strong>salary-cycle crunch</strong> where 60%+ of urban salaried
+    households have under a month saved, <strong>forgotten UPI Autopay subscriptions</strong>
+    (1.27B mandates, 10× in &lt;2 years), and deep distrust of apps that want bank/SMS access
+    or sell data. Meanwhile the personal-finance app category is in a <strong>retention
+    crisis</strong>: ~80% abandon a budgeting app within a month, the average person tries 3
+    before giving up, and standalone subscription finance apps keep <strong>dying</strong>
+    (Mint, Clarity Money, Piggy, Muvin, Investmint, Plus Gold, Dream Money) — sometimes
+    <strong>permanently deleting user data</strong>.
+  </p>
+  <p>
+    The evidence supports the user's thesis: <em>subscription SaaS for personal finance is
+    structurally fragile, and consumers are fatigued.</em> A one-time or free,
+    <strong>local-first, export-friendly</strong> tool that doesn't sell data or force cloud
+    signup aligns with both the global subscription-fatigue data and India-specific privacy
+    reluctance. The differentiator is <strong>trust, ownership, and not being abandoned</strong>
+    — not "AI chat" (which is demonstrably unreliable for finance: a UGA study found a chatbot
+    told one demographic to keep <em>no</em> cash).
+  </p>
+  <div class="card">
+    <h4>Headline numbers</h4>
+    <div class="stat"><b>228B+</b><span>UPI transactions in CY2025</span></div>
+    <div class="stat"><b>₹1,293</b><span>avg UPI ticket (merchant ₹592)</span></div>
+    <div class="stat"><b>1.27B</b><span>UPI Autopay mandates, Nov 2025</span></div>
+    <div class="stat"><b>60%+</b><span>urban salaried, &lt;1 month saved</span></div>
+    <div class="stat"><b>~80%</b><span>abandon budgeting apps in a month</span></div>
+    <div class="stat"><b>41%</b><span>report subscription fatigue</span></div>
+    <div class="stat"><b>26.2%</b><span>households borrow from friends/family</span></div>
+    <div class="stat"><b>2.8</b><span>avg subscriptions/household (down from 4.1)</span></div>
+  </div>
+</section>
+
+<section id="competitors">
+  <h2>1. Competitor app reviews (Indian audience)</h2>
+
+  <h3>Dying-app distrust (the canonical stories)</h3>
+  <p>
+    <strong>Cheetah Mobile</strong> — ~45 apps (4.5B+ installs) removed from Play Store Feb 2020
+    for ad fraud &amp; "disruptive ads" (ads during calls/navigation). The reference "dying app /
+    can't trust the developer" story.
+    <a href="https://www.androidpolice.com/2020/02/27/cheetah-mobile-apps-disappeared-play-store/">Android Police</a> ·
+    <a href="https://www.theverge.com/2020/2/20/21145595/google-app-ban-ads-play-store-android-user-experience">The Verge</a> ·
+    <a href="https://www.buzzfeednews.com/article/craigsilverman/google-bans-android-apps-disruptive-ads">BuzzFeed</a> ·
+    <a href="https://www.androidauthority.com/google-play-store-app-ban-cheetah-1085601/">Android Authority</a>.
+  </p>
+  <p>
+    <strong>Dream Money</strong> (Dream Sports wealthtech) — shut July 30, 2026, &lt;1 year after
+    launch; SIPs cancelled July 7; holdings migrated. A live, India-specific dying-startup saga.
+    <a href="https://economictimes.indiatimes.com/tech/technology/dream-sports-shuts-fintech-platform-dream-money-within-a-year-of-launch/articleshow/132112341.cms">ET</a> ·
+    <a href="https://entrackr.com/news/dream-sports-shuts-down-wealthtech-platform-dream-money-within-a-year-of-launch-12121771">Entrackr</a> ·
+    <a href="https://www.angelone.in/news/personal-finance/dream-sports-to-shut-dream-money-what-happens-to-your-mutual-funds-and-sips">Angel One</a>.
+  </p>
+
+  <h3>Walnut (now Axio)</h3>
+  <p>
+    <strong>Loved:</strong> auto-reads bank SMS to categorize expenses without account linking;
+    was India's most-downloaded tracker.
+    <a href="https://trackmyrupee.com/blog/trackmyrupee-vs-walnut-axio-vs-money-manager-which-expense-tracker-is-best-for-indians-in-2026/">TrackMyRupee</a> ·
+    <a href="https://medium.com/@anurag.bits18/walnut-axio-and-business-of-lending-1e59205deade">Medium</a>.
+  </p>
+  <blockquote>
+    <strong>The big complaint:</strong> the privacy/lending pivot. Acquired by Capital Float
+    (2018), rebranded to Axio, became a BNPL/lending platform — <em>"We are sacrificing financial
+    privacy for a little bit of convenience."</em> Categorization "not always accurate"; bank-sync
+    issues; manual-entry requests ignored.
+    <a href="https://trackmyrupee.com/blog/trackmyrupee-vs-walnut-axio-vs-money-manager-which-expense-tracker-is-best-for-indians-in-2026/">TrackMyRupee</a> ·
+    <a href="https://www.mouthshut.com/product-reviews/walnut-track-split-expenses-reviews-925814869">MouthShut</a> ·
+    <a href="https://anuragkrishna.substack.com/p/walnut-tracking-money-or-saving-money">Substack</a>
+  </blockquote>
+
+  <h3>Money Manager Expense &amp; Budget (Realbyte)</h3>
+  <p>4.6/5, ~4.56L reviews, 1Cr+ downloads in India.
+    <a href="https://play.google.com/store/apps/details?id=com.realbyteapps.moneymanagerfree&hl=en_IN">Play Store</a>.
+    Loved for no bank-linking, double-entry, Excel backup, low one-time cost. Recurring complaints:
+  </p>
+  <ul>
+    <li><strong>Recurring transactions bug</strong> — repeated bills don't show on the monthly calendar; must be re-entered manually.</li>
+    <li><strong>No cross-device sync</strong> — the single biggest complaint; "in progress" for years.</li>
+    <li>No split transactions; can't delete a single digit (whole number deletes); clipboard privacy scare; no onboarding; dated UI; intrusive ads; Indian date-format friction.
+    <a href="https://justuseapp.com/en/app/560481810/money-manager-expense-budget/reviews">JustUseApp</a></li>
+  </ul>
+
+  <h3>Monefy</h3>
+  <p>Loved: lightweight, one-tap entry, simple circular chart. Complaints:</p>
+  <ul>
+    <li><strong>One-time → subscription bait-and-switch</strong> — long-time users lost access to previously paid features (e.g. dark theme) with no refund.</li>
+    <li>Sync unreliable (Dropbox/Drive data loss); no bank sync; no recurring automation; poor support (emails bounce).
+    <a href="https://chrome-stats.com/d/com.monefy.app.lite/reviews">Chrome-stats</a> ·
+    <a href="https://omellody.com/budget-apps/monefy/">Omellody</a></li>
+  </ul>
+
+  <h3>Spendee, Goodbudget, YNAB-in-India</h3>
+  <ul>
+    <li><strong>Spendee</strong> — subscription required for anything useful; free version "very limited"; bank-sync discrepancies; privacy concerns.
+      <a href="https://www.saashub.com/compare-spendee-vs-monefy">SaaSHub</a> · <a href="https://sidepaisa.com/best-budgeting-apps-in-india/">SidePaisa</a></li>
+    <li><strong>Goodbudget</strong> — envelope budgeting; manual entry in free; premium for more envelopes/multi-device; limited reporting.
+      <a href="https://www.retirewise.in/best-apps-budgeting/">Retirewise</a></li>
+    <li><strong>YNAB</strong> — no Indian bank sync (Plaid covers few/no Indian institutions); ~₹9,000/yr for fully manual entry; "a free spreadsheet can replicate the method." <em>No direct r/IndiaPersonalFinance threads found — flagged.</em>
+      <a href="https://www.fincomparelab.com/reviews/ynab-review/">FinCompareLab</a> · <a href="https://whatredditthinks.com/topics/is-ynab-worth-it/">What Reddit Thinks</a></li>
+  </ul>
+
+  <h3>KhataBook / Bahi Khata</h3>
+  <p>4.4★, ~5.87L reviews, 5Cr+ downloads. Loved: offline-first auto-sync, QR payments, 10+ regional languages — <em>"you can continue using if your internet connection is lost."</em></p>
+  <blockquote>
+    <strong>Serious complaints:</strong> payment settlement failures (₹3,500–₹50,000 stuck/not
+    credited for days; "cyber crime" complaints filed); unresponsive support; merchants want
+    <strong>WhatsApp reminders instead of SMS</strong> ("people often ignore SMS").
+    <a href="https://consumercomplaintscourt.com/tag/khatabook/">Consumer Complaints Court</a> ·
+    <a href="https://ca.trustpilot.com/review/www.khatabook.com">Trustpilot</a> ·
+    <a href="https://www.techjockey.com/detail/khatabook">Techjockey</a> ·
+    <a href="https://apps.appfollow.io/android/khatabook-credit-account-book/com.vaibhavkalpe.android.khatabook?country=ph">AppFollow</a>
+  </blockquote>
+
+  <h3>Paytm / PhonePe in-app spend views</h3>
+  <p>Paytm "Spend Summary" &amp; PhonePe "Expense Tracker" auto-categorize UPI — but each only sees <strong>its own app's</strong> transactions. Most Indians use 2–4 UPI apps, so each tracker is a fragmented slice; the bank statement (CSV) is the only comprehensive truth.
+    <a href="https://paytm.com/blog/payments/paytm-spend-summary-upi-expense-tracker/">Paytm</a> ·
+    <a href="https://www.moonproduct.tech/insights/upi-expense-tracker-india-2026/">Moonproduct</a> ·
+    <a href="https://learnfinedge.com/upi-spend-tracker-india-5-free-methods-2026/">Learnfinedge</a></p>
+
+  <h3>Jupiter / Fi / INDmoney</h3>
+  <ul>
+    <li><strong>Fi</strong> — strongest insights ("Ask Fi", Insights Hub; users found ₹15,000 in forgotten subscriptions, ₹8,500/mo food delivery). Customer support is the #1 weakness; tiered pricing added fees (₹236/yr debit card). <a href="https://aayushbhaskar.com/fi-money-review-the-best-neobank-in-india/">Aayush Bhaskar</a> · <a href="https://manikarthik.com/blog/fi-money-vs-jupiter/">Mani Karthik</a></li>
+    <li><strong>Jupiter</strong> — basic categorization, gamified "Jewels," instant loans. <a href="https://apps.apple.com/in/app/jupiter-cards-upi-banking/id1507748747?platform=iphone&see-all=reviews">App Store</a></li>
+    <li><strong>INDmoney</strong> — comprehensive (Indian+US stocks, MFs, FDs, EPF, NPS); free tier funded by referral arrangements; recommendations algorithmic, not fiduciary. <a href="https://investkaro.in/indmoney-review/">InvestKaro</a> · <a href="https://foliyo.ai/guides/mf-platforms/indmoney-review/">Foliyo</a></li>
+  </ul>
+
+  <h3>Splitwise (the "who owes whom" incumbent)</h3>
+  <blockquote>
+    Aggressive paywalling since 2023 — free users limited to ~3 expenses/day, 10-second
+    full-screen ads before adding expenses, search &amp; receipt-scan locked behind Pro
+    (~₹330–400/mo, "too expensive for a bill-splitting utility"). <strong>No native UPI</strong> —
+    users manually copy account details and switch apps. India-specific alternative
+    <strong>FairShare</strong> offers unlimited free + native UPI deep-linking.
+    <a href="https://technofino.in/community/threads/splitwise-is-useless-without-pro-now.19199/">TechnoFino</a> ·
+    <a href="https://fairshareapp.co.in/blog/splitwise-free-tier-limits-india.html">FairShare</a> ·
+    <a href="https://www.complaintsboard.com/splitwise-b149630">ComplaintsBoard</a>
+  </blockquote>
+</section>
+
+<section id="reality">
+  <h2>2. Indian spending &amp; saving reality</h2>
+
+  <h3>UPI dominance &amp; "too many tiny transactions"</h3>
+  <ul>
+    <li><strong>228.3–228.5B UPI transactions in CY2025</strong> (₹300 lakh crore), +33% YoY. <a href="https://www.thehindubusinessline.com/money-and-banking/upi-processes-2285-billion-transactions-in-2025-reshaping-indias-payments-landscape/article70860946.ece">Hindu BL</a></li>
+    <li>Avg ticket falling: &gt;₹1,600 (early 2023) → <strong>~₹1,293</strong> (Dec 2025); merchant (P2M) avg <strong>₹592</strong>; groceries ₹214, fast food ₹113, restaurants ₹158. <a href="https://sbi.bank.in/documents/13958/14472/New+Insights+from+UPI+Data_SBI+Research.pdf/5e8227bf-78b1-5838-59b5-1ba3e76099b5?t=1755680722524">SBI Research</a> · <a href="https://www.financialexpress.com/business/news/upi-sets-new-record-in-december-transactions-cross-21-6-billion-highest-ever/4094525/">FE</a></li>
+    <li>504M unique UPI users (Aug 2025); UPI = 84% of retail digital payments (FY25). <a href="https://www.thehindubusinessline.com/money-and-banking/upi-processes-2285-billion-transactions-in-2025-reshaping-indias-payments-landscape/article70860946.ece">Hindu BL</a></li>
+    <li><strong>Implication:</strong> hundreds of sub-₹500 transactions/month make manual entry unmanageable; auto-categorization essential, but any single-app tracker is incomplete because users span 2–4 UPI apps. <a href="https://www.moonproduct.tech/insights/upi-expense-tracker-india-2026/">Moonproduct</a></li>
+  </ul>
+
+  <h3>Salary-cycle cashflow / month-end crunch</h3>
+  <ul>
+    <li><strong>RBI Household Finance Survey 2024: 60%+ of urban salaried households have &lt;1 month of expenses saved.</strong> <a href="https://rivo.pe/blog/why-indians-live-paycheck-to-paycheck">Rivo.pe</a></li>
+    <li>Lifestyle inflation: 70–80% of a salary increment consumed within 6 months.</li>
+    <li>EMI normalization: 3–5 simultaneous EMIs, ₹15,000–35,000/mo; when EMIs exceed 30–35% of take-home, the system is fragile. <a href="https://www.businesstoday.in/personal-finance/investment/story/my-bank-balance-dropped-to-rs7-in-5-minutes-viral-post-exposes-crushing-debt-cycle-of-urban-india-483266-2025-07-06">Business Today</a></li>
+    <li>The viral <strong>"₹43,000 → ₹7 in 5 minutes"</strong> post: rent ₹19k, CC minimum ₹15k (of ₹60k), two EMIs ₹10k. RBI: personal loans +75% in 3 yrs; household debt 41.9% of GDP; national household savings at a 47-year low.</li>
+    <li><strong>The estimation gap:</strong> people underestimate spending by 20–30% — food delivery thought ₹1,000, actually ₹2,800. <a href="https://paisewaise.com/my-%f2%9c%b930000-salary-was-gone-by-the-20th/">Paisewaise</a> · <a href="https://economictimes.indiatimes.com/magazines/panache/rs-80000-monthly-income-but-he-lives-a-broke-life-man-asks-how-to-escape-the-salary-vs-expenses-trap-in-india/articleshow/129778055.cms">ET</a></li>
+  </ul>
+
+  <h3>Festival / seasonal spending</h3>
+  <ul>
+    <li><strong>Diwali 2024 urban spend ~₹1.85T</strong> (LocalCircles, 49,000+ responses, 342 districts). <a href="https://www.business-standard.com/finance/personal-finance/diwali-splurge-2024-india-to-spend-rs-1-85-trn-this-season-shows-survey-124092600556_1.html">Business Standard</a></li>
+    <li>YouGov Diwali Spending Index 2024: 117.37 (4-yr high); 34% planned to spend more. <a href="https://yougov.com/reports/50689-diwali-consumer-report-india-2024">YouGov</a></li>
+    <li>Diwali 2025 sales: record ₹6.05T (+25% YoY). <a href="https://www.business-standard.com/industry/news/diwali-2025-sales-record-6-trillion-local-goods-rise-cait-report-125102100517_1.html">Business Standard</a></li>
+    <li>Avg urban professional spends <strong>₹80,000–₹1,50,000/yr</strong> on weddings/gifting/group dinners — unbudgeted. <a href="https://rivo.pe/blog/why-indians-live-paycheck-to-paycheck">Rivo.pe</a></li>
+  </ul>
+
+  <h3>Family / joint finances</h3>
+  <ul>
+    <li>Money flows beyond the married couple — parents↔adult children, siblings, extended family. <a href="https://scispace.com/papers/money-management-and-control-in-the-indian-joint-family-ceho9hzfiw">Singh 2012, Sociological Review</a></li>
+    <li><strong>NFHS-5 (51,758 women): only 3.38% decide independently; 81.74% jointly; 14.88% dependently.</strong> Working women 1.52× more likely to be independent. <a href="https://journals.plos.org/plosone/article/file?id=10.1371%2Fjournal.pone.0316805&type=printable">PLoS ONE 2025</a></li>
+    <li><strong>Implication:</strong> a single-user app leaves partner-side spending invisible — a noted failure mode. <a href="https://www.moonproduct.tech/insights/upi-expense-tracker-india-2026/">Moonproduct</a></li>
+  </ul>
+
+  <h3>Cash-in-hand still common</h3>
+  <ul>
+    <li><strong>Cash ≈ 50% of Private Final Consumption Expenditure</strong> (Q1 FY26, Care Edge); currency in circulation ₹41.6T, +11.9% YoY. <a href="https://www.thehindubusinessline.com/money-and-banking/cash-still-king-in-india-accounts-for-50-of-payments-even-as-digital-transactions-soar/article70161485.ece">Hindu BL</a></li>
+    <li>~86% of P2M UPI &amp; ~60% of P2P UPI below ₹500 — UPI handles small daily; cash serves informal/large/precautionary uses. <a href="https://sbi.bank.in/documents/13958/14472/24042026_Ecowrap_20260424.pdf/82e00a26-b766-330a-0c12-f1d86ccce481?t=1777039731373">SBI Ecowrap</a></li>
+    <li><strong>Implication:</strong> cash transactions are invisible to SMS auto-trackers — manual entry needed. <a href="https://www.moonproduct.tech/insights/upi-expense-tracker-india-2026/">Moonproduct</a></li>
+  </ul>
+
+  <h3>Lack of formal budgeting culture / low financial literacy</h3>
+  <ul>
+    <li><strong>80%+ of rural households don't maintain monthly budgets.</strong> <a href="https://www.billcut.com/blogs/local-language-finance-ux-reaching-bharat-tier-3/">Billcut</a></li>
+    <li><strong>Finnovate Survey (July 2024): avg financial fitness score 5.29/20.</strong> 40% lack an emergency fund; only 38% debt-free; 73% uninsured/underinsured for health; 65% short for retirement. <a href="https://www.business-standard.com/finance/personal-finance/only-38-indians-debt-free-40-lack-emergency-fund-what-a-survey-reveals-124072601107_1.html">Business Standard</a></li>
+    <li>71% of young Indians consider themselves financially literate, but 62% use YouTube as their primary source. <a href="https://businessnewsthisweek.com/business/fin-one-young-indians-saving-habits-outlook-2024-gen-z-prefers-stocks-over-mutual-funds-by-39/">BNTW</a></li>
+  </ul>
+
+  <h3>Credit-card growth + misuse</h3>
+  <ul>
+    <li>Credit-card NPAs <strong>+28.42% to ₹6,742 crore</strong> (Dec 2024) — a 500%+ jump since 2020. <a href="https://indianexpress.com/article/business/banking-and-finance/credit-card-defaults-up-28-per-cent-last-year-touched-rs-6742-crore-9928846/">IE</a></li>
+    <li>Swipe-spend-default cycle: 42–48% annual interest traps users into minimum dues, then loan-stacking; 22% now hold 3+ cards (vs 12% a decade ago). <a href="https://economictimes.indiatimes.com/industry/banking/finance/banking/indias-credit-card-losses-spike-for-millennials-swipe-spend-default-habit/articleshow/113695284.cms">ET</a></li>
+    <li>UPI + RuPay credit made credit frictionless down to ₹10 chai. Zavo: avg CC debt per user ₹4.16L; 13% pay only minimum at 53% annual interest. <a href="https://www.thecore.in/business/behind-indias-credit-card-spending-surge-young-borrowers-rising-defaults-833503">The Core</a> · <a href="https://indianexpress.com/article/business/india-credit-card-debt-unsecured-loans-delinquency-transunion-cibil-report-10777716/">IE-CIBIL</a></li>
+  </ul>
+
+  <h3>Subscription fatigue / UPI Autopay</h3>
+  <ul>
+    <li>UPI Autopay <strong>doubled YoY</strong>: ~926M transactions (Nov 2025); 1.27B mandates (Nov 2025); 10× in &lt;2 years. <a href="https://economictimes.indiatimes.com/tech/technology/upi-autopay-volume-doubles-in-a-year-npci-launches-portal-for-e-mandate-management/articleshow/126172927.cms">ET</a> · <a href="https://www.rbi.org.in/Scripts/BS_ViewMasDirections.aspx?id=13374">RBI</a></li>
+    <li>The <strong>"₹1 trial" trap</strong>: sign-up authorization screen "looks like a regular payment confirmation, not a recurring agreement." Users forget; six forgotten subscriptions hit at once and disrupted an EMI. <a href="https://www.business-standard.com/finance/personal-finance/hidden-upi-mandates-here-s-why-a-1-trial-can-cost-far-more-over-time-126070600578_1.html">BS</a></li>
+    <li>Fi users found <strong>₹15,000/month in forgotten subscriptions</strong>. <a href="https://aayushbhaskar.com/fi-money-review-the-best-neobank-in-india/">Aayush Bhaskar</a></li>
+  </ul>
+
+  <h3>No emergency-fund habit</h3>
+  <ul>
+    <li><strong>Global Findex 2025:</strong> main emergency-money source within 30 days — family/friends 34.5%, working 22.7%, savings only 14.3%, selling assets 10.7%, lender 13%, couldn't 3.8%. <a href="https://microdata.worldbank.org/catalog/7916/variable/F1/V82?name=fin24">World Bank</a></li>
+    <li>88% anticipate high financial uncertainty in the next 5 years; 36% cite job loss as top worry. <a href="https://www.businesstoday.in/personal-finance/investment/story/88-anticipate-high-financial-uncertainty-in-next-5-years-including-job-loss-a-nishchit-index-2024-445831-2024-09-13">Business Today</a></li>
+  </ul>
+
+  <h3>Gold / savings behavior</h3>
+  <ul>
+    <li><strong>85–99% of Indian households own gold</strong>; avg household holds 11% of wealth in gold; poorer households 24%. 80–90% of motivations are financial (security, liquidity, collateral). <a href="https://www.iima.ac.in/sites/default/files/2022-11/Paper-Monami%20Dasgupta%20Dvara%20Research.pdf">IIMA–Dvara</a></li>
+  </ul>
+
+  <h3>Informal lending/borrowing among friends &amp; family</h3>
+  <ul>
+    <li><strong>IHDS-II: ~26.2% of households borrowed from friends/relatives</strong> (vs 24.6% applying for bank loans). <a href="https://doi.org/10.1007/s00181-025-02822-0">Springer</a></li>
+    <li>CMIE CPHS: for every 2 borrowing institutionally, <strong>5 borrow non-institutionally</strong>; ratio 2.63× vs 0.6× in Brazil. <a href="https://scroll.in/article/1083749/how-indians-save-and-borrow-in-six-charts">Scroll</a> · <a href="https://www.piramal.com/assets/downloads/Piramal%20Group/PressRelease/Prevalence%20Of%20Non-Institutional%20Borrowing%20Among%20Indian%20Households%20A%20Pre%20and%20Post%20COVID-19%20Analysis.pdf">Piramal</a></li>
+    <li><strong>The "forgetting" problem:</strong> Splitwise exists precisely because people lose track of who owes whom; its 1Cr+ India downloads confirm the need — and its paywalling confirms the gap for a free, local who-owes-whom tracker. <a href="https://technofino.in/community/threads/splitwise-is-useless-without-pro-now.19199/">TechnoFino</a> · <a href="https://fairshareapp.co.in/blog/splitwise-free-tier-limits-india.html">FairShare</a></li>
+  </ul>
+</section>
+
+<section id="problems">
+  <h2>3. Ground-level problems to solve (Top 15, ranked)</h2>
+  <ol class="rank">
+    <li><strong>UPI created hundreds of tiny monthly transactions nobody can track manually, and each UPI app only sees its own slice</strong> — 228B+ UPI txns in 2025, avg ticket ₹1,293 (merchant ₹592), most use 2–4 apps. <a href="https://www.thehindubusinessline.com/money-and-banking/upi-processes-2285-billion-transactions-in-2025-reshaping-indias-payments-landscape/article70860946.ece">Hindu BL</a> · <a href="https://www.moonproduct.tech/insights/upi-expense-tracker-india-2026/">Moonproduct</a> <span class="tag pill-build">→ Phase 1–2 (AI picks useful aggregations, not raw row dumps)</span></li>
+    <li><strong>People forget who owes whom among friends &amp; family, and Splitwise paywalled basic features</strong> — 26.2% of households borrow from friends/relatives; Splitwise limited free users to ~3 expenses/day with ads; no native UPI. <a href="https://doi.org/10.1007/s00181-025-02822-0">Springer</a> · <a href="https://technofino.in/community/threads/splitwise-is-useless-without-pro-now.19199/">TechnoFino</a> <span class="tag pill-build">→ Existing Dues feature (own it, keep it free, local)</span></li>
+    <li><strong>Forgotten UPI Autopay/recurring subscriptions silently drain accounts</strong> — 1.27B mandates (Nov 2025), 10× in &lt;2 yrs; the "₹1 trial" trap; Fi users found ₹15k/mo forgotten. <a href="https://economictimes.indiatimes.com/tech/technology/upi-autopay-volume-doubles-in-a-year-npci-launches-portal-for-e-mandate-management/articleshow/126172927.cms">ET</a> · <a href="https://www.business-standard.com/finance/personal-finance/hidden-upi-mandates-here-s-why-a-1-trial-can-cost-far-more-over-time-126070600578_1.html">BS</a> <span class="tag pill-build">→ Phase 3 (Bills &amp; subscriptions)</span></li>
+    <li><strong>Most urban salaried Indians live paycheck-to-paycheck with &lt;1 month saved; "savings-last" is the core failure</strong> — RBI HFS 2024: 60%+ &lt;1 month saved. <a href="https://rivo.pe/blog/why-indians-live-paycheck-to-paycheck">Rivo.pe</a> · <a href="https://www.businesstoday.in/personal-finance/investment/story/my-bank-balance-dropped-to-rs7-in-5-minutes-viral-post-exposes-crushing-debt-cycle-of-urban-india-483266-2025-07-06">BT</a> <span class="tag pill-build">→ Phases 4 &amp; 6 (goals + forecast/"days of money left")</span></li>
+    <li><strong>Apps that require bank/SMS access trigger privacy fear and high drop-off; users don't want bank data on a server</strong> — 68% AA drop-off before consent; Walnut/Axio reads all SMS incl. OTPs and sells credit products. <a href="https://www.billcut.com/blogs/account-aggregator-gaps-startup-lessons/">Billcut</a> · <a href="https://trackmyrupee.com/blog/trackmyrupee-vs-walnut-axio-vs-money-manager-which-expense-tracker-is-best-for-indians-in-2026/">TrackMyRupee</a> <span class="tag pill-build">→ SpendWise core (on-device, no account, no SMS read)</span></li>
+    <li><strong>Cash is still ~50% of consumption expenditure, invisible to any SMS/auto tracker</strong> — careEdge Q1 FY26; ₹41.6T currency in circulation. <a href="https://www.thehindubusinessline.com/money-and-banking/cash-still-king-in-india-accounts-for-50-of-payments-even-as-digital-transactions-soar/article70161485.ece">Hindu BL</a> <span class="tag pill-build">→ Manual entry stays first-class (already core)</span></li>
+    <li><strong>Festival/seasonal spending is large, recurring, and unbudgeted</strong> (₹80k–₹1.5L/yr social; ₹1.85T Diwali 2024 urban) — no app handles festival-envelope planning well. <a href="https://www.business-standard.com/finance/personal-finance/diwali-splurge-2024-india-to-spend-rs-1-85-trn-this-season-shows-survey-124092600556_1.html">BS</a> · <a href="https://rivo.pe/blog/why-indians-live-paycheck-to-paycheck">Rivo.pe</a> <span class="tag pill-build">→ Phase 4 (goals as envelopes; festival target)</span></li>
+    <li><strong>~80% abandon budgeting apps within a month; the average person tries 3 before giving up</strong> — driven by manual effort (26% of cancellations) and setup friction. <a href="https://www.gotaprob.com/problems/budgeting-apps-too-complicated">gotaprob</a> · <a href="https://retentioncheck.com/churn-benchmarks/budgeting-apps">RetentionCheck</a> <span class="tag pill-build">→ Phase 5 (weekly digest) + no-shame tone</span></li>
+    <li><strong>Existing apps are built for English-literate urban salaried users; 80%+ of rural households don't budget, and vernacular onboarding gives 2.6× higher completion</strong> — a real underserved Bharat segment. <a href="https://www.billcut.com/blogs/local-language-finance-ux-reaching-bharat-tier-3/">Billcut</a> <span class="tag">Flagged: i18n is a future phase</span></li>
+    <li><strong>Credit-card + BNPL misuse is producing a debt trap, especially among Gen Z/millennials</strong> — CC NPAs +28% to ₹6,742 crore; 42–48% annual interest; UPI-RuPay made credit frictionless down to ₹10 chai. <a href="https://indianexpress.com/article/business/banking-and-finance/credit-card-defaults-up-28-per-cent-last-year-touched-rs-6742-crore-9928846/">IE</a> · <a href="https://economictimes.indiatimes.com/industry/banking/finance/banking/indias-credit-card-losses-spike-for-millennials-swipe-spend-default-habit/articleshow/113695284.cms">ET</a> <span class="tag">Future: EMI/credit visibility</span></li>
+    <li><strong>Joint/family finances mean a single-user app leaves partner-side spending invisible</strong> — only 3.4% of women decide independently, 81.7% decide jointly. <a href="https://journals.plos.org/plosone/article/file?id=10.1371%2Fjournal.pone.0316805&type=printable">PLoS ONE</a> <span class="tag">Future: shared/household views</span></li>
+    <li><strong>Dying startups leave users stranded with deleted data and cancelled SIPs</strong> — Mint (data permanently deleted, no recovery), Piggy, Muvin, Investmint, Plus Gold, Dream Money all shut in ~2 yrs. <a href="https://www.cnet.com/personal-finance/end-of-mint-how-to-download-your-financial-data-before-its-gone/">CNET</a> · <a href="https://economictimes.indiatimes.com/wealth/save/this-mutual-fund-investment-platform-to-shut-down-from-june-30-2025-what-happens-to-your-active-sips-existing-investments/articleshow/121624019.cms">ET</a> <span class="tag pill-build">→ SpendWise core (export-first, local DB)</span></li>
+    <li><strong>Subscription/paywall fatigue is measurable and rising</strong> — households cut from 4.1→2.8 subscriptions (2024→25), 41% report fatigue, SaaS cancellations +23% YoY. <a href="https://www.self.inc/info/cost-of-unused-paid-subscriptions/">Self Financial</a> · <a href="https://www.apprupt.com/state-of-subscription-fatigue/">Apprupt</a> <span class="tag pill-build">→ SpendWise: free / one-time, never subscription</span></li>
+    <li><strong>"AI chat" in finance is demonstrably unreliable and users are losing real money following it</strong> — UGA study (July 2026): demographic bias &amp; inconsistent advice across 7 chatbots (one told a demographic to keep no cash); 19% of US adults lost &gt;$100 following chatbot advice. <a href="https://news.uga.edu/should-a-chatbot-manage-your-bank-account/">UGA</a> · <a href="https://www.ft.com/content/8e84e72d-6098-4378-80c1-2053ac1a8365">FT</a> <span class="tag pill-build">→ SpendWise AI: deterministic insights + gatekeeper, not raw chat</span></li>
+    <li><strong>No emergency-fund habit; reliance on family/friends (34.5%) over savings (14.3%)</strong> — an app that gently builds an emergency-fund envelope and surfaces "days of money left" addresses a real gap. <a href="https://microdata.worldbank.org/catalog/7916/variable/F1/V82?name=fin24">World Bank</a> · <a href="https://www.business-standard.com/finance/personal-finance/only-38-indians-debt-free-40-lack-emergency-fund-what-a-survey-reveals-124072601107_1.html">BS</a> <span class="tag pill-build">→ Phase 4 (goals) + Phase 6 (forecast)</span></li>
+  </ol>
+</section>
+
+<section id="retention">
+  <h2>4. Retention &amp; habit formation</h2>
+  <div class="card">
+    <h4>The brutal benchmarks</h4>
+    <ul>
+      <li><strong>~80% abandon a budgeting app within the first month; average person tries 3 before giving up.</strong> <a href="https://www.gotaprob.com/problems/budgeting-apps-too-complicated">gotaprob</a></li>
+      <li>Budgeting-app monthly churn <strong>7.9% (62.5% annual)</strong> — far above SaaS median (4.8%/mo). <a href="https://retentioncheck.com/churn-benchmarks/budgeting-apps">RetentionCheck</a></li>
+      <li><strong>Fintech D30 retention collapsed to 2% in 2026</strong> (−33% YoY), per Adjust — steepest decline of any category. <a href="https://www.emarketer.com/content/finance-apps-keep-users-engaged-longer-than-any-other-industry">eMarketer</a></li>
+      <li>Global finance-app day-1 retention fell 13.8% (2023) → 12.5% (H1 2025); banking apps are the standout at 20.6%. <a href="https://www.businesswire.com/news/home/20251029280342/en/New-Adjust-Report-Finds-Global-Finance-App-Market-Shifting-From-Rapid-Expansion-to-Sustainable-Growth-In-2025">Adjust/BW</a></li>
+    </ul>
+  </div>
+  <h4>Why users cancel budgeting apps specifically</h4>
+  <ol>
+    <li>Achieved goal / no longer needed — 29%</li>
+    <li>Too much manual effort — 26%</li>
+    <li>Free alternatives (bank apps, spreadsheets) — 22%</li>
+    <li>Privacy concerns about linking accounts — 14%</li>
+    <li>Bank-connection sync issues — 9% &nbsp;<a href="https://retentioncheck.com/churn-benchmarks/budgeting-apps">RetentionCheck</a></li>
+  </ol>
+  <h4>What makes apps sticky</h4>
+  <ul>
+    <li><strong>Low-friction entry:</strong> strong auto-sync retains at 5–7%/mo churn vs 9–12% for manual; manual-entry apps abandoned within ~3 weeks. <a href="https://retentioncheck.com/churn-benchmarks/budgeting-apps">RetentionCheck</a> · <a href="https://www.moonproduct.tech/insights/upi-expense-tracker-india-2026/">Moonproduct</a></li>
+    <li><strong>Reframe from "budget tracking" to "financial coaching":</strong> net-worth tracking + personalized insights retain 2–3× longer; YNAB's retention comes from methodology + community, not the software. <a href="https://retentioncheck.com/churn-benchmarks/budgeting-apps">RetentionCheck</a></li>
+    <li>Trials boost D30 retention to 42% vs 23% without. <a href="https://retentioncheck.com/churn-benchmarks/budgeting-apps">RetentionCheck</a></li>
+    <li><strong>Engagement drives outcomes:</strong> users who increased engagement saw 1.8× greater change in deposit balances and 3.9× in loan accounts (MX, 30M+ consumers over 24 mo). <a href="https://www.mx.com/research/engagement-drives-stronger-financial-wellness/">MX</a></li>
+    <li><strong>The real user need:</strong> users "want to feel less anxious about money" — a different outcome than tracking; the most effective interventions "require the least ongoing effort." <a href="https://www.gotaprob.com/problems/budgeting-apps-too-complicated">gotaprob</a></li>
+    <li>Tracking ≠ behavior change: dashboards that look identical every visit make opening the app feel pointless; apps with all of {education, scoring, guidance, accountability} retain users. <a href="https://www.financialfitnesspassport.com/why-personal-finance-apps-fail-user-retention">FFP</a></li>
+  </ul>
+  <h4>Habit-formation mechanics</h4>
+  <ul>
+    <li>Hook Model (trigger → action → variable reward → investment) &amp; cue→routine→reward; heavily applied in fintech. <a href="https://medium.com/design-bootcamp/crafting-a-habit-forming-blueprint-with-behavioral-economics-and-product-design-9da55bd88a81">Medium</a></li>
+    <li>Duolingo's 7-day-streak users are 2.4× more likely to continue; SaverLife "Race to $500" produced a 31% increase in savings rates. <a href="https://earmarkiq.app/blog/money-habits-app">earmarkIQ</a></li>
+    <li>Behavioral economics: present bias (auto-deposits/round-up), loss aversion (frame saving as not-loss), status-quo bias (opt-out defaults), Thaler &amp; Benartzi "Save More Tomorrow" (commit future pay-increases to savings → quadrupled savings rates). <a href="https://www.suebehaviouraldesign.com/en/blog/behavioural-design-for-fintech/">Sue</a></li>
+  </ul>
+  <h4>The dying-app risk (standalone subscription fragility)</h4>
+  <p>Mint (2024), Clarity Money (2021), Simple, Finn, Zeta (2025), Money Dashboard (2025), Moneyhub (2026) all shut down — pure-budgeting subscription models can't sustain themselves. <a href="https://retentioncheck.com/churn-benchmarks/budgeting-apps">RetentionCheck</a>. In India: Piggy, Muvin, Investmint, Plus Gold, Dream Money all shut within ~2 years. <a href="https://economictimes.indiatimes.com/wealth/save/this-mutual-fund-investment-platform-to-shut-down-from-june-30-2025-what-happens-to-your-active-sips-existing-investments/articleshow/121624019.cms">ET-Piggy</a> · <a href="https://entrackr.com/2024/02/exclusive-neobank-muvin-shuts-down-operations/">Entrackr-Muvin</a> · <a href="https://entrackr.com/2024/07/trading-app-investmint-goes-for-liquidation-process/">Entrackr-Investmint</a> · <a href="https://inc42.com/buzz/exclusive-shark-tank-fame-plus-gold-shuts-shop/">Inc42-PlusGold</a> · <a href="https://entrackr.com/news/dream-sports-shuts-down-wealthtech-platform-dream-money-within-a-year-of-launch-12121771">Entrackr-DreamMoney</a>.</p>
+</section>
+
+<section id="tone">
+  <h2>5. No-shame tone (design principle)</h2>
+  <p>
+    The "wellness fintech" movement is a direct reaction against red-number/guilt design.
+    <strong>Shame corrodes the very part of us that believes we're capable of change</strong> — guilt
+    leads to avoidance, not better behavior.
+  </p>
+  <ul>
+    <li><strong>Money Mirror</strong> (Pratt, May 2026): no red in the UI, no scores/grades/failure-states, patterns framed as <em>observations not alerts</em>, ask "did it help?" not "was this in budget?" <a href="https://medium.com/@nallxly/money-mirror-designing-without-judgment-c103f4303ed9">Medium</a></li>
+    <li><strong>Track That Money</strong> (Flutter, for neurodivergent users): avoids red, uses soft temperature colors — "awareness replaces shame; the user learns to observe rather than judge." <a href="https://github.com/alexisvassquez/trackthatmoney">GitHub</a></li>
+    <li><strong>Good With</strong> (CBT-based): 57% of learners feel less anxious after 2 weeks, 52% more confident. <a href="https://goodwith.co/">Good With</a></li>
+    <li>Affect labeling (naming emotions reduces amygdala activity) is the neurological basis for reflection-over-enforcement. Also see MoodWallet, enough.app ("judgment-free"). <a href="https://moodwallet.co/">MoodWallet</a> · <a href="https://enough.app/">enough.app</a></li>
+  </ul>
+  <blockquote>
+    <strong>SpendWise application:</strong> avoid <code>#DC2626</code> (red) as a "you failed"
+    cue; frame over-budget/over-spend as observation ("Spent ₹4,200 of ₹4,000 — 5% over"), never
+    alarm; no scores/grades/failure-states; warm/soft palette for status. A shared
+    <code>lib/app/utils/tone.dart</code> copy helper ("on track" / "a bit over" / "worth a look")
+    is applied across all new UI in Phases 3–6. The existing <code>AiGatekeeper</code>
+    numeric-sanity conservatism extends to all notification + nudge copy.
+  </blockquote>
+</section>
+
+<section id="antipatterns">
+  <h2>6. Anti-patterns to avoid</h2>
+  <ol>
+    <li><strong>Aggressive paywalls / bait-and-switch</strong> — Monefy moved one-time→subscription and locked previously paid features with no refund; Splitwise limited free users to ~3 expenses/day with 10s ads. <a href="https://chrome-stats.com/d/com.monefy.app.lite/reviews">Chrome-stats</a> · <a href="https://technofino.in/community/threads/splitwise-is-useless-without-pro-now.19199/">TechnoFino</a></li>
+    <li><strong>Forced account/cloud signup</strong> — 68% of AA users drop off before granting consent; the consent UX looks like "legal jargon, not empowerment." <a href="https://www.billcut.com/blogs/account-aggregator-gaps-startup-lessons/">Billcut</a></li>
+    <li><strong>Ads</strong> — Cheetah Mobile's 45 apps banned for disruptive ads. <a href="https://www.theverge.com/2020/2/20/21145595/google-app-ban-ads-play-store-android-user-experience">The Verge</a></li>
+    <li><strong>Data-selling / privacy concerns</strong> — Walnut/Axio reads all bank SMS (incl. OTPs) and pushes credit products; SBI's MD flagged "single consent for everything"; security/privacy concerns drive 26.8% of FinTech adoption reluctance in India. <a href="https://trackmyrupee.com/blog/trackmyrupee-vs-walnut-axio-vs-money-manager-which-expense-tracker-is-best-for-indians-in-2026/">TrackMyRupee</a> · <a href="https://doi.org/10.52783/jier.v4i1.524">JIER</a></li>
+    <li><strong>Complex setup / no onboarding</strong> — Money Manager has "no tutorial" and a steep learning curve; YNAB runs dedicated workshops. <a href="https://justuseapp.com/en/app/560481810/money-manager-expense-budget/reviews">JustUseApp</a> · <a href="https://www.gotaprob.com/problems/budgeting-apps-too-complicated">gotaprob</a></li>
+    <li><strong>Requiring bank connection</strong> — bank-connection failures cause 20–30% mid-onboarding abandonment; YNAB has near-zero Indian bank support. <a href="https://retentioncheck.com/churn-benchmarks/budgeting-apps">RetentionCheck</a> · <a href="https://www.fincomparelab.com/reviews/ynab-review/">FinCompareLab</a></li>
+    <li><strong>Dying startups leaving users stranded</strong> — Mint permanently deleted all user data after Mar 23, 2024 (no recovery); Piggy cancelled SIPs; Plus Gold users had withdrawal troubles. <a href="https://www.cnet.com/personal-finance/end-of-mint-how-to-download-your-financial-data-before-its-gone/">CNET</a> · <a href="https://spendify.money/blog/mint-shut-down-now-what/">Spendify</a></li>
+    <li><strong>"AI chat" that adds no real value</strong> — UGA study (July 2026): 7 chatbots gave "significantly varied" advice with demographic bias; one told African Americans to keep no cash. 19% of US adults lost &gt;$100 following chatbot advice. The "jagged frontier": reliable on common topics, dangerously wrong on rare/expensive one-time decisions. <a href="https://news.uga.edu/should-a-chatbot-manage-your-bank-account/">UGA</a> · <a href="https://www.ft.com/content/8e84e72d-6098-4378-80c1-2053ac1a8365">FT</a> · <a href="https://theconversation.com/when-managing-your-money-take-a-chatbots-confidence-with-a-grain-of-salt-286106">The Conversation</a></li>
+    <li><strong>Generic advice not tuned to India</strong> — US-centric apps have limited India bank sync (Plaid); category sprawl ("30+ categories → daily tagging miserable → app abandoned"); merchant-name confusion (UPI receipts show <code>razorpay@hdfcbank</code> not "Cafe Coffee Day"). <a href="https://getfinny.app/blog/best-expense-tracker-apps-india-2026">Finny</a> · <a href="https://www.moonproduct.tech/insights/upi-expense-tracker-india-2026/">Moonproduct</a></li>
+  </ol>
+</section>
+
+<section id="saas">
+  <h2>7. SaaS fatigue &amp; the local-first appeal</h2>
+  <h4>Consumer subscription fatigue is real and measurable</h4>
+  <ul>
+    <li>Avg US household subscriptions dropped <strong>4.1 → 2.8</strong> (2024→2025), a 32% decline. <a href="https://www.self.inc/info/cost-of-unused-paid-subscriptions/">Self Financial</a></li>
+    <li><strong>52% canceled ≥1 subscription in the past year</strong>; SaaS cancellations +23% YoY in 2025; 41% report subscription fatigue. <a href="https://www.apprupt.com/subscription-cancellation-statistics/">Apprupt</a> · <a href="https://www.marketwatch.com/financial-guides/banking/subscription-fatigue-survey/">MarketWatch</a></li>
+    <li>Wasted spend: ~$200/yr on unused subscriptions; consumers estimate $86/mo but actually spend $219/mo (a $133 gap). <a href="https://www.apprupt.com/state-of-subscription-fatigue/">Apprupt</a></li>
+    <li>70% locked into a paid subscription because they forgot to cancel a free trial; 76% believe services intentionally make cancellation difficult (avg 6.2 "dark patterns"). <a href="https://www.apprupt.com/state-of-subscription-fatigue/">Apprupt</a></li>
+    <li>In India: the ₹199–₹299/mo forgotten-subscription problem disrupts household cashflow; Splitwise Pro at ₹330–₹400/mo is "too expensive for a bill-splitting utility." <a href="https://www.business-standard.com/finance/personal-finance/hidden-upi-mandates-here-s-why-a-1-trial-can-cost-far-more-over-time-126070600578_1.html">BS</a> · <a href="https://technofino.in/community/threads/splitwise-is-useless-without-pro-now.19199/">TechnoFino</a></li>
+  </ul>
+  <h4>The appeal of local-first / own-your-data</h4>
+  <ul>
+    <li>Local-first movement (2019 Ink &amp; Switch manifesto) gaining momentum on the back of cloud shutdowns — Omnivore (Nov 2024), Pocket (Mozilla shut July 2025, ~35M libraries lost). Core: "Your data. Your devices. Your rules." <a href="https://outl.app/blog/private-by-default.html">outl</a> · <a href="https://dev.to/david_hamilton/local-first-bookmark-managers-are-back-two-ideals-most-of-them-quietly-skip-1p5b">DEV</a></li>
+    <li>Honest critique: self-hosting "moves risk from a company with an ops team to a person who has a day job." The more important properties are <strong>escapable</strong> (can you export everything?) and <strong>machine-readable</strong> — not just local-vs-cloud. <a href="https://dev.to/david_hamilton/local-first-bookmark-managers-are-back-two-ideals-most-of-them-quietly-skip-1p5b">DEV</a></li>
+    <li><strong>2026 trend:</strong> local-first apps expose data to LLMs via MCP so AI agents can read local files without data leaving the device — positioning as privacy-preserving AI. <a href="https://outl.app/blog/private-by-default.html">outl</a></li>
+    <li><strong>India-specific signal:</strong> TrackMyRupee (indie, Pune) markets as "Zero data sharing, no SMS reading, no credit product upselling. Your data is your data" — recommended as the best choice for most Indian salaried professionals. <a href="https://trackmyrupee.com/blog/trackmyrupee-vs-walnut-axio-vs-money-manager-which-expense-tracker-is-best-for-indians-in-2026/">TrackMyRupee</a></li>
+  </ul>
+  <blockquote>
+    <strong>Synthesis:</strong> the evidence supports the user's thesis. Subscription SaaS for
+    personal finance is structurally fragile (high churn, low ARPU, dying startups) and consumers
+    are fatigued. A one-time or free, local-first, export-friendly tool that doesn't sell data or
+    force cloud signup aligns with both the global subscription-fatigue data and India-specific
+    privacy reluctance. <strong>The differentiator is not "AI chat" — it is trust, ownership, and
+    not being abandoned.</strong>
+  </blockquote>
+</section>
+
+<section id="build">
+  <h2>8. What we'll build (problem → phase mapping)</h2>
+  <div class="map">
+    <div class="row"><div class="ph">Phase 0</div><div>This report (HTML + RESEARCH.md).</div></div>
+    <div class="row"><div class="ph">Phase 1</div><div>Chart-spec DSL + named on-device data providers + spec→fl_chart renderer. Makes the report <em>spec-driven</em> with a safe default. Reuses existing repository aggregations; <strong>no LLM, no SQL yet</strong>.</div></div>
+    <div class="row"><div class="ph">Phase 2</div><div>LLM emits the chart spec (Hybrid: named providers by default + opt-in LLM-authored SQL through a read-only safety pipeline). Refined, Indian-audience-tuned system prompt. Privacy: LLM sees only schema metadata + opaque labels, never raw rows or names.</div></div>
+    <div class="row"><div class="ph">Phase 3</div><div><strong>Bills &amp; subscription reminders</strong> (problem #3). New <code>recurring_items</code> table; surfaces the existing on-device recurring detector as actionable reminders + local notifications.</div></div>
+    <div class="row"><div class="ph">Phase 4</div><div><strong>Goals &amp; savings targets</strong> (problems #4, #7, #15). New <code>goals</code> table; "Save More Tomorrow" commitment framing; festival/emergency envelopes.</div></div>
+    <div class="row"><div class="ph">Phase 5</div><div><strong>Weekly digest + notifications</strong> (problem #8). On-device Sunday summary; optional LLM polish via the existing anonymize→LLM→restore pipeline.</div></div>
+    <div class="row"><div class="ph">Phase 6</div><div><strong>Cashflow forecasting / run-rate nudges</strong> (problems #4, #15). "You usually spend ~₹X on Fuel by now" observation + month-end balance projection. No-shame tone.</div></div>
+    <div class="row"><div class="ph">Phase 7</div><div><strong>.claude project tooling</strong> — skills (release, db-schema-change, privacy-audit, add-provider) + agents (explorer, privacy-auditor, reviewer) + <code>tone.dart</code> copy helper.</div></div>
+  </div>
+  <p class="note">Cross-cutting: <strong>no-shame tone</strong> applied across Phases 3–6; every DB-schema phase runs the DB Schema Change Checklist; every AI change runs a privacy audit; every list screen follows the List Row Interaction Rules. Privacy invariant (no personal details leave the device) is paramount and unchanged.</p>
+</section>
+
+<section id="gaps">
+  <h2>Notes on source quality &amp; gaps</h2>
+  <ul>
+    <li>No specific app literally named "Cheetah Money Manager" was found; the closest match is the Cheetah Mobile Play Store ban (2020) for ad fraud — the user's "Cheetah shutdown saga" likely refers to this. Flagged rather than invented.</li>
+    <li>No direct r/IndiaPersonalFinance threads on YNAB were surfaced in this search (results were US-Reddit). The claim that Indian YNAB users rely on manual entry is inferred from the absence of Indian bank Plaid support, not a direct Indian-user testimonial.</li>
+    <li>"Amazon acquired Axio in 2025" appeared in one secondary blog (<a href="https://getfinny.app/blog/best-expense-tracker-apps-india-2026">Finny</a>) but could not be verified against a primary news source — treat with caution.</li>
+    <li>The "80% abandon within a month" and "average person tries 3 apps" figures come from <a href="https://www.gotaprob.com/problems/budgeting-apps-too-complicated">gotaprob</a>, an analysis blog rather than a peer-reviewed study — strong directional signal, not a hard primary stat.</li>
+    <li>All UPI/Autopay/credit-card statistics are from NPCI/RBI/SBI Research/primary news and are recent (2024–2026).</li>
+  </ul>
+</section>
+
+<div class="footer">
+  <p>Prepared July 2026 to inform SpendWise's product direction. This document cites only public sources and contains no user data. Companion files: <code>docs/RESEARCH.md</code> (Markdown mirror) and the implementation plan in <code>.claude/plans/</code>.</p>
+  <p>Open this file directly in any browser; it is fully self-contained (no external CSS/JS) and print-friendly.</p>
+</div>
+
+</div>
+</body>
+</html>

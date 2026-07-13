@@ -10,15 +10,15 @@ import '../../../state/dues_providers.dart';
 import '../../../widgets/swipe_action_button.dart';
 import '../../../state/manage_providers.dart';
 import '../../../state/prefs_providers.dart';
+import '../../../app/widgets/spendwise_sheet.dart';
 
 Future<void> showSettleSheet(
   BuildContext context, {
   required DueContact contact,
   required List<DueEntry> entries,
 }) {
-  return showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
+  return showSpendWiseSheet(
+    context,
     builder: (context) => _SettleSheet(contact: contact, entries: entries),
   );
 }

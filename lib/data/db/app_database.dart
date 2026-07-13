@@ -9,19 +9,29 @@ import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
 import 'package:uuid/uuid.dart';
 
 import 'daos/accounts_dao.dart';
+import 'daos/ai_messages_dao.dart';
+import 'daos/ai_threads_dao.dart';
 import 'daos/budgets_dao.dart';
 import 'daos/categories_dao.dart';
+import 'daos/custom_reports_dao.dart';
 import 'daos/dues_dao.dart';
+import 'daos/goals_dao.dart';
 import 'daos/modes_dao.dart';
+import 'daos/recurring_items_dao.dart';
 import 'daos/tags_dao.dart';
 import 'daos/transactions_dao.dart';
 import 'tables/accounts_table.dart';
+import 'tables/ai_messages_table.dart';
+import 'tables/ai_threads_table.dart';
 import 'tables/budgets_table.dart';
 import 'tables/categories_table.dart';
+import 'tables/custom_reports_table.dart';
 import 'tables/due_contacts_table.dart';
 import 'tables/due_entries_table.dart';
 import 'tables/due_settlements_table.dart';
+import 'tables/goals_table.dart';
 import 'tables/modes_table.dart';
+import 'tables/recurring_items_table.dart';
 import 'tables/tags_table.dart';
 import 'tables/transaction_tags_table.dart';
 import 'tables/transactions_table.dart';
@@ -40,6 +50,11 @@ part 'app_database.g.dart';
     DueContacts,
     DueEntries,
     DueSettlements,
+    AiThreads,
+    AiMessages,
+    RecurringItems,
+    Goals,
+    CustomReports,
   ],
   daos: [
     AccountsDao,
@@ -49,6 +64,11 @@ part 'app_database.g.dart';
     TransactionsDao,
     BudgetsDao,
     DuesDao,
+    AiThreadsDao,
+    AiMessagesDao,
+    RecurringItemsDao,
+    GoalsDao,
+    CustomReportsDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -59,7 +79,7 @@ class AppDatabase extends _$AppDatabase {
   static const kTransferCategoryId = 'system-transfer-cat-0000-000000000001';
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -141,6 +161,43 @@ class AppDatabase extends _$AppDatabase {
             if (!names.contains('phones')) {
               await m.addColumn(dueContacts, dueContacts.phones);
             }
+          }
+          if (from < 12) {
+            // AI Copilot chat history: two brand-new tables (no existing rows
+            // to migrate, so plain createTable is safe — no ALTER COLUMN
+            // concerns). Threads hold metadata; messages hold the per-chat
+            // turns. Deletion of a thread removes its messages in a transaction
+            // in the repository (no FK declared).
+            await m.createTable(aiThreads);
+            await m.createTable(aiMessages);
+          }
+          if (from < 13) {
+            // Bills & subscription reminders: a brand-new table (no existing
+            // rows to migrate). All nullable-or-defaulted columns except the
+            // required id/name/amount/categoryId/nextDueDate/createdAt/updatedAt,
+            // so plain createTable is safe — no NOT NULL-without-DEFAULT risk.
+            // Detected items are seeded lazily from the user's expense history
+            // by RecurringRepository.autoRefreshFromTransactions() on first
+            // open post-upgrade (idempotent).
+            await m.createTable(recurringItems);
+          }
+          if (from < 14) {
+            // Goals & savings targets: a brand-new table (no existing rows to
+            // migrate). All nullable-or-defaulted columns except the required
+            // id/name/targetAmount/createdAt/updatedAt, so plain createTable is
+            // safe — no NOT NULL-without-DEFAULT risk. No PII; never in the AI
+            // schema metadata.
+            await m.createTable(goals);
+          }
+          if (from < 15) {
+            // Custom Reports: a brand-new table (no existing rows to migrate).
+            // Stores user-authored report specs as JSON — field refs + filters
+            // only, no PII (no notes / contact names / receipt paths / raw
+            // rows), and never sent to the AI. All columns are non-nullable but
+            // have no NOT NULL-without-DEFAULT risk: id/name/specJson/
+            // createdAt/updatedAt are required at insert by the DAO, so plain
+            // createTable is safe.
+            await m.createTable(customReports);
           }
         },
       );

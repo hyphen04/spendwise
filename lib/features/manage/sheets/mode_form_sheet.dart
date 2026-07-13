@@ -4,12 +4,11 @@ import '../../../data/db/app_database.dart';
 import '../../../data/validators.dart';
 import '../../../state/manage_providers.dart';
 import '../../../app/utils/feedback.dart';
+import '../../../app/widgets/spendwise_sheet.dart';
 
 Future<void> showModeFormSheet(BuildContext context, {Mode? editing}) {
-  return showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
+  return showSpendWiseSheet(
+    context,
     builder: (_) => _ModeFormSheet(editing: editing),
   );
 }
@@ -77,7 +76,6 @@ class _ModeFormSheetState extends ConsumerState<_ModeFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final isEditing = widget.editing != null;
 
     return Padding(
@@ -91,17 +89,6 @@ class _ModeFormSheetState extends ConsumerState<_ModeFormSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: cs.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
               Text(
                 isEditing ? 'Edit Payment Mode' : 'New Payment Mode',
                 style: Theme.of(context).textTheme.titleLarge,

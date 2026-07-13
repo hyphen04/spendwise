@@ -7,6 +7,7 @@ import '../../app/themes/app_colors.dart';
 import '../../app/utils/feedback.dart';
 import '../../app/widgets/load_more_button.dart';
 import '../../app/widgets/screen_header.dart';
+import '../../app/widgets/spendwise_sheet.dart';
 import '../../app/utils/infinite_scroll.dart';
 import '../../data/db/app_database.dart';
 import '../../data/models/transaction_row.dart';
@@ -21,7 +22,17 @@ import 'widgets/transaction_tile.dart';
 
 // ── Filter state ───────────────────────────────────────────────────────────────
 
-enum _DateRange { all, today, week, month, quarter, year, lastMonth, lastQuarter, custom }
+enum _DateRange {
+  all,
+  today,
+  week,
+  month,
+  quarter,
+  year,
+  lastMonth,
+  lastQuarter,
+  custom
+}
 
 class _Filters {
   const _Filters({
@@ -181,10 +192,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     }
 
     if (_filters.minAmount != null) {
-      out = out.where((r) => r.transaction.amount >= _filters.minAmount!).toList();
+      out = out
+          .where((r) => r.transaction.amount >= _filters.minAmount!)
+          .toList();
     }
     if (_filters.maxAmount != null) {
-      out = out.where((r) => r.transaction.amount <= _filters.maxAmount!).toList();
+      out = out
+          .where((r) => r.transaction.amount <= _filters.maxAmount!)
+          .toList();
     }
 
     if (_searchQuery.isNotEmpty) {
@@ -248,56 +263,63 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               ).animate().fadeIn(duration: 220.ms),
 
               // ── Scrollable content ───────────────────────────────────
-              Expanded(child: NotificationListener<ScrollNotification>(
-            onNotification: (n) {
-              maybeLoadMore(
-                n,
-                hasMore: _visibleCount < filtered.length,
-                onLoadMore: () => setState(() => _visibleCount += _pageSize),
-              );
-              return false;
-            },
-            child: CustomScrollView(
-            slivers: [
+              Expanded(
+                  child: NotificationListener<ScrollNotification>(
+                      onNotification: (n) {
+                        maybeLoadMore(
+                          n,
+                          hasMore: _visibleCount < filtered.length,
+                          onLoadMore: () =>
+                              setState(() => _visibleCount += _pageSize),
+                        );
+                        return false;
+                      },
+                      child: CustomScrollView(
+                        slivers: [
+                          // ── Inline stats ─────────────────────────────────────────
+                          if (filtered.isNotEmpty)
+                            SliverToBoxAdapter(
+                              child: _StatsRow(
+                                  totals: totals, appColors: appColors),
+                            ),
 
-              // ── Inline stats ─────────────────────────────────────────
-              if (filtered.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: _StatsRow(totals: totals, appColors: appColors),
-                ),
+                          // ── Active filter chips ──────────────────────────────────
+                          if (_filters.hasActiveFilters)
+                            SliverToBoxAdapter(
+                              child: _ActiveFilterChips(
+                                filters: _filters,
+                                onClear: () => setState(() {
+                                  _filters = const _Filters();
+                                  _visibleCount = _pageSize;
+                                }),
+                              ),
+                            ),
 
-              // ── Active filter chips ──────────────────────────────────
-              if (_filters.hasActiveFilters)
-                SliverToBoxAdapter(
-                  child: _ActiveFilterChips(
-                    filters: _filters,
-                    onClear: () => setState(() {
-                      _filters = const _Filters();
-                      _visibleCount = _pageSize;
-                    }),
-                  ),
-                ),
+                          // ── List / empty state ───────────────────────────────────
+                          if (filtered.isEmpty)
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: _EmptyState(
+                                hasFilter: _filters.hasActiveFilters ||
+                                    _searchQuery.isNotEmpty,
+                                onAdd: () =>
+                                    showAddEditTransactionSheet(context),
+                                onClear: () =>
+                                    setState(() => _filters = const _Filters()),
+                              ),
+                            )
+                          else
+                            ..._groupedSlivers(filtered, cs),
 
-              // ── List / empty state ───────────────────────────────────
-              if (filtered.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: _EmptyState(
-                    hasFilter: _filters.hasActiveFilters || _searchQuery.isNotEmpty,
-                    onAdd: () => showAddEditTransactionSheet(context),
-                    onClear: () => setState(() => _filters = const _Filters()),
-                  ),
-                )
-              else
-                ..._groupedSlivers(filtered, cs),
-
-              SliverToBoxAdapter(
-                child: SizedBox(height: MediaQuery.paddingOf(context).bottom + 96),
-              ),
+                          SliverToBoxAdapter(
+                            child: SizedBox(
+                                height:
+                                    MediaQuery.paddingOf(context).bottom + 96),
+                          ),
+                        ],
+                      ))),
             ],
-          ))),
-          ],
-        );
+          );
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -382,9 +404,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final cats = ref.read(categoriesStreamProvider).valueOrNull ?? [];
     final accs = ref.read(accountsStreamProvider).valueOrNull ?? [];
 
-    final result = await showModalBottomSheet<_Filters>(
-      context: context,
-      isScrollControlled: true,
+    final result = await showSpendWiseSheet<_Filters>(
+      context,
+      showChrome: false,
       builder: (_) => _FilterSheet(
         initial: _filters,
         categories: cats,
@@ -398,8 +420,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       });
     }
   }
-
-
 }
 
 // ── Header ─────────────────────────────────────────────────────────────────────
@@ -443,8 +463,10 @@ class _Header extends StatelessWidget {
                 style: GoogleFonts.plusJakartaSans(fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Search transactions…',
-                  hintStyle: GoogleFonts.plusJakartaSans(fontSize: 14, color: cs.onSurfaceVariant),
-                  prefixIcon: Icon(Icons.search_rounded, size: 18, color: cs.onSurfaceVariant),
+                  hintStyle: GoogleFonts.plusJakartaSans(
+                      fontSize: 14, color: cs.onSurfaceVariant),
+                  prefixIcon: Icon(Icons.search_rounded,
+                      size: 18, color: cs.onSurfaceVariant),
                   border: InputBorder.none,
                   isCollapsed: true,
                   contentPadding: const EdgeInsets.symmetric(vertical: 13),
@@ -574,7 +596,8 @@ class _ActiveFilterChips extends StatelessWidget {
     final chips = <String>[];
     if (filters.kind != 'all') chips.add(_kindLabel(filters.kind));
     if (filters.dateRange != _DateRange.all) {
-      if (filters.dateRange == _DateRange.custom && filters.customFrom != null) {
+      if (filters.dateRange == _DateRange.custom &&
+          filters.customFrom != null) {
         chips.add(
             '${_shortDate(filters.customFrom!)} – ${_shortDate(filters.customTo ?? filters.customFrom!)}');
       } else {
@@ -604,8 +627,8 @@ class _ActiveFilterChips extends StatelessWidget {
                 children: chips.map((label) {
                   return Container(
                     margin: const EdgeInsets.only(right: 6),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: cs.primary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
@@ -836,141 +859,135 @@ class _FilterSheetState extends State<_FilterSheet> {
             color: cs.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 12, bottom: 4),
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: cs.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
+          child: SafeArea(
+            top: true,
+            bottom: false,
+            child: Column(
+              children: [
+                const SpendWiseSheetChrome(),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Filters',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: cs.onSurface,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (_f.hasActiveFilters)
+                        TextButton(
+                          onPressed: () => setState(() {
+                            _f = const _Filters();
+                            _minCtrl.clear();
+                            _maxCtrl.clear();
+                          }),
+                          child: const Text('Reset all'),
+                        ),
+                    ],
                   ),
                 ),
-              ),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                child: Row(
-                  children: [
-                    Text(
-                      'Filters',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: cs.onSurface,
-                      ),
-                    ),
-                    const Spacer(),
-                    if (_f.hasActiveFilters)
-                      TextButton(
-                        onPressed: () => setState(() {
-                          _f = const _Filters();
-                          _minCtrl.clear();
-                          _maxCtrl.clear();
-                        }),
-                        child: const Text('Reset all'),
-                      ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              Expanded(
-                child: ListView(
-                  controller: scrollCtrl,
-                  padding: const EdgeInsets.all(20),
-                  children: [
-                    _Section(label: 'Type'),
-                    const SizedBox(height: 10),
-                    _KindRow(
-                      selected: _f.kind,
-                      onChanged: (v) =>
-                          setState(() => _f = _f.copyWith(kind: v)),
-                    ),
-                    const SizedBox(height: 20),
-                    _Section(label: 'Date range'),
-                    const SizedBox(height: 10),
-                    _DateRangeGrid(
-                      selected: _f.dateRange,
-                      onChanged: (v) =>
-                          setState(() => _f = _f.copyWith(dateRange: v)),
-                      onCustomTap: _pickCustomRange,
-                      customLabel: _f.dateRange == _DateRange.custom &&
-                              _f.customFrom != null
-                          ? '${_shortDate(_f.customFrom!)} – ${_shortDate(_f.customTo ?? _f.customFrom!)}'
-                          : null,
-                    ),
-                    if (widget.categories.isNotEmpty) ...[
-                      const SizedBox(height: 20),
-                      _Section(label: 'Categories'),
+                const Divider(height: 1),
+                Expanded(
+                  child: ListView(
+                    controller: scrollCtrl,
+                    padding: const EdgeInsets.all(20),
+                    children: [
+                      _Section(label: 'Type'),
                       const SizedBox(height: 10),
-                      _MultiSelect<Category>(
-                        items: widget.categories,
-                        selected: _f.categoryIds,
-                        labelOf: (c) => c.name,
-                        iconOf: (c) => c.icon,
-                        idOf: (c) => c.id,
-                        onChanged: (ids) =>
-                            setState(() => _f = _f.copyWith(categoryIds: ids)),
+                      _KindRow(
+                        selected: _f.kind,
+                        onChanged: (v) =>
+                            setState(() => _f = _f.copyWith(kind: v)),
                       ),
-                    ],
-                    if (widget.accounts.isNotEmpty) ...[
                       const SizedBox(height: 20),
-                      _Section(label: 'Accounts'),
+                      _Section(label: 'Date range'),
                       const SizedBox(height: 10),
-                      _MultiSelect<Account>(
-                        items: widget.accounts,
-                        selected: _f.accountIds,
-                        labelOf: (a) => a.name,
-                        iconOf: (a) => a.icon,
-                        idOf: (a) => a.id,
-                        onChanged: (ids) =>
-                            setState(() => _f = _f.copyWith(accountIds: ids)),
+                      _DateRangeGrid(
+                        selected: _f.dateRange,
+                        onChanged: (v) =>
+                            setState(() => _f = _f.copyWith(dateRange: v)),
+                        onCustomTap: _pickCustomRange,
+                        customLabel: _f.dateRange == _DateRange.custom &&
+                                _f.customFrom != null
+                            ? '${_shortDate(_f.customFrom!)} – ${_shortDate(_f.customTo ?? _f.customFrom!)}'
+                            : null,
                       ),
-                    ],
-                    const SizedBox(height: 20),
-                    _Section(label: 'Amount range'),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _AmountField(
-                            ctrl: _minCtrl,
-                            hint: 'Min (₹)',
-                            onChanged: (v) => setState(() => _f = v == null
-                                ? _f.copyWith(clearMin: true)
-                                : _f.copyWith(minAmount: v)),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _AmountField(
-                            ctrl: _maxCtrl,
-                            hint: 'Max (₹)',
-                            onChanged: (v) => setState(() => _f = v == null
-                                ? _f.copyWith(clearMax: true)
-                                : _f.copyWith(maxAmount: v)),
-                          ),
+                      if (widget.categories.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        _Section(label: 'Categories'),
+                        const SizedBox(height: 10),
+                        _MultiSelect<Category>(
+                          items: widget.categories,
+                          selected: _f.categoryIds,
+                          labelOf: (c) => c.name,
+                          iconOf: (c) => c.icon,
+                          idOf: (c) => c.id,
+                          onChanged: (ids) => setState(
+                              () => _f = _f.copyWith(categoryIds: ids)),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 32),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                    20, 12, 20, MediaQuery.paddingOf(context).bottom + 16),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: () => Navigator.pop(context, _f),
-                    child: const Text('Apply filters'),
+                      if (widget.accounts.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        _Section(label: 'Accounts'),
+                        const SizedBox(height: 10),
+                        _MultiSelect<Account>(
+                          items: widget.accounts,
+                          selected: _f.accountIds,
+                          labelOf: (a) => a.name,
+                          iconOf: (a) => a.icon,
+                          idOf: (a) => a.id,
+                          onChanged: (ids) =>
+                              setState(() => _f = _f.copyWith(accountIds: ids)),
+                        ),
+                      ],
+                      const SizedBox(height: 20),
+                      _Section(label: 'Amount range'),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _AmountField(
+                              ctrl: _minCtrl,
+                              hint: 'Min (₹)',
+                              onChanged: (v) => setState(() => _f = v == null
+                                  ? _f.copyWith(clearMin: true)
+                                  : _f.copyWith(minAmount: v)),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _AmountField(
+                              ctrl: _maxCtrl,
+                              hint: 'Max (₹)',
+                              onChanged: (v) => setState(() => _f = v == null
+                                  ? _f.copyWith(clearMax: true)
+                                  : _f.copyWith(maxAmount: v)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                    ],
                   ),
                 ),
-              ),
-            ],
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                      20, 12, 20, MediaQuery.paddingOf(context).bottom + 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(context, _f),
+                      child: const Text('Apply filters'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -1026,9 +1043,7 @@ class _KindRow extends StatelessWidget {
               decoration: BoxDecoration(
                 color: active ? cs.primary : cs.surfaceContainer,
                 borderRadius: BorderRadius.circular(12),
-                border: active
-                    ? null
-                    : Border.all(color: cs.outlineVariant),
+                border: active ? null : Border.all(color: cs.outlineVariant),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1092,14 +1107,11 @@ class _DateRangeGrid extends StatelessWidget {
             onTap: () => onChanged(value),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 160),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 color: active ? cs.primary : cs.surfaceContainer,
                 borderRadius: BorderRadius.circular(10),
-                border: active
-                    ? null
-                    : Border.all(color: cs.outlineVariant),
+                border: active ? null : Border.all(color: cs.outlineVariant),
               ),
               child: Text(
                 label,
@@ -1131,9 +1143,8 @@ class _DateRangeGrid extends StatelessWidget {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: selected == _DateRange.custom
-                    ? cs.onPrimary
-                    : cs.onSurface,
+                color:
+                    selected == _DateRange.custom ? cs.onPrimary : cs.onSurface,
               ),
             ),
           ),
@@ -1181,14 +1192,11 @@ class _MultiSelect<T> extends StatelessWidget {
           },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(
               color: active ? cs.primary : cs.surfaceContainer,
               borderRadius: BorderRadius.circular(10),
-              border: active
-                  ? null
-                  : Border.all(color: cs.outline),
+              border: active ? null : Border.all(color: cs.outline),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -1230,8 +1238,8 @@ class _AmountField extends StatelessWidget {
       keyboardType: TextInputType.number,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle:
-            GoogleFonts.plusJakartaSans(fontSize: 13, color: cs.onSurfaceVariant),
+        hintStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 13, color: cs.onSurfaceVariant),
         filled: true,
         fillColor: cs.surfaceContainer,
         border: OutlineInputBorder(
@@ -1292,8 +1300,18 @@ String _dateRangeLabel(_DateRange r) => switch (r) {
 
 String _shortDate(DateTime d) {
   const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
   return '${d.day} ${months[d.month - 1]} ${d.year}';
 }
@@ -1322,6 +1340,16 @@ String _fmt(double v) {
 }
 
 const _months = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ];

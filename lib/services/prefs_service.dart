@@ -74,4 +74,55 @@ class PrefsService {
   /// only and never uploaded.
   bool get contactAccess => _prefs.getBool('contact_access') ?? false;
   Future<void> setContactAccess(bool v) => _prefs.setBool('contact_access', v);
+
+  // ── AI Copilot (non-secret config; the API key is NOT stored here — it
+  // lives in SecureStorageService). AI is entirely opt-in and off by default.
+  bool get aiEnabled => _prefs.getBool('ai_enabled') ?? false;
+  Future<void> setAiEnabled(bool v) => _prefs.setBool('ai_enabled', v);
+
+  /// Provider preset id: 'openai' | 'openrouter' | 'groq' | 'gemini' | 'custom'.
+  String get aiProvider => _prefs.getString('ai_provider') ?? 'openai';
+  Future<void> setAiProvider(String v) => _prefs.setString('ai_provider', v);
+
+  /// Optional base-URL override; null/empty → use the preset default.
+  String? get aiBaseUrl => _prefs.getString('ai_base_url');
+  Future<void> setAiBaseUrl(String? v) async {
+    if (v == null || v.isEmpty) {
+      await _prefs.remove('ai_base_url');
+    } else {
+      await _prefs.setString('ai_base_url', v);
+    }
+  }
+
+  /// Optional model override; null/empty → use the preset default.
+  String? get aiModel => _prefs.getString('ai_model');
+  Future<void> setAiModel(String? v) async {
+    if (v == null || v.isEmpty) {
+      await _prefs.remove('ai_model');
+    } else {
+      await _prefs.setString('ai_model', v);
+    }
+  }
+
+  /// Whether the user allows category/account/mode names to be sent to the LLM
+  /// (anonymized rank keys are sent otherwise). Notes, contact names, phone
+  /// numbers and photos are ALWAYS stripped regardless of this toggle.
+  bool get aiShareNames => _prefs.getBool('ai_share_names') ?? false;
+  Future<void> setAiShareNames(bool v) => _prefs.setBool('ai_share_names', v);
+
+  /// Whether the AI Report may propose its own chart layout (the LLM emits a
+  /// chart spec; the app executes it on-device). Off by default — the report
+  /// uses a safe fixed default spec, so charts always render even with AI off.
+  /// The LLM still only sees schema metadata + opaque labels; it never sees raw
+  /// rows or real amounts.
+  bool get aiSpecEnabled => _prefs.getBool('ai_spec_enabled') ?? false;
+  Future<void> setAiSpecEnabled(bool v) => _prefs.setBool('ai_spec_enabled', v);
+
+  /// Whether the AI may author read-only SQL queries against the user's data
+  /// (the opt-in `customSql` provider). Off by default. Even when on, queries
+  /// run through the [SqlGuard] safety pipeline: single-statement, SELECT-only,
+  /// blocked keywords/tables/columns, auto-LIMIT, timeout. Results never leave
+  /// the device. Requires [aiSpecEnabled] to be meaningful.
+  bool get aiCustomSql => _prefs.getBool('ai_custom_sql') ?? false;
+  Future<void> setAiCustomSql(bool v) => _prefs.setBool('ai_custom_sql', v);
 }

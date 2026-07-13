@@ -362,6 +362,92 @@ class ReportsRepository {
         .toList();
   }
 
+  /// Per-day expense totals over [from, to), keyed by ISO date "yyyy-MM-dd".
+  /// One grouped query — used by the forecast day-grid (monthly + yearly)
+  /// to color each cell by spend intensity. Income/transfer rows are excluded;
+  /// only `expense` rows count toward the heatmap.
+  Future<Map<String, double>> dailyExpenseByDay({
+    required String from,
+    required String to,
+  }) async {
+    final rows = await _db.customSelect(
+      "SELECT substr(transaction_date,1,10) AS d, COALESCE(SUM(amount),0) AS total "
+      "FROM transactions WHERE kind = 'expense' "
+      "AND transaction_date >= ? AND transaction_date < ? GROUP BY d",
+      variables: [Variable.withString(from), Variable.withString(to)],
+    ).get();
+    return {
+      for (final r in rows)
+        r.data['d'] as String: (r.data['total'] as num).toDouble(),
+    };
+  }
+
+  /// Total income + expense over [from, to) in a single grouped query.
+  Future<({double income, double expense})> incomeExpenseInRange({
+    required String from,
+    required String to,
+  }) async {
+    final rows = await _db.customSelect(
+      "SELECT kind, COALESCE(SUM(amount),0) AS total FROM transactions "
+      "WHERE kind IN ('income','expense') "
+      "AND transaction_date >= ? AND transaction_date < ? GROUP BY kind",
+      variables: [Variable.withString(from), Variable.withString(to)],
+    ).get();
+    double income = 0, expense = 0;
+    for (final r in rows) {
+      if (r.data['kind'] == 'income') {
+        income = (r.data['total'] as num).toDouble();
+      } else if (r.data['kind'] == 'expense') {
+        expense = (r.data['total'] as num).toDouble();
+      }
+    }
+    return (income: income, expense: expense);
+  }
+
+  /// Count of `expense` transactions over [from, to). Used for the AI payload's
+  /// `tx_frequency` aggregate. Reads only `kind` + `transaction_date` — no
+  /// notes, no contact data, no raw rows leave the device.
+  Future<int> expenseCountInRange({
+    required String from,
+    required String to,
+  }) async {
+    final row = await _db.customSelect(
+      "SELECT COUNT(*) AS cnt FROM transactions "
+      "WHERE kind = 'expense' "
+      "AND transaction_date >= ? AND transaction_date < ?",
+      variables: [Variable.withString(from), Variable.withString(to)],
+    ).getSingle();
+    return (row.data['cnt'] as int?) ?? 0;
+  }
+
+  /// Current balance per active account (`opening_balance` + net of all
+  /// transactions on the account). Used for the AI payload's
+  /// `account_balances` aggregate — names are labelized on-device by the
+  /// builder and never sent as raw names unless `shareNames` is on. No notes
+  /// or contact data are read.
+  Future<List<({String id, String name, double balance})>>
+      accountBalances() async {
+    final rows = await _db.customSelect(
+      "SELECT a.id AS id, a.name AS name, "
+      "a.opening_balance + COALESCE(SUM(CASE "
+      "WHEN t.kind IN ('income','transfer_in') THEN t.amount "
+      "WHEN t.kind IN ('expense','transfer_out') THEN -t.amount "
+      "ELSE 0 END), 0) AS balance "
+      "FROM accounts a "
+      "LEFT JOIN transactions t ON t.account_id = a.id "
+      "WHERE a.is_archived = 0 "
+      "GROUP BY a.id, a.name, a.opening_balance "
+      "ORDER BY a.name",
+    ).get();
+    return rows
+        .map((r) => (
+              id: r.data['id'] as String,
+              name: r.data['name'] as String? ?? '',
+              balance: (r.data['balance'] as num).toDouble(),
+            ))
+        .toList();
+  }
+
   Future<List<ExportRow>> transactionsForExport({
     required String from,
     required String to,
