@@ -302,9 +302,10 @@ class AiToolExecutor {
       default:
         return AiToolResult(body: {'error': 'Unknown group_by: $groupBy'}, isError: true);
     }
-    final capped = rows.take(_maxRows).toList();
+    final capped = <Map<String, Object?>>[...rows.take(_maxRows)];
     if (rows.length > _maxRows) {
       final otherAmt = rows.skip(_maxRows).fold<double>(0, (s, r) => s + (r['amount'] as double));
+      _emit(otherAmt);
       capped.add({'id': 'other', 'amount': otherAmt});
     }
     final withPct = capped.map((r) {
@@ -365,9 +366,10 @@ class AiToolExecutor {
           'count': e.count,
         };
       }).toList();
-      final capped = mapped.take(_maxGroup).toList();
+      final capped = <Map<String, Object?>>[...mapped.take(_maxGroup)];
       if (mapped.length > _maxGroup) {
         final otherAmt = mapped.skip(_maxGroup).fold<double>(0, (s, m) => s + (m['amount'] as double));
+        _emit(otherAmt);
         final otherCnt = src.skip(_maxGroup).fold<int>(0, (s, m) => s + m.count);
         capped.add({'id': 'other', 'amount': otherAmt, 'count': otherCnt});
       }
@@ -403,13 +405,15 @@ class AiToolExecutor {
       _emit(b.spent);
       _emit(b.effectiveAmount);
       if (shareNames) _emitName(b.categoryName);
+      final overBy = b.isOver ? b.spent - b.effectiveAmount : null;
+      if (overBy != null) _emit(overBy);
       return {
         'id': _labelOf(b.budget.categoryId, 'category'),
         if (shareNames) 'name': b.categoryName,
         'spent': b.spent,
         'effective': b.effectiveAmount,
         'over': b.isOver,
-        if (b.isOver) 'over_by': b.spent - b.effectiveAmount,
+        if (overBy != null) 'over_by': overBy,
       };
     }).toList();
     return AiToolResult(

@@ -178,4 +178,62 @@ void main() {
     expect((goals[0] as Map)['target'], 60000);
     expect(r.body.toString(), isNot(contains('Phone')));
   });
+
+  // Locking test for Task 5 I1: the `other` rollup amount must be _emit-ed into
+  // gatekeeper sentAmounts so a reply quoting it isn't false-flagged. Seeds 21
+  // categories (> _maxRows of 20) with equal 100 spends so `otherAmt` = 100.
+  test('breakdown(>20 categories) emits the `other` rollup into amounts', () async {
+    // Build a fresh DB + executor with 21 categories + matching labels.
+    final db2 = AppDatabase(NativeDatabase.memory());
+    await db2.customSelect('SELECT 1').get();
+    final reports2 = ReportsRepository(db2);
+    final budgets2 = BudgetsRepository(db2);
+    await db2.into(db2.accounts).insert(AccountsCompanion.insert(
+        id: 'a1', name: 'HDFC', icon: '💳', color: '#059669', createdAt: 0, updatedAt: 0));
+    await db2.into(db2.modes).insert(ModesCompanion.insert(
+        id: 'm-upi', name: 'UPI', icon: '📱', createdAt: 0, updatedAt: 0));
+
+    final labelMap = <String, String>{};
+    final dirCats = <({String id, String name})>[];
+    for (var i = 0; i < 21; i++) {
+      final id = 'c-$i';
+      final label = 'cat_$i';
+      labelMap[label] = id;
+      dirCats.add((id: id, name: 'Cat$i'));
+      await db2.into(db2.categories).insert(CategoriesCompanion.insert(
+          id: id, name: 'Cat$i', icon: '🔹', createdAt: 0, updatedAt: 0));
+      await db2.into(db2.transactions).insert(TransactionsCompanion.insert(
+        id: 'tx-$i', amount: 100, transactionDate: '2026-10-05T10:00:00.000',
+        accountId: 'a1', categoryId: id, modeId: 'm-upi',
+        kind: const Value('expense'), createdAt: 0, updatedAt: 0,
+      ));
+    }
+
+    final exec2 = AiToolExecutor(
+      reports: reports2, budgets: budgets2,
+      directory: AiMentionData(
+        categories: dirCats,
+        accounts: const [(id: 'a1', name: 'HDFC')],
+        modes: const [(id: 'm-upi', name: 'UPI')],
+        tags: const [],
+        categoryAmount: const {}, modeAmount: const {}, tagAmount: const {}, accountBalance: const {},
+      ),
+      goals: const [], bills: const [],
+      labelToId: labelMap, shareNames: false,
+    );
+
+    final r = await exec2.execute('breakdown', {
+      'group_by': 'category', 'from': '2026-10-01', 'to': '2026-11-01',
+    });
+    expect(r.isError, isFalse);
+    final rows = r.body['rows']! as List;
+    // 20 top rows + 1 `other` rollup.
+    expect(rows.length, 21);
+    final otherRow = rows.last as Map;
+    expect(otherRow['id'], 'other');
+    expect(otherRow['amount'], 100);
+    // The rollup figure must be in the emitted amounts set (the fix).
+    expect(r.amounts, contains(100.0));
+    await db2.close();
+  });
 }
