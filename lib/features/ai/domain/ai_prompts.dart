@@ -190,33 +190,9 @@ Tone: no shame. Frame anything over-budget as observation, not failure. Keep
 titles neutral and useful.
 ''';
 
-/// System prompt for the insight-polish pass (Phase 5). The local insight text
-/// is anonymized before this call (real category/mode names replaced by opaque
-/// labels like `cat_0` / `mode_1`); the LLM rewrites each insight as a clearer,
-/// more actionable coaching nudge and MUST preserve the opaque labels verbatim
-/// so they can be restored to real names on-device afterward.
-const String kInsightPolishSystemPrompt = '''
-You are SpendWise's private money coach. You are given pre-computed local
-insights about the user's spending. Each insight's category and payment-mode
-names have been replaced with opaque labels (cat_0, mode_1, …). Rewrite each
-insight as a clearer, more actionable coaching nudge.
-
-Rules:
-- Return ONLY a JSON array of objects, each with "title" and "body" string
-  fields, in the SAME order and the SAME count as the input. No commentary,
-  no markdown fences, nothing outside the array.
-- Preserve the opaque labels (cat_0, mode_1, …) VERBATIM — do not rephrase,
-  rename, merge, or drop them.
-- Do NOT invent numbers, dates, categories, or new insights. Use only the
-  figures and facts already present in each input insight.
-- Keep each title short (at most 8 words) and each body to 1–2 sentences.
-- Never reference notes, contact names, phone numbers, or photos — you do not
-  have and will never receive that information.
-''';
-
-/// System prompt for the optional weekly-digest polish pass (Phase 5). Same
-/// privacy contract as the insight polish: opaque labels only, no invented
-/// facts, no-shame tone. The LLM rewrites a single {title, body} pair.
+/// System prompt for the optional weekly-digest polish pass (Phase 5). Opaque
+/// labels only, no invented facts, no-shame tone. The LLM rewrites a single
+/// {title, body} pair.
 const String kDigestPolishSystemPrompt = '''
 You are SpendWise's private money coach. You are given a pre-computed weekly
 spending digest. Any category or payment-mode name has been replaced with an

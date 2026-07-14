@@ -1,11 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/db/app_database.dart';
-import '../data/models/report_models.dart';
 import '../data/repositories/ai_chat_repository.dart';
 import '../features/ai/domain/ai_config.dart';
 import '../features/ai/domain/ai_report_data.dart';
-import '../features/ai/domain/local_insight_engine.dart';
 import '../features/ai/domain/llm_client.dart';
 import '../services/secure_storage_service.dart';
 import 'database_provider.dart'; // appDatabaseProvider
@@ -165,61 +163,6 @@ final aiTestConnectionProvider =
   }
 });
 
-/// Locally-computed smart insights — the no-API-key, no-network path.
-///
-/// Runs the deterministic [LocalInsightEngine] detectors over the app's own
-/// aggregations for the current month. Reacts to transaction and budget
-/// changes. Nothing here touches the network; it works for every user even
-/// when AI is disabled.
-final aiInsightsProvider =
-    FutureProvider<List<AiInsight>>((ref) async {
-  // Reactive: re-run whenever transactions or budgets change.
-  ref.watch(allTransactionsStreamProvider);
-  ref.watch(budgetsStreamProvider);
-
-  final repo = ref.read(reportsRepositoryProvider);
-  final budgetsRepo = ref.read(budgetsRepositoryProvider);
-
-  final now = DateTime.now();
-  final year = now.year;
-  final month = now.month;
-  final monthDate = DateTime(year, month);
-
-  final results = <AiInsight>[];
-
-  // 1) Budget trajectory (current month).
-  final budgets = await budgetsRepo.progressForMonth(monthDate);
-  results.addAll(LocalInsightEngine.budgetTrajectory(budgets, now));
-
-  // 2) Spending spikes: current month vs trailing 3 months (per category).
-  final curFrom = DateTime(year, month).toIso8601String();
-  final curTo = DateTime(year, month + 1).toIso8601String();
-  final currentCats =
-      await repo.categoryBreakdown(from: curFrom, to: curTo, kind: 'expense');
-  final trailingCats = <List<CategoryTotal>>[];
-  for (int i = 1; i <= 3; i++) {
-    final p = DateTime(year, month - i); // Dart normalizes month underflow.
-    final pf = DateTime(p.year, p.month).toIso8601String();
-    final pt = DateTime(p.year, p.month + 1).toIso8601String();
-    trailingCats
-        .add(await repo.categoryBreakdown(from: pf, to: pt, kind: 'expense'));
-  }
-  results.addAll(LocalInsightEngine.spendingSpikes(currentCats, trailingCats));
-
-  // 3) Recurring payments over the last 6 months of expenses (local only).
-  final recStart = DateTime(year, month - 5);
-  final recFrom = DateTime(recStart.year, recStart.month).toIso8601String();
-  final recTo = DateTime(year, month + 1).toIso8601String();
-  final expenses =
-      await repo.transactionsForExport(from: recFrom, to: recTo, kind: 'expense');
-  results.addAll(LocalInsightEngine.recurringPayments(expenses));
-
-  // 4) Savings-rate trend (rolling 6-month cashflow).
-  final cashflow = await repo.cashFlowMonths();
-  results.addAll(LocalInsightEngine.savingsTrend(cashflow));
-
-  return results;
-});
 // ── AI Copilot chat history (threads + messages) ──────────────────────────
 
 final aiChatRepositoryProvider = Provider<AiChatRepository>(

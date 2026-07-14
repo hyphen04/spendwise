@@ -8,7 +8,7 @@ import 'modes_table.dart';
 /// monthly, rent ₹12000 monthly, electricity quarterly).
 ///
 /// Rows come from two sources:
-/// - `source = 'detected'` — seeded by [LocalInsightEngine.recurringPayments]
+/// - `source = 'detected'` — seeded by [LocalInsightEngine.detectRecurring]
 ///   over the user's expense history (one-time on upgrade to schema v13).
 /// - `source = 'manual'` — the user added it themselves.
 ///

@@ -4,7 +4,6 @@ import '../features/ai/presentation/ai_chat_list_screen.dart';
 import '../features/ai/presentation/ai_chat_screen.dart';
 import '../features/ai/presentation/ai_report_screen.dart';
 import '../features/ai/presentation/ai_settings_screen.dart';
-import '../features/ai/presentation/insight_viewer_screen.dart';
 import '../features/bills/bills_screen.dart';
 import '../features/digest/digest_preview_screen.dart';
 import '../features/dues/dues_screen.dart';
@@ -157,15 +156,6 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/ai/report',
         pageBuilder: (context, state) => _aiPage(state, const AiReportScreen()),
-      ),
-      // Smart Insights fullscreen (WhatsApp-status-style) viewer — pushed
-      // top-level from the Reports hub's compact "Smart Insights" entry card.
-      GoRoute(
-        name: 'ai-insights',
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/ai/insights',
-        pageBuilder: (context, state) =>
-            _aiPage(state, const InsightViewerScreen()),
       ),
     ],
   );

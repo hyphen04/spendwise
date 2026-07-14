@@ -297,7 +297,7 @@ accounts, categories, modes, budgets, contacts, due entries).
   `AiToolExecutor` / `AiToolRunner` / `ai_tool_catalog.dart` /
   `ai_tool_protocol.dart` / the tool-calling controller path.
 - **On-device restore + validation.** `AiGatekeeper` runs on **every** LLM text
-  surface (chat replies, polished insights, digest polish, report `title`/
+  surface (chat replies, digest polish, report `title`/
   `caption`/`narrativeSeed`, report narrative) to restore opaque labels + scrub
   PII + sanity-check numbers — **no surface bypasses the gatekeeper.** In
   addition to the existing empty/garbage, leftover-label, PII-scrub, and
@@ -309,9 +309,9 @@ accounts, categories, modes, budgets, contacts, due entries).
   - **Hallucinated-name detection** (only when `shareNames` is on) — flags
     category/account/mode/tag/goal/bill names in the reply that are not in the
     `sentNameVocabulary` the payload sent.
-  The insight/digest polish paths run their LLM reply through `AiGatekeeper`
+  The digest polish path runs its LLM reply through `AiGatekeeper`
   (built from the `InsightAnonymizer` legend) for `restore` **and** `check` —
-  adding PII-scrub + numeric sanity to polish/digest for the first time.
+  adding PII-scrub + numeric sanity to digest polish.
   `InsightAnonymizer` stays as the legend builder; its direct `restore` call
   sites are replaced by the gatekeeper (one legend mechanic, one validator).
   The legend map never leaves the device.
@@ -412,11 +412,6 @@ track, reconciles shared files in a final merge phase, and signals merge-ready
 - **Track 1 — AI core:** `pubspec.yaml`, `lib/features/ai/domain/**`,
   `lib/features/ai/services/**`, `lib/features/ai/presentation/ai_chat_screen.dart`
   + `ai_report_screen.dart`, new `lib/features/ai/widgets/ai_markdown.dart`.
-- **Track 2 — Smart Insights fullscreen viewer:**
-  `lib/features/ai/presentation/ai_insights_section.dart`,
-  `lib/features/ai/widgets/ai_insight_card.dart`, new
-  `lib/features/ai/presentation/insight_viewer_screen.dart` +
-  `lib/features/ai/widgets/insight_status_page.dart`, the `/ai/insights` route.
 - **Track 3 — Reports hub + Custom Report builder:**
   `lib/features/reports/reports_screen.dart`,
   `lib/features/reports/widgets/report_card.dart`, new

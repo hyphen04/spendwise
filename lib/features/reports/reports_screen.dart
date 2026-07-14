@@ -7,7 +7,6 @@ import '../../data/db/app_database.dart';
 import '../../state/ai_providers.dart';
 import '../../state/custom_report_providers.dart';
 import '../../state/period_providers.dart';
-import '../ai/presentation/ai_insights_section.dart';
 import 'widgets/report_card.dart';
 
 import 'reports/account_statement_report.dart';
@@ -56,13 +55,8 @@ class ReportsScreen extends ConsumerWidget {
             ),
           ),
 
-          // ── Smart Insights (local, no API key) — swipeable stack ───
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
-          SliverToBoxAdapter(child: _SectionHeader('SMART INSIGHTS', cs)),
-          const AiInsightsSection(),
-          const SliverToBoxAdapter(child: SizedBox(height: 28)),
-
           // ── AI Copilot (two compact side-by-side entry cards) ───────
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
           SliverToBoxAdapter(child: _SectionHeader('AI COPILOT', cs)),
           SliverToBoxAdapter(
             child: Padding(
