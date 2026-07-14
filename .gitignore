@@ -55,7 +55,9 @@ switch_fonts.py
 .env
 DESIGN.md
 
-# Claude Code scratch worktrees + local state (do not commit)
-.claude/worktrees/
-.claude/settings.local.json
+# Claude Code local state (do not commit — kept local only)
+.claude/
 .superpowers/
+
+# Old research/planning docs (removed from repo)
+docs/
