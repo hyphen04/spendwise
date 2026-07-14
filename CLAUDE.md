@@ -158,6 +158,31 @@ Run this checklist **every time** you modify a Drift table definition:
 
 ### Migration history (additive entries)
 
+- **v11 → v12 — `ai_threads` + `ai_messages` tables (additive).** `m.createTable`
+  for both in `onUpgrade`. New tables `lib/data/db/tables/ai_threads_table.dart`
+  (`id`, `title`, `preview`, `createdAt`, `updatedAt`) and
+  `ai_messages_table.dart` (`id`, `threadId`, `role`, `content`, `isError`,
+  `createdAt`). Local user chat content only — the hidden, anonymized context
+  preamble is rebuilt in memory per session and is never persisted. DAOs
+  `AiThreadsDao` / `AiMessagesDao`. These are PII tables (chat content) —
+  **never listed in `schema_metadata`**, never queried by AI tools.
+- **v12 → v13 — `recurring_items` table (additive).** `m.createTable` in
+  `onUpgrade`. New table `lib/data/db/tables/recurring_items_table.dart`:
+  `id`, `name`, `amount`, `categoryId`, `accountId?`, `modeId?`, `cadence`,
+  `nextDueDate`, `lastSeenDate?`, `source`, `isActive`, `note`, `createdAt`,
+  `updatedAt`. No NOT NULL columns without a default. Detected recurring items
+  are seeded idempotently on first open of the Bills screen / "Re-detect" from
+  existing expense history; nothing is deleted. No PII beyond the user's own
+  bill names/amounts; the `note` field is on-device only. The table is
+  **never listed in `schema_metadata`** and never queried by AI tools — it
+  reaches the AI only as anonymized `bill_N` aggregates via `AiPayloadBuilder`.
+- **v13 → v14 — `goals` table (additive).** `m.createTable` in `onUpgrade`.
+  New table `lib/data/db/tables/goals_table.dart`: `id`, `name`, `icon`,
+  `color`, `targetAmount`, `savedAmount`, `targetDate?`, `linkedAccountId?`,
+  `monthlyCommitment?`, `isActive`, `createdAt`, `updatedAt`. No NOT NULL
+  columns without a default. No PII. The table is **never listed in
+  `schema_metadata`** and never queried by AI tools — it reaches the AI only
+  as anonymized `goal_N` aggregates via `AiPayloadBuilder`. DAO `GoalsDao`.
 - **v14 → v15 — `custom_reports` table (additive).** `m.createTable(customReports)`
   in `onUpgrade`. New table `lib/data/db/tables/custom_reports_table.dart`:
   `id`, `name`, `specJson` (TEXT), `createdAt`, `updatedAt`. No PII (the spec is
@@ -236,6 +261,41 @@ accounts, categories, modes, budgets, contacts, due entries).
   `mode_count` / `tag_count` scalars and a 12-month cashflow series — privacy is
   unchanged (same aggregates + opaque labels, just more of them; the name↔label
   legend still leaves only with `shareNames`).
+- **On-device tool-calling (Phase 2).** The chat may now answer questions the
+  static snapshot can't (other months, arbitrary date ranges, filtered
+  counts/totals, refreshed goal/bill status) by having the LLM emit a
+  provider-agnostic JSON tool-call `{"tool","args"}`; the app runs a **fixed
+  named query on-device** and feeds the **anonymized result back** as a
+  `[Tool result…]` user message, then re-requests (≤4 rounds, buffered /
+  non-streaming while tools are on). This is **not** a second outbound
+  boundary and introduces no new real names, notes, or raw rows:
+  `AiToolExecutor` (`lib/features/ai/tools/ai_tool_executor.dart`) is the
+  on-device execution boundary — it dispatches by a closed string `switch`
+  over seven named tools (`list_entities` / `breakdown` / `monthly_totals` /
+  `filtered_totals` / `budget_status` / `goals_overview` / `bills_overview`)
+  to existing repository methods, **never** LLM-authored SQL (the opt-in
+  `customSql` dynamic-report path is separate and stays gated by
+  `aiCustomSql` + `sql_guard`). Tool results are aggregates + opaque labels
+  only (`cat_0`/`acc_1`/…; real names gated by `shareNames`); they never
+  `SELECT note`/`receipt_path` and never touch `due_*`/`ai_*`/`goals`/
+  `recurring_items` tables. `AiToolRunner`
+  (`lib/features/ai/tools/ai_tool_runner.dart`) only ever calls
+  `LlmClient.complete` with `preamble + history` and appends the executor's
+  anonymized `body` — it never injects raw data. The on-device `labelToId`
+  (the inverse of `_Labeler`'s six id→label maps, exposed via `AiContext`
+  but **never serialized into the outbound JSON**) resolves the LLM's opaque
+  labels back to real ids for the fixed queries. The gatekeeper's
+  `sentAmounts`/`sentNameVocabulary` merge the tool-emitted figures/names
+  (on top of the snapshot's `collectAmounts`) so a final answer quoting a
+  tool figure is accepted, not flagged. Gated by the on-by-default
+  `aiToolCalling` pref (Settings → "Allow AI to look up my data"); when off,
+  the chat uses the static-snapshot streaming path + `kAskSystemPrompt`
+  unchanged. `kAskToolSystemPrompt` is `kAskSystemPrompt` + the tool catalog
+  + the JSON protocol — it inherits the "use opaque labels / never invent
+  figures / never claim a category doesn't exist" rules verbatim, no
+  weakening. Run `spendwise-privacy-audit` after any change to
+  `AiToolExecutor` / `AiToolRunner` / `ai_tool_catalog.dart` /
+  `ai_tool_protocol.dart` / the tool-calling controller path.
 - **On-device restore + validation.** `AiGatekeeper` runs on **every** LLM text
   surface (chat replies, polished insights, digest polish, report `title`/
   `caption`/`narrativeSeed`, report narrative) to restore opaque labels + scrub
