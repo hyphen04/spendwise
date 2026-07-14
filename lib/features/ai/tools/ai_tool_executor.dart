@@ -176,6 +176,10 @@ class AiToolExecutor {
     throw _ToolError('Bad number for $key: $v.');
   }
 
+  /// Round to one decimal place — bit-for-bit identical to
+  /// `AiPayloadBuilder._round1` so executor `pct` matches the builder's `pct`.
+  static double _round1(double v) => (v * 10).round() / 10;
+
   // ── Tools ─────────────────────────────────────────────────────────────────
 
   AiToolResult _listEntities(Map<String, Object?> args) {
@@ -312,7 +316,7 @@ class AiToolExecutor {
       final amt = r['amount'] as double;
       return {
         ...r,
-        'pct': totalForPct > 0 ? (amt / totalForPct * 100).roundToDouble() / 10 : 0.0,
+        'pct': totalForPct > 0 ? _round1(amt / totalForPct * 100) : 0.0,
       };
     }).toList();
     return AiToolResult(
@@ -437,7 +441,7 @@ class AiToolExecutor {
         'id': label,
         'target': g.target,
         'saved': g.saved,
-        'pct': g.target > 0 ? (g.saved / g.target * 100).roundToDouble() / 10 : 0.0,
+        'pct': g.target > 0 ? _round1(g.saved / g.target * 100) : 0.0,
         if (g.monthsLeft != null) 'months_left': g.monthsLeft,
         if (g.monthlyCommitment != null) 'monthly_commitment': g.monthlyCommitment,
       };

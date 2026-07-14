@@ -93,6 +93,13 @@ void main() {
     expect(json, isNot(contains('c-food')));
     // Emitted amounts are returned for gatekeeper merging.
     expect(r.amounts, contains(3000.0));
+    // Locking test for the pct 10x bug: pct must match AiPayloadBuilder._round1
+    // (one decimal place), not the old 10x-too-small formula. c-food=3000 of
+    // 5500 total → 54.5, c-fuel=2500 of 5500 → 45.5.
+    final foodRow = rows.firstWhere((m) => (m as Map)['id'] == 'cat_1') as Map;
+    expect(foodRow['pct'], 54.5);
+    final fuelRow = rows.firstWhere((m) => (m as Map)['id'] == 'cat_0') as Map;
+    expect(fuelRow['pct'], 45.5);
   });
 
   test('filtered_totals with a label filter resolves cat_0 -> c-fuel', () async {
@@ -176,6 +183,9 @@ void main() {
     final goals = r.body['goals']! as List;
     expect((goals[0] as Map)['id'], 'goal_0');
     expect((goals[0] as Map)['target'], 60000);
+    // Locking test for the pct 10x bug: 15000/60000 = 25.0 (matches
+    // AiPayloadBuilder._round1), not the old 2.5 (10x too small).
+    expect((goals[0] as Map)['pct'], 25.0);
     expect(r.body.toString(), isNot(contains('Phone')));
   });
 
