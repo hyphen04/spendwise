@@ -125,4 +125,12 @@ class PrefsService {
   /// the device. Requires [aiSpecEnabled] to be meaningful.
   bool get aiCustomSql => _prefs.getBool('ai_custom_sql') ?? false;
   Future<void> setAiCustomSql(bool v) => _prefs.setBool('ai_custom_sql', v);
+
+  /// Whether the AI Copilot chat may call on-device lookup tools to answer
+  /// questions (any category, any date range, filtered totals, goal status).
+  /// On by default — tools return aggregates only (no rows, notes, contacts, or
+  /// real names unless `aiShareNames` is also on). When off, the chat uses a
+  /// static snapshot only.
+  bool get aiToolCalling => _prefs.getBool('ai_tool_calling') ?? true;
+  Future<void> setAiToolCalling(bool v) => _prefs.setBool('ai_tool_calling', v);
 }

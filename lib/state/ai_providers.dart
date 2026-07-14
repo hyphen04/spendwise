@@ -77,6 +77,21 @@ class AiCustomSqlNotifier extends StateNotifier<bool> {
   }
 }
 
+/// Whether the AI Copilot chat may call on-device lookup tools. On by default
+/// (privacy-safe — aggregates only). See [PrefsService.aiToolCalling].
+final aiToolCallingProvider =
+    StateNotifierProvider<AiToolCallingNotifier, bool>(
+        (ref) => AiToolCallingNotifier(ref.watch(prefsServiceProvider)));
+
+class AiToolCallingNotifier extends StateNotifier<bool> {
+  AiToolCallingNotifier(this._prefs) : super(_prefs.aiToolCalling);
+  final PrefsService _prefs;
+  Future<void> set(bool v) async {
+    await _prefs.setAiToolCalling(v);
+    state = v;
+  }
+}
+
 /// Resolved (non-secret) AI config from the prefs-stored provider/base/model.
 /// Watches [aiShareNamesProvider] so flipping the "Share names" toggle takes
 /// effect immediately (the toggle's notifier updates prefs + state; this

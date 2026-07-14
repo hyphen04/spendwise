@@ -102,6 +102,19 @@ class AiSettingsSection extends ConsumerWidget {
           ),
           const Divider(height: 1),
           SwitchListTile(
+            title: const Text('Allow AI to look up my data'),
+            subtitle: const Text(
+                'Lets the chat AI run read-only lookups on your device to '
+                'answer questions about any category, date range, or filtered '
+                'totals — and help plan around goals and budgets. Your data '
+                'never leaves; lookups return aggregates only (no notes, '
+                'contacts, or raw rows). On by default.'),
+            secondary: const Icon(Icons.manage_search_outlined),
+            value: ref.watch(aiToolCallingProvider),
+            onChanged: (v) => ref.read(aiToolCallingProvider.notifier).set(v),
+          ),
+          const Divider(height: 1),
+          SwitchListTile(
             title: const Text('Dynamic charts (experimental)'),
             subtitle: const Text(
                 'The AI proposes which charts to show for your month, using '
