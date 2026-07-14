@@ -19,6 +19,8 @@ import '../domain/ai_mention_resolver.dart';
 import '../domain/ai_payload_builder.dart';
 import '../domain/ai_prompts.dart';
 import '../domain/llm_client.dart';
+import '../tools/ai_tool_executor.dart';
+import '../tools/ai_tool_runner.dart';
 import 'ai_context_gatherer.dart';
 
 /// A visible chat message. `id` is the persisted DB row id ('' for transient
@@ -115,6 +117,13 @@ class AskChatNotifier extends StateNotifier<AskConversationState> {
   /// category the user names without the legend ever leaving. Built once per
   /// session alongside the preamble.
   AiMentionResolver? _resolver;
+
+  // Inputs for the tool executor, captured in _buildContext so the executor can
+  // be built without re-gathering. All on-device-only; never sent wholesale.
+  AiMentionData? _mentionData;
+  Map<String, String> _labelToId = const {};
+  List<GoalSummary> _goals = const [];
+  List<BillSummary> _bills = const [];
 
   // Base gatekeeper params (stable for the session); the per-stream gatekeeper
   // is rebuilt from these + the current question's resolved mentions.
@@ -250,8 +259,11 @@ class AskChatNotifier extends StateNotifier<AskConversationState> {
 
     if (!_contextSent) {
       final context = await _buildContext(config);
+      final toolCallingOn = _ref.read(aiToolCallingProvider);
       _preamble = [
-        ChatMessage(role: 'system', content: kAskSystemPrompt),
+        ChatMessage(
+            role: 'system',
+            content: toolCallingOn ? kAskToolSystemPrompt : kAskSystemPrompt),
         ChatMessage(
             role: 'user',
             content:
@@ -265,6 +277,8 @@ class AskChatNotifier extends StateNotifier<AskConversationState> {
       _contextSent = true;
     }
 
+    final toolCallingOn = _ref.read(aiToolCallingProvider);
+
     // History = all persisted (non-placeholder) messages so far.
     final history = state.messages
         .map((m) => ChatMessage(role: m.role, content: m.content))
@@ -277,12 +291,20 @@ class AskChatNotifier extends StateNotifier<AskConversationState> {
     // the user's real names and the anonymized labels the LLM holds, without
     // leaking the legend (only names the user typed are reused). Also rebuild
     // the gatekeeper so a reply quoting the note's figures/names passes.
+    // Runs in BOTH modes (it composes with tools: the note bridges names the
+    // user typed to the labels the LLM holds, regardless of whether tools run).
     final resolution = _resolveLastUserMessage(history);
     if (resolution != null) {
       _gatekeeper =
           _buildGatekeeper(resolution.amounts, resolution.matchedNames);
     }
 
+    if (toolCallingOn) {
+      await _streamReplyWithTools(config, history);
+      return;
+    }
+
+    // ── Tools OFF: today's streaming path (unchanged) ──
     final requestMessages = [..._preamble, ...history];
 
     state = state.copyWith(
@@ -293,6 +315,118 @@ class AskChatNotifier extends StateNotifier<AskConversationState> {
       isLoading: true,
     );
 
+    await _sub?.cancel();
+    final client = _ref.read(aiClientProvider);
+    _sub = client.stream(config, requestMessages).listen(
+      _onChunk,
+      onError: (Object e) => _failLast(_errorMessage(e)),
+      onDone: () {
+        if (state.isLoading) _finishLast();
+      },
+    );
+  }
+
+  /// Tool-calling path: buffered (non-streaming) rounds via [AiToolRunner].
+  /// Shows a "Looking up your data…" status during tool rounds, then renders the
+  /// final answer whole (restored + gatekeeper-checked) and persists it. The
+  /// runner is the only thing that touches the LLM here; the preamble's context
+  /// JSON is the already-built anonymized payload, and tool_result messages are
+  /// the executor's anonymized `body` (aggregates + opaque labels only) — so
+  /// [AiPayloadBuilder] remains the sole outbound constructor.
+  Future<void> _streamReplyWithTools(
+      AiConfig config, List<ChatMessage> history) async {
+    final mentionData = _mentionData;
+    if (mentionData == null) {
+      // No context yet (shouldn't happen — _buildContext ran). Fall back to the
+      // streaming path so the user still gets a reply.
+      final requestMessages = [..._preamble, ...history];
+      _streamFallback(config, requestMessages);
+      return;
+    }
+    final executor = AiToolExecutor(
+      reports: _ref.read(reportsRepositoryProvider),
+      budgets: _ref.read(budgetsRepositoryProvider),
+      directory: mentionData,
+      goals: _goals,
+      bills: _bills,
+      labelToId: _labelToId,
+      shareNames: config.shareNames,
+    );
+    // The runner's gatekeeperBuilder expects (Set<double>, Set<String>);
+    // _buildGatekeeper takes (Set<double>, List<String>) — adapt at the call
+    // site only (don't touch the runner or the existing _buildGatekeeper sites).
+    final runner = AiToolRunner(
+      client: _ref.read(aiClientProvider),
+      config: config,
+      executor: executor,
+      gatekeeperBuilder: (a, n) => _buildGatekeeper(a, n.toList()),
+      onStatus: (s) {
+        // Show the status as a transient streaming bubble that gets replaced.
+        final messages = List<AskMessage>.of(state.messages);
+        if (messages.isNotEmpty && messages.last.streaming) {
+          messages[messages.length - 1] = AskMessage(
+              role: 'assistant', content: s, streaming: true, isError: false);
+        } else {
+          messages.add(AskMessage(role: 'assistant', content: s, streaming: true));
+        }
+        state = state.copyWith(messages: messages, isLoading: true);
+      },
+    );
+
+    state = state.copyWith(
+      messages: [
+        ...state.messages,
+        const AskMessage(role: 'assistant', content: '', streaming: true),
+      ],
+      isLoading: true,
+    );
+
+    try {
+      final res = await runner.run(preamble: _preamble, history: history);
+      if (!mounted) return;
+      final check = res.check;
+      final messages = List<AskMessage>.of(state.messages);
+      // Empty reply → drop the placeholder and finish quietly.
+      if (res.content.isEmpty) {
+        messages.removeLast();
+        state = state.copyWith(messages: messages, isLoading: false);
+        return;
+      }
+      if (check.severity == AiCheckSeverity.bad) {
+        messages[messages.length - 1] = AskMessage(
+            role: 'assistant', content: check.issues.join(' '), isError: true);
+        state = state.copyWith(messages: messages, isLoading: false);
+        return;
+      }
+      final saved = await _ref
+          .read(aiChatRepositoryProvider)
+          .addAssistantMessage(_threadId, res.content);
+      if (!mounted) return;
+      messages[messages.length - 1] = AskMessage(
+        role: 'assistant',
+        content: res.content,
+        id: saved.id,
+        createdAt: saved.createdAt,
+        streaming: false,
+      );
+      state = state.copyWith(messages: messages, isLoading: false);
+    } on LlmException catch (e) {
+      _failLast(e.userMessage);
+    } catch (e) {
+      _failLast('Something went wrong. Try again.');
+    }
+  }
+
+  /// Streaming fallback used only if the tool path can't run (no context).
+  Future<void> _streamFallback(
+      AiConfig config, List<ChatMessage> requestMessages) async {
+    state = state.copyWith(
+      messages: [
+        ...state.messages,
+        const AskMessage(role: 'assistant', content: '', streaming: true),
+      ],
+      isLoading: true,
+    );
     await _sub?.cancel();
     final client = _ref.read(aiClientProvider);
     _sub = client.stream(config, requestMessages).listen(
@@ -459,6 +593,13 @@ class AskChatNotifier extends StateNotifier<AskConversationState> {
       allTags: mentionData.tags,
     );
     _resolver = AiMentionResolver(data: mentionData, legend: ctx.legend);
+
+    // Cache the tool-executor inputs (on-device only) so a tool-calling stream
+    // can build the executor without re-gathering the directory/legend/goals.
+    _mentionData = mentionData;
+    _labelToId = ctx.labelToId;
+    _goals = extras.goals;
+    _bills = extras.recurringBills;
 
     // Store the stable gatekeeper base; the per-stream gatekeeper is rebuilt
     // from these + the current question's resolved mentions (so a reply that
