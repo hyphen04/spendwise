@@ -124,25 +124,15 @@ void main() {
     // The note is never returned by filteredTotals (no note field in the result).
   });
 
-  test('filteredTotals: tagId filter narrows to tagged transactions', () async {
-    // Tag tx1 (2000) and tx3 (3000) with tag 't-work'; leave tx2 (500) untagged.
-    await db.into(db.tags).insert(
-            TagsCompanion.insert(id: 't-work', name: 'Work', createdAt: 0, updatedAt: 0));
-    await db.into(db.transactionTags).insert(
-            TransactionTagsCompanion.insert(transactionId: 'tx1', tagId: 't-work'));
-    await db.into(db.transactionTags).insert(
-            TransactionTagsCompanion.insert(transactionId: 'tx3', tagId: 't-work'));
+  test('filteredTotals: modeId filter narrows to one payment mode', () async {
+    // All three October txs use m-upi, so the filter keeps them all.
     final r = await repo.filteredTotals(
       from: '2026-10-01T00:00:00.000',
       to: '2026-11-01T00:00:00.000',
       kind: 'expense',
-      tagId: 't-work',
+      modeId: 'm-upi',
     );
-    expect(r.count, 2); // tx1 + tx3 (tx2 untagged, excluded)
-    expect(r.total, 5000);
-    final byTag = r.byTag;
-    final work = byTag.firstWhere((t) => t.id == 't-work');
-    expect(work.amount, 5000);
-    expect(work.count, 2);
+    expect(r.count, 3); // tx1 + tx2 + tx3
+    expect(r.total, 5500);
   });
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 
 class DateStrip extends StatelessWidget {
   const DateStrip({super.key, required this.selected, required this.onSelect});
@@ -74,7 +74,7 @@ class DateStrip extends StatelessWidget {
               child: Text(
                 label,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                   fontSize: 11,
                   fontWeight: active ? FontWeight.w700 : FontWeight.w400,
                   color: active ? cs.onPrimary : cs.onSurfaceVariant,

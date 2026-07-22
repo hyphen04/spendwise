@@ -1,12 +1,10 @@
 import 'package:drift/drift.dart';
 import '../app_database.dart';
 import '../tables/transactions_table.dart';
-import '../tables/transaction_tags_table.dart';
-import '../tables/tags_table.dart';
 
 part 'transactions_dao.g.dart';
 
-@DriftAccessor(tables: [Transactions, TransactionTags, Tags])
+@DriftAccessor(tables: [Transactions])
 class TransactionsDao extends DatabaseAccessor<AppDatabase>
     with _$TransactionsDaoMixin {
   TransactionsDao(super.db);
@@ -112,34 +110,6 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase>
       ],
     ).getSingleOrNull();
     return result?.data['id'] as String?;
-  }
-
-  // --- Tags ---
-
-  Future<List<Tag>> getTagsForTransaction(String transactionId) async {
-    final tagIds = await (select(transactionTags)
-          ..where((tt) => tt.transactionId.equals(transactionId)))
-        .get();
-    if (tagIds.isEmpty) return [];
-    final ids = tagIds.map((tt) => tt.tagId).toList();
-    return (select(tags)..where((t) => t.id.isIn(ids))).get();
-  }
-
-  Future<void> setTagsForTransaction(
-    String transactionId,
-    List<String> tagIds,
-  ) async {
-    await (delete(transactionTags)
-          ..where((tt) => tt.transactionId.equals(transactionId)))
-        .go();
-    for (final tagId in tagIds) {
-      await into(transactionTags).insert(
-        TransactionTagsCompanion.insert(
-          transactionId: transactionId,
-          tagId: tagId,
-        ),
-      );
-    }
   }
 
   /// Returns the date of the oldest transaction, or null if table is empty.

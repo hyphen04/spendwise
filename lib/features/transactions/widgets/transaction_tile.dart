@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 import '../../../app/themes/app_colors.dart';
+import '../../../app/utils/money_format.dart';
 import '../../../data/models/transaction_row.dart';
 
 /// Flat monochrome transaction row — no card, no shadow, no colored amounts.
@@ -109,12 +110,12 @@ class TransactionTile extends StatelessWidget {
                   _HighlightText(
                     text: isTransfer ? '${row.accountName} ⇄ ${row.transferPairAccountName}' : row.categoryName,
                     highlight: highlight,
-                    baseStyle: GoogleFonts.plusJakartaSans(
+                    baseStyle: plusJakartaSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: cs.onSurface,
                     ),
-                    matchStyle: GoogleFonts.plusJakartaSans(
+                    matchStyle: plusJakartaSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                       color: cs.onSurface,
@@ -126,12 +127,12 @@ class TransactionTile extends StatelessWidget {
                   _HighlightText(
                     text: tx.note.isNotEmpty ? tx.note : (isTransfer ? 'Transfer' : row.accountName),
                     highlight: highlight,
-                    baseStyle: GoogleFonts.plusJakartaSans(
+                    baseStyle: plusJakartaSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
                       color: cs.onSurfaceVariant,
                     ),
-                    matchStyle: GoogleFonts.plusJakartaSans(
+                    matchStyle: plusJakartaSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: cs.onSurfaceVariant,
@@ -146,7 +147,7 @@ class TransactionTile extends StatelessWidget {
             // Amount — colored by kind
             Text(
               '$sign₹${_fmtAmt(tx.amount)}',
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
                 color: amountColor,
@@ -207,10 +208,6 @@ class _HighlightText extends StatelessWidget {
   }
 }
 
-String _fmtAmt(double v) {
-  if (v >= 10000000) return '${(v / 10000000).toStringAsFixed(1)}Cr';
-  if (v >= 100000) return '${(v / 100000).toStringAsFixed(1)}L';
-  if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
-  if (v == v.truncateToDouble()) return v.toInt().toString();
-  return v.toStringAsFixed(2);
-}
+// Full Indian-grouped amount (no K/L/Cr abbreviation) so each transaction's
+// value is clearly readable. See `fmtGrouped` in money_format.dart.
+String _fmtAmt(double v) => fmtGrouped(v);

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 
 /// Full-screen welcome page shown before the onboarding slides.
 /// Matches the "mibu" reference: big lowercase wordmark, tagline, and floating
@@ -29,7 +29,7 @@ class WelcomeScreen extends StatelessWidget {
               children: [
                 Text(
                   'spendwise',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 44,
                     fontWeight: FontWeight.w800,
                     color: cs.onSurface,
@@ -43,7 +43,7 @@ class WelcomeScreen extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(
                   'your minimal money tracker',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
                     color: cs.onSurfaceVariant,
@@ -68,7 +68,7 @@ class WelcomeScreen extends StatelessWidget {
               ),
               child: Text(
                 'Get started',
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),
@@ -134,7 +134,7 @@ class _FloatingPill extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: cs.surface,

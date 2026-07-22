@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 
 import '../../../app/utils/money_format.dart';
 import '../../../utils/color_utils.dart';
@@ -100,7 +100,7 @@ class CustomReportChart extends StatelessWidget {
                       _shortLabel(shown[i].label),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: plusJakartaSans(
                           fontSize: 10, color: cs.onSurfaceVariant),
                     ),
                   );
@@ -224,7 +224,7 @@ class CustomReportChart extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(
                       _shortLabel(rows[i].label),
-                      style: GoogleFonts.plusJakartaSans(
+                      style: plusJakartaSans(
                           fontSize: 10, color: cs.onSurfaceVariant),
                     ),
                   );
@@ -272,10 +272,10 @@ class CustomReportChart extends StatelessWidget {
                   child: Text(r.label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.plusJakartaSans(fontSize: 13)),
+                      style: plusJakartaSans(fontSize: 13)),
                 ),
                 Text(_formatValue(r.value),
-                    style: GoogleFonts.plusJakartaSans(
+                    style: plusJakartaSans(
                         fontSize: 12, color: cs.onSurfaceVariant)),
               ],
             ),
@@ -292,12 +292,12 @@ class CustomReportChart extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(_formatValue(value),
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 28, fontWeight: FontWeight.w800, color: color)),
         const SizedBox(height: 4),
         Text(
           '${_metricLabel(spec.metric)} of ${spec.kind.name} • ${_groupByLabel(spec.groupBy)}',
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
               fontSize: 12, color: cs.onSurfaceVariant),
         ),
       ],
@@ -367,11 +367,11 @@ class CustomReportChart extends StatelessWidget {
           const SizedBox(width: 4),
         ],
         Text(name,
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 12, fontWeight: FontWeight.w600)),
         const SizedBox(width: 6),
         Text(amount,
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 11, color: cs.onSurfaceVariant)),
       ],
     );
@@ -383,7 +383,7 @@ class CustomReportChart extends StatelessWidget {
       child: Center(
         child: Text(message,
             textAlign: TextAlign.center,
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 12, color: cs.onSurfaceVariant)),
       ),
     );
@@ -400,7 +400,6 @@ String _groupByLabel(CustomGroupBy g) => switch (g) {
       CustomGroupBy.category => 'by category',
       CustomGroupBy.account => 'by account',
       CustomGroupBy.mode => 'by mode',
-      CustomGroupBy.tag => 'by tag',
       CustomGroupBy.day => 'by day',
       CustomGroupBy.month => 'by month',
     };

@@ -8,6 +8,7 @@ import '../../../data/db/app_database.dart';
 import '../../../data/models/budget_progress.dart';
 import '../../../data/models/report_models.dart';
 import '../../../state/ai_providers.dart';
+import '../../../state/app_mode_providers.dart';
 import '../../../state/bills_providers.dart';
 import '../../../state/database_provider.dart';
 import '../../../state/goals_providers.dart';
@@ -18,6 +19,7 @@ import '../domain/ai_gatekeeper.dart';
 import '../domain/ai_mention_resolver.dart';
 import '../domain/ai_payload_builder.dart';
 import '../domain/ai_prompts.dart';
+import '../domain/label_replacer.dart';
 import '../domain/llm_client.dart';
 import '../tools/ai_tool_executor.dart';
 import '../tools/ai_tool_runner.dart';
@@ -133,7 +135,7 @@ class AskChatNotifier extends StateNotifier<AskConversationState> {
   Set<double> _baseAmounts = const {};
   bool _shareNames = false;
 
-  bool get canUseAi => _ref.read(aiEnabledProvider);
+  bool get canUseAi => _ref.read(aiEffectiveEnabledProvider);
 
   // ── Load persisted history on open ───────────────────────────────────────
 
@@ -410,6 +412,7 @@ class AskChatNotifier extends StateNotifier<AskConversationState> {
         streaming: false,
       );
       state = state.copyWith(messages: messages, isLoading: false);
+      unawaited(_maybeGenerateTitle());
     } on LlmException catch (e) {
       _failLast(e.userMessage);
     } catch (e) {
@@ -491,6 +494,7 @@ class AskChatNotifier extends StateNotifier<AskConversationState> {
       streaming: false,
     );
     state = state.copyWith(messages: messages, isLoading: false);
+    unawaited(_maybeGenerateTitle());
   }
 
   /// Show a transient (non-persisted) error bubble. If a partial reply already
@@ -510,6 +514,89 @@ class AskChatNotifier extends StateNotifier<AskConversationState> {
       messages.add(AskMessage(role: 'assistant', content: message, isError: true));
     }
     state = state.copyWith(messages: messages, isLoading: false);
+  }
+
+  /// After the opening exchange (exactly 1 user + 1 non-error assistant reply,
+  /// both persisted) completes, ask the LLM for a short, tone-matched title and
+  /// persist it. Fire-and-forget — the header watches the thread stream, so the
+  /// title updates when the call returns.
+  ///
+  /// **Privacy:** no new data leaves the device. The user's first message is
+  /// their own text (already sent during the chat). The assistant reply was
+  /// label-restored on-device before being persisted, so in anonymize-by-default
+  /// mode it carries real names the chat LLM never saw — we re-anonymize it
+  /// (name→label, via the on-device legend) before sending, so the title LLM
+  /// sees the same opaque labels the chat LLM saw. No real names leave in that
+  /// mode; in `shareNames` mode the reply goes as-is (names already permitted).
+  /// The generated title is run through the gatekeeper (restore + check) before
+  /// saving, so no LLM text surface bypasses it, and is stored locally on
+  /// `ai_threads` (a PII table — never sent back to the AI). Best-effort: any
+  /// failure leaves the existing first-message title in place.
+  Future<void> _maybeGenerateTitle() async {
+    final msgs = state.messages;
+    if (msgs.length != 2) return; // only the opening exchange
+    if (msgs[0].role != 'user' || msgs[0].id.isEmpty) return;
+    if (msgs[1].role != 'assistant' ||
+        msgs[1].id.isEmpty ||
+        msgs[1].isError) {
+      return;
+    }
+    final config = await _aiConfigWithKey();
+    if (config == null) return;
+
+    final repo = _ref.read(aiChatRepositoryProvider);
+    // Snapshot the title before the (slow) LLM call; if the user renames the
+    // thread while it's in flight, don't clobber their choice.
+    final beforeTitle = (await repo.getThread(_threadId))?.title ?? '';
+
+    try {
+      final raw = await _ref.read(aiClientProvider).complete(
+        config,
+        [
+          const ChatMessage(role: 'system', content: kTitleSystemPrompt),
+          ChatMessage(
+            role: 'user',
+            content: 'User: ${msgs[0].content}\n\n'
+                'Assistant: ${_anonymizeReplyForTitle(msgs[1].content)}\n\n'
+                'Title:',
+          ),
+        ],
+        maxTokens: 32,
+      );
+      if (!mounted) return;
+      var title = cleanThreadTitle(raw);
+      // No LLM text surface bypasses the gatekeeper: restore any labels → real
+      // names (so the saved title reads naturally) and sanity-check before save.
+      // If there's no gatekeeper (no context was built), don't save an unchecked
+      // title — leave the first-message placeholder in place.
+      final gatekeeper = _gatekeeper;
+      if (gatekeeper == null) return;
+      title = gatekeeper.restore(title);
+      final check = gatekeeper.check(title);
+      if (title.isEmpty || check.severity == AiCheckSeverity.bad) return;
+      if (title.length > 48) title = '${title.substring(0, 48)}…';
+      // Don't clobber a manual rename done while the LLM was thinking.
+      final afterTitle = (await repo.getThread(_threadId))?.title ?? '';
+      if (afterTitle != beforeTitle) return;
+      await repo.renameThread(_threadId, title);
+    } catch (_) {
+      // Best-effort — leave the first-message title in place.
+    }
+  }
+
+  /// Re-map real names → opaque labels in an assistant reply before it leaves
+  /// the device for title generation. In anonymize-by-default mode the persisted
+  /// reply has been label-restored on-device, so it carries real names the chat
+  /// LLM never saw; this reverses that (name→label via the on-device legend) so
+  /// the title LLM sees exactly what the chat LLM saw — no new names leave. In
+  /// `shareNames` mode names are already permitted to leave, so it's a passthrough.
+  String _anonymizeReplyForTitle(String reply) {
+    if (_shareNames || _legend.isEmpty) return reply;
+    final reverse = <String, String>{};
+    _legend.forEach((label, name) {
+      if (name.isNotEmpty) reverse[name] = label;
+    });
+    return LabelReplacer.replace(reply, reverse);
   }
 
   Future<AiConfig?> _aiConfigWithKey() => aiConfigWithKey(_ref);
@@ -566,7 +653,7 @@ class AskChatNotifier extends StateNotifier<AskConversationState> {
     );
 
     // Full entity directory (on-device only) — reused both for mention
-    // resolution and now for the payload's all-categories/modes/tags.
+    // resolution and now for the payload's all-categories/modes.
     final mentionData = await gatherAiMentionData(
       db: _ref.read(appDatabaseProvider),
       modeBreakdown: modes,
@@ -581,7 +668,6 @@ class AskChatNotifier extends StateNotifier<AskConversationState> {
       period: '${now.year}-${now.month.toString().padLeft(2, '0')}',
       modeBreakdown: modes,
       accountBalances: extras.accountBalances,
-      tagBreakdown: extras.tagBreakdown,
       categoryBreakdown3mo: extras.categoryBreakdown3mo,
       expenseCount: extras.expenseCount,
       daysInPeriod: extras.daysInPeriod,
@@ -590,7 +676,6 @@ class AskChatNotifier extends StateNotifier<AskConversationState> {
       recurringBills: extras.recurringBills,
       allCategories: mentionData.categories,
       allModes: mentionData.modes,
-      allTags: mentionData.tags,
     );
     _resolver = AiMentionResolver(data: mentionData, legend: ctx.legend);
 
@@ -655,4 +740,23 @@ class AskChatNotifier extends StateNotifier<AskConversationState> {
       // Best-effort cleanup; never crash on dispose.
     }
   }
+}
+
+/// Tidy a raw thread title from the LLM: trim, drop a "Title:" prefix, strip a
+/// surrounding quote pair, and remove a trailing period. Top-level so it's
+/// unit-testable without a controller harness.
+String cleanThreadTitle(String raw) {
+  var t = raw.trim();
+  if (t.toLowerCase().startsWith('title:')) {
+    t = t.substring(6).trim();
+  }
+  final doubleQuoted = t.startsWith('"') && t.endsWith('"');
+  final singleQuoted = t.startsWith("'") && t.endsWith("'");
+  if (t.length >= 2 && (doubleQuoted || singleQuoted)) {
+    t = t.substring(1, t.length - 1).trim();
+  }
+  if (t.endsWith('.') || t.endsWith('。')) {
+    t = t.substring(0, t.length - 1);
+  }
+  return t.trim();
 }

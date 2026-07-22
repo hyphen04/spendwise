@@ -35,8 +35,6 @@ numbers.
 - accounts: id, name, opening_balance (REAL), kind (TEXT enum).
 - categories: id, name, icon, color (#RRGGBB), kind (TEXT enum: income|expense).
 - modes: id, name, icon, kind (TEXT enum: income|expense).
-- tags: id, name, color.
-- transaction_tags: transaction_id, tag_id.
 - budgets: id, category_id, amount (REAL), period (TEXT: weekly|monthly|yearly).
 
 ## transaction.kind enum

@@ -60,9 +60,6 @@ MonthTotal _m(int y, int mo, double income, double expense) =>
 ModeTotal _mode(String id, String name, double total) =>
     ModeTotal(modeId: id, name: name, icon: '💳', total: total);
 
-TagTotal _tag(String id, String name, double total) =>
-    TagTotal(tagId: id, name: name, color: '#475569', total: total);
-
 AccountBalance _acc(String id, String name, double balance) =>
     (id: id, name: name, balance: balance);
 
@@ -200,7 +197,7 @@ void main() {
     });
   });
 
-  group('AiPayloadBuilder — account_balances + tags (anonymized)', () {
+  group('AiPayloadBuilder — account_balances (anonymized)', () {
     final builder = AiPayloadBuilder();
 
     test('account_balances uses acc_N and omits names', () {
@@ -221,30 +218,6 @@ void main() {
       final json = jsonEncode(payload);
       expect(json, isNot(contains('HDFC Savings')));
       expect(json, isNot(contains('Cash')));
-    });
-
-    test('tag_breakdown uses tag_N and omits names', () {
-      final payload = builder.buildAskContext(
-        summary: _summary(),
-        budgets: const [],
-        cashflow: const [],
-        period: '2026-07',
-        allTags: const [
-          (id: 't1', name: 'Essential'),
-          (id: 't2', name: 'Optional'),
-        ],
-        tagBreakdown: [
-          _tag('t1', 'Essential', 30000),
-          _tag('t2', 'Optional', 12000),
-        ],
-      ).json;
-      final tags = payload['tag_breakdown']! as List;
-      expect((tags[0] as Map)['id'], 'tag_0');
-      expect((tags[1] as Map)['id'], 'tag_1');
-      expect((tags[0] as Map)['amount'], 30000.0);
-      final json = jsonEncode(payload);
-      expect(json, isNot(contains('Essential')));
-      expect(json, isNot(contains('Optional')));
     });
   });
 
@@ -380,10 +353,8 @@ void main() {
         cashflow: [_m(2026, 6, 80000, 60000)],
         period: '2026-07',
         allModes: const [(id: 'm-upi', name: 'UPI')],
-        allTags: const [(id: 't1', name: 'Essential')],
         modeBreakdown: [_mode('m-upi', 'UPI', 52000)],
         accountBalances: [_acc('a1', 'HDFC Savings', 50000)],
-        tagBreakdown: [_tag('t1', 'Essential', 30000)],
         goals: [_goal(name: 'New Phone')],
         recurringBills: [_bill(name: 'Netflix')],
       ).json;
@@ -391,7 +362,6 @@ void main() {
       expect(legend['cat_0'], 'Food & Dining');
       expect(legend['mode_0'], 'UPI');
       expect(legend['acc_0'], 'HDFC Savings');
-      expect(legend['tag_0'], 'Essential');
       expect(legend['goal_0'], 'New Phone');
       expect(legend['bill_0'], 'Netflix');
     });

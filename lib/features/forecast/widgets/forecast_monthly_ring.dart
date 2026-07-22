@@ -1,13 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 
 import '../../../app/utils/money_format.dart';
 import '../cashflow_forecast.dart';
-
-const Color _kForecastAccent = Color(0xFF14B8A6);
-const Color _kAmber = Color(0xFFB45309);
 
 /// Compact monthly forecast visual: a progress ring showing how far through
 /// the month you are, with the projected month-end balance in the centre.
@@ -15,16 +12,19 @@ const Color _kAmber = Color(0xFFB45309);
 /// Used instead of the GitHub day-grid for the monthly mode — a single month's
 /// ~30 days don't fill a square grid nicely (either huge cells or a narrow
 /// strip), so a ring reads better. Observation tone, no alarm.
+///
+/// [accent] defaults to the theme seed (`cs.primary`) so the ring follows the
+/// user's chosen colour; pass an override only when you need a fixed hue.
 class ForecastMonthlyRing extends StatelessWidget {
   const ForecastMonthlyRing({
     super.key,
     required this.forecast,
-    this.accent = _kForecastAccent,
+    this.accent,
     this.size = 156,
   });
 
   final CashflowForecast forecast;
-  final Color accent;
+  final Color? accent;
   final double size;
 
   @override
@@ -33,7 +33,8 @@ class ForecastMonthlyRing extends StatelessWidget {
     final f = forecast;
     final hasData = f.hasData;
     final negative = f.projectedEnd < 0;
-    final endColor = negative ? _kAmber : cs.onSurface;
+    final endColor = negative ? cs.error : cs.onSurface;
+    final ringColor = accent ?? cs.primary;
     final dayFraction = f.daysInPeriod > 0
         ? (f.daysElapsed / f.daysInPeriod).clamp(0.0, 1.0)
         : 0.0;
@@ -49,7 +50,9 @@ class ForecastMonthlyRing extends StatelessWidget {
             size: Size(size, size),
             painter: _RingPainter(
               progress: dayFraction,
-              accent: hasData ? accent : accent.withValues(alpha: 0.45),
+              accent: hasData
+                  ? ringColor
+                  : ringColor.withValues(alpha: 0.45),
               track: cs.outlineVariant,
               stroke: stroke,
             ),
@@ -61,7 +64,7 @@ class ForecastMonthlyRing extends StatelessWidget {
               children: [
                 Text(
                   hasData ? 'PROJECTED' : 'AWAITING',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.2,
@@ -74,7 +77,7 @@ class ForecastMonthlyRing extends StatelessWidget {
                     fit: BoxFit.scaleDown,
                     child: Text(
                       '${negative ? '−' : ''}${fmtMoney(f.projectedEnd.abs())}',
-                      style: GoogleFonts.spaceGrotesk(
+                      style: spaceGrotesk(
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
                         color: endColor,
@@ -86,7 +89,7 @@ class ForecastMonthlyRing extends StatelessWidget {
                 else
                   Text(
                     'Log spending',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: plusJakartaSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: cs.onSurfaceVariant,
@@ -95,7 +98,7 @@ class ForecastMonthlyRing extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   hasData ? 'at month-end' : 'to see a projection',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
                     color: cs.onSurfaceVariant.withValues(alpha: 0.8),

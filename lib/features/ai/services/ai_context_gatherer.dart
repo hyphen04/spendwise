@@ -13,7 +13,6 @@ import '../domain/ai_payload_builder.dart';
 /// leave the device.
 typedef AiContextExtras = ({
   List<AccountBalance> accountBalances,
-  List<TagTotal> tagBreakdown,
   List<List<CategoryTotal>> categoryBreakdown3mo,
   int? expenseCount,
   int? daysInPeriod,
@@ -24,7 +23,7 @@ typedef AiContextExtras = ({
 
 /// Gather the extended anonymized aggregates for an AI context build, for the
 /// month `(year, month)`. Reads only safe tables (accounts, transactions,
-/// categories, modes, tags, goals, recurring_items) — never `due_*` / `ai_*`,
+/// categories, modes, goals, recurring_items) — never `due_*` / `ai_*`,
 /// never `note` / `receipt_path` / contact columns. Goal and bill names are
 /// passed to the builder solely so the on-device legend can map `goal_N` /
 /// `bill_N` back to real names; they never appear in the outbound JSON unless
@@ -46,7 +45,6 @@ Future<AiContextExtras> gatherAiContextExtras({
   final to = DateTime(year, month + 1).toIso8601String();
 
   final accountBalances = await reports.accountBalances();
-  final tagBreakdown = await reports.tagBreakdown(from: from, to: to);
   final dailyExpenseByDay =
       await reports.dailyExpenseByDay(from: from, to: to);
   final expenseCount =
@@ -97,7 +95,6 @@ Future<AiContextExtras> gatherAiContextExtras({
 
   return (
     accountBalances: accountBalances,
-    tagBreakdown: tagBreakdown,
     categoryBreakdown3mo: categoryBreakdown3mo,
     expenseCount: expenseCount,
     daysInPeriod: daysInPeriod,
@@ -112,12 +109,12 @@ Future<AiContextExtras> gatherAiContextExtras({
 /// anonymized labels/amounts the LLM holds.
 ///
 /// **Privacy contract — this is never sent to the LLM wholesale.** The
-/// directory (every active category/account/mode/tag name) stays on-device.
+/// directory (every active category/account/mode name) stays on-device.
 /// Only names the user *themselves typed* in their own message can appear in a
 /// resolver hint, and only because the user already put them in the outbound
 /// text — the legend for unmentioned entities never leaves. The amount maps are
 /// the same aggregates the payload already sends (so no new figures are
-/// exposed). Reads only the safe tables (categories/accounts/modes/tags) and the
+/// exposed). Reads only the safe tables (categories/accounts/modes) and the
 /// already-gathered [AiContextExtras] + mode breakdown — never `due_*` / `ai_*`,
 /// never `note` / `receipt_path` / contact columns.
 ///
@@ -130,7 +127,6 @@ Future<AiMentionData> gatherAiMentionData({
 }) async {
   final cats = await db.categoriesDao.getAllActive();
   final modes = await db.modesDao.getAllActive();
-  final tags = await db.tagsDao.getAllActive();
 
   // Current-month category spend: the last entry of the 3-month series is the
   // current month. Categories with no spend are simply absent (amount 0).
@@ -141,7 +137,6 @@ Future<AiMentionData> gatherAiMentionData({
     }
   }
   final modeAmount = {for (final m in modeBreakdown) m.modeId: m.total};
-  final tagAmount = {for (final t in extras.tagBreakdown) t.tagId: t.total};
   final accountBalance = {
     for (final a in extras.accountBalances) a.id: a.balance,
   };
@@ -152,10 +147,8 @@ Future<AiMentionData> gatherAiMentionData({
         .map((a) => (id: a.id, name: a.name))
         .toList(),
     modes: modes.map((m) => (id: m.id, name: m.name)).toList(),
-    tags: tags.map((t) => (id: t.id, name: t.name)).toList(),
     categoryAmount: categoryAmount,
     modeAmount: modeAmount,
-    tagAmount: tagAmount,
     accountBalance: accountBalance,
   );
 }

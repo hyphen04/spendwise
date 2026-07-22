@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 
 import '../../../app/utils/feedback.dart';
 import '../../../app/widgets/confirm_delete_dialog.dart';
@@ -35,7 +35,7 @@ class CustomReportViewScreen extends ConsumerWidget {
               data: (r) => r?.name ?? 'Report',
               orElse: () => 'Report',
             ),
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontWeight: FontWeight.w800, fontSize: 18)),
         actions: [
           IconButton(
@@ -138,8 +138,7 @@ class _SummaryStrip extends StatelessWidget {
       _rangeLabel(spec),
       if (spec.accountId != null ||
           spec.categoryId != null ||
-          spec.modeId != null ||
-          spec.tagId != null)
+          spec.modeId != null)
         'filtered',
     ];
     return Wrap(
@@ -155,7 +154,7 @@ class _SummaryStrip extends StatelessWidget {
               border: Border.all(color: cs.outlineVariant),
             ),
             child: Text(c,
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: cs.onSurfaceVariant)),
@@ -168,7 +167,6 @@ class _SummaryStrip extends StatelessWidget {
         CustomGroupBy.category => 'By category',
         CustomGroupBy.account => 'By account',
         CustomGroupBy.mode => 'By mode',
-        CustomGroupBy.tag => 'By tag',
         CustomGroupBy.day => 'By day',
         CustomGroupBy.month => 'By month',
       };

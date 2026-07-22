@@ -41,7 +41,8 @@ class DetectedRecurring {
   final String categoryName;
   final String modeName;
   final double amount;
-  final String cadence; // weekly|fortnightly|monthly|quarterly|yearly|'every N days'
+  final String
+      cadence; // weekly|fortnightly|monthly|quarterly|yearly|'every N days'
   final int occurrences;
   final String lastDate; // ISO date of the most recent matching transaction
 }

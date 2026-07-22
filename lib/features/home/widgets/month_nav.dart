@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 import '../../../app/widgets/spendwise_sheet.dart';
 import '../../../state/home_providers.dart';
 import '../../../state/period_providers.dart';
@@ -46,7 +46,7 @@ class MonthNav extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
             child: Text(
               _label(period.month, period.year),
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: cs.onSurface,
@@ -165,7 +165,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
                 ),
                 Text(
                   '$_year',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: cs.onSurface,
@@ -223,7 +223,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
                     alignment: Alignment.center,
                     child: Text(
                       names[i],
-                      style: GoogleFonts.plusJakartaSans(
+                      style: plusJakartaSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: isSelected

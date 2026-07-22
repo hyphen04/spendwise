@@ -3,7 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/models/transaction_row.dart';
@@ -134,14 +134,14 @@ class _SearchSheetState extends ConsumerState<_SearchSheet> {
                       controller: _ctrl,
                       autofocus: true,
                       onChanged: _onChanged,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: plusJakartaSans(
                         fontSize: 18,
                         fontWeight: FontWeight.w500,
                         color: cs.onSurface,
                       ),
                       decoration: InputDecoration(
                         hintText: 'Search SpendWise...',
-                        hintStyle: GoogleFonts.plusJakartaSans(
+                        hintStyle: plusJakartaSans(
                           fontSize: 18,
                           fontWeight: FontWeight.w400,
                           color: cs.onSurfaceVariant.withValues(alpha: 0.6),
@@ -387,7 +387,7 @@ class _SectionHeader extends StatelessWidget {
         children: [
           Text(
             label,
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color: cs.onSurfaceVariant,
@@ -404,7 +404,7 @@ class _SectionHeader extends StatelessWidget {
               ),
               child: Text(
                 '$count',
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   color: cs.onSurfaceVariant,
@@ -454,12 +454,12 @@ class _EntityTile extends StatelessWidget {
                   _HighlightText(
                     text: label,
                     highlight: highlight,
-                    baseStyle: GoogleFonts.plusJakartaSans(
+                    baseStyle: plusJakartaSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: cs.onSurface,
                     ),
-                    highlightStyle: GoogleFonts.plusJakartaSans(
+                    highlightStyle: plusJakartaSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: cs.onSurface,
@@ -468,7 +468,7 @@ class _EntityTile extends StatelessWidget {
                   if (sublabel != null)
                     Text(
                       sublabel!,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: plusJakartaSans(
                         fontSize: 11,
                         color: cs.onSurfaceVariant,
                       ),
@@ -535,7 +535,7 @@ class _EmptyHint extends StatelessWidget {
       child: Text(
         message,
         textAlign: TextAlign.center,
-        style: GoogleFonts.plusJakartaSans(fontSize: 14, color: cs.onSurfaceVariant),
+        style: plusJakartaSans(fontSize: 14, color: cs.onSurfaceVariant),
       ),
     );
   }

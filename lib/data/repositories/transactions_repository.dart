@@ -22,12 +22,6 @@ class TransactionsRepository {
   Future<Transaction?> getById(String id) =>
       _db.transactionsDao.getById(id);
 
-  Future<List<Tag>> getTagsFor(String transactionId) =>
-      _db.transactionsDao.getTagsForTransaction(transactionId);
-
-  Future<void> setTagsFor(String transactionId, List<String> tagIds) =>
-      _db.transactionsDao.setTagsForTransaction(transactionId, tagIds);
-
   // ── Write ops ──────────────────────────────────────────────────────────────
 
   Future<String> create({
@@ -38,7 +32,6 @@ class TransactionsRepository {
     required String modeId,
     required String kind,
     String note = '',
-    List<String> tagIds = const [],
   }) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     final id = _uuid.v4();
@@ -54,9 +47,6 @@ class TransactionsRepository {
       createdAt: now,
       updatedAt: now,
     ));
-    if (tagIds.isNotEmpty) {
-      await _db.transactionsDao.setTagsForTransaction(id, tagIds);
-    }
     return id;
   }
 
@@ -69,7 +59,6 @@ class TransactionsRepository {
     required String modeId,
     required String kind,
     required String note,
-    List<String>? tagIds,
   }) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     await _db.transactionsDao.upsert(TransactionsCompanion(
@@ -84,9 +73,6 @@ class TransactionsRepository {
       createdAt: Value(existing.createdAt),
       updatedAt: Value(now),
     ));
-    if (tagIds != null) {
-      await _db.transactionsDao.setTagsForTransaction(existing.id, tagIds);
-    }
   }
 
   /// Creates a transfer pair: expense leg from [fromAccountId] and income
@@ -181,7 +167,7 @@ class TransactionsRepository {
   }
 
   /// Creates a faithful copy of [tx] — same amount/date/account/category/mode/
-  /// note/tags. For transfers, both legs are recreated via [createTransfer].
+  /// note. For transfers, both legs are recreated via [createTransfer].
   ///
   /// The original `transactionDate` is preserved; the user can open the new row
   /// and change the date if they want it "now". Returns the new transaction id
@@ -202,7 +188,6 @@ class TransactionsRepository {
       );
       return '';
     }
-    final tagIds = await getTagsFor(tx.id);
     return create(
       amount: tx.amount,
       transactionDate: tx.transactionDate,
@@ -211,7 +196,6 @@ class TransactionsRepository {
       modeId: tx.modeId,
       kind: tx.kind,
       note: tx.note,
-      tagIds: tagIds.map((t) => t.id).toList(),
     );
   }
 

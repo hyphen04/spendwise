@@ -18,7 +18,6 @@ import 'daos/dues_dao.dart';
 import 'daos/goals_dao.dart';
 import 'daos/modes_dao.dart';
 import 'daos/recurring_items_dao.dart';
-import 'daos/tags_dao.dart';
 import 'daos/transactions_dao.dart';
 import 'tables/accounts_table.dart';
 import 'tables/ai_messages_table.dart';
@@ -30,10 +29,9 @@ import 'tables/due_contacts_table.dart';
 import 'tables/due_entries_table.dart';
 import 'tables/due_settlements_table.dart';
 import 'tables/goals_table.dart';
+import 'tables/ignored_recurring_table.dart';
 import 'tables/modes_table.dart';
 import 'tables/recurring_items_table.dart';
-import 'tables/tags_table.dart';
-import 'tables/transaction_tags_table.dart';
 import 'tables/transactions_table.dart';
 
 part 'app_database.g.dart';
@@ -43,9 +41,7 @@ part 'app_database.g.dart';
     Accounts,
     Categories,
     Modes,
-    Tags,
     Transactions,
-    TransactionTags,
     Budgets,
     DueContacts,
     DueEntries,
@@ -55,12 +51,12 @@ part 'app_database.g.dart';
     RecurringItems,
     Goals,
     CustomReports,
+    IgnoredRecurring,
   ],
   daos: [
     AccountsDao,
     CategoriesDao,
     ModesDao,
-    TagsDao,
     TransactionsDao,
     BudgetsDao,
     DuesDao,
@@ -79,7 +75,7 @@ class AppDatabase extends _$AppDatabase {
   static const kTransferCategoryId = 'system-transfer-cat-0000-000000000001';
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -198,6 +194,31 @@ class AppDatabase extends _$AppDatabase {
             // createdAt/updatedAt are required at insert by the DAO, so plain
             // createTable is safe.
             await m.createTable(customReports);
+          }
+          if (from < 16) {
+            // Tags feature removal: the tags + transaction_tags tables had no
+            // UI to create or assign tags, so they are dropped entirely. Order
+            // matters — drop the join table (transaction_tags) before its parent
+            // (tags). IF EXISTS makes this safe to re-run. Any tag data a user
+            // previously imported via JSON backup is deleted on upgrade.
+            await customStatement('DROP TABLE IF EXISTS transaction_tags');
+            await customStatement('DROP TABLE IF EXISTS tags');
+          }
+          if (from < 17) {
+            // `ignored_recurring` — categories the user marked "not a bill" so
+            // the recurring detector skips them on re-detect. Additive; no PII
+            // (category id only); never queried by AI tools / schema_metadata.
+            await m.createTable(ignoredRecurring);
+          }
+          if (from < 18) {
+            // Chat organization: pin, archive, named folder on `ai_threads`.
+            // Additive; all columns defaulted so existing rows are untouched.
+            // Local-only organizational metadata — never in schema_metadata,
+            // never read by AiPayloadBuilder / AI tools (ai_threads is a PII
+            // table kept off the AI schema entirely).
+            await m.addColumn(aiThreads, aiThreads.pinned);
+            await m.addColumn(aiThreads, aiThreads.archived);
+            await m.addColumn(aiThreads, aiThreads.folder);
           }
         },
       );

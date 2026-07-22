@@ -56,19 +56,6 @@ class DayTotal {
   double get net => income - expense;
 }
 
-class TagTotal {
-  const TagTotal({
-    required this.tagId,
-    required this.name,
-    required this.color,
-    required this.total,
-  });
-  final String tagId;
-  final String name;
-  final String color;
-  final double total;
-}
-
 class MonthlySummary {
   const MonthlySummary({
     required this.income,

@@ -84,12 +84,16 @@ class InsightAnonymizer {
 
   /// Reverse every opaque label back to its real name. Longer labels are
   /// replaced first so `cat_10` is handled before `cat_1` (the latter is a
-  /// prefix of the former and would corrupt it).
+  /// prefix of the former and would corrupt it). Case-insensitive + fuzzy so
+  /// `Cat_0` / `cate_0` / `category_0` / `cat 0` also restore, and unresolvable
+  /// label-shaped tokens are scrubbed to a noun.
   List<InsightText> restore(List<InsightText> polished) {
     return polished
         .map((p) => (
-              title: LabelReplacer.replace(p.title, _labelToName),
-              body: LabelReplacer.replace(p.body, _labelToName),
+              title: LabelReplacer.replace(p.title, _labelToName,
+                  caseInsensitive: true, fuzzy: true),
+              body: LabelReplacer.replace(p.body, _labelToName,
+                  caseInsensitive: true, fuzzy: true),
             ))
         .toList();
   }

@@ -1239,353 +1239,6 @@ class ModesCompanion extends UpdateCompanion<Mode> {
   }
 }
 
-class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $TagsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<String> id = GeneratedColumn<String>(
-      'id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
-  @override
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _colorMeta = const VerificationMeta('color');
-  @override
-  late final GeneratedColumn<String> color = GeneratedColumn<String>(
-      'color', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('#7C3AED'));
-  static const VerificationMeta _isArchivedMeta =
-      const VerificationMeta('isArchived');
-  @override
-  late final GeneratedColumn<bool> isArchived = GeneratedColumn<bool>(
-      'is_archived', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_archived" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
-  @override
-  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _updatedAtMeta =
-      const VerificationMeta('updatedAt');
-  @override
-  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
-      'updated_at', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  @override
-  List<GeneratedColumn> get $columns =>
-      [id, name, color, isArchived, createdAt, updatedAt];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'tags';
-  @override
-  VerificationContext validateIntegrity(Insertable<Tag> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
-    }
-    if (data.containsKey('name')) {
-      context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
-    } else if (isInserting) {
-      context.missing(_nameMeta);
-    }
-    if (data.containsKey('color')) {
-      context.handle(
-          _colorMeta, color.isAcceptableOrUnknown(data['color']!, _colorMeta));
-    }
-    if (data.containsKey('is_archived')) {
-      context.handle(
-          _isArchivedMeta,
-          isArchived.isAcceptableOrUnknown(
-              data['is_archived']!, _isArchivedMeta));
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    } else if (isInserting) {
-      context.missing(_createdAtMeta);
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(_updatedAtMeta,
-          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
-    } else if (isInserting) {
-      context.missing(_updatedAtMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  Tag map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Tag(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      color: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}color'])!,
-      isArchived: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_archived'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
-      updatedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
-    );
-  }
-
-  @override
-  $TagsTable createAlias(String alias) {
-    return $TagsTable(attachedDatabase, alias);
-  }
-}
-
-class Tag extends DataClass implements Insertable<Tag> {
-  final String id;
-  final String name;
-  final String color;
-  final bool isArchived;
-  final int createdAt;
-  final int updatedAt;
-  const Tag(
-      {required this.id,
-      required this.name,
-      required this.color,
-      required this.isArchived,
-      required this.createdAt,
-      required this.updatedAt});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<String>(id);
-    map['name'] = Variable<String>(name);
-    map['color'] = Variable<String>(color);
-    map['is_archived'] = Variable<bool>(isArchived);
-    map['created_at'] = Variable<int>(createdAt);
-    map['updated_at'] = Variable<int>(updatedAt);
-    return map;
-  }
-
-  TagsCompanion toCompanion(bool nullToAbsent) {
-    return TagsCompanion(
-      id: Value(id),
-      name: Value(name),
-      color: Value(color),
-      isArchived: Value(isArchived),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
-    );
-  }
-
-  factory Tag.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Tag(
-      id: serializer.fromJson<String>(json['id']),
-      name: serializer.fromJson<String>(json['name']),
-      color: serializer.fromJson<String>(json['color']),
-      isArchived: serializer.fromJson<bool>(json['isArchived']),
-      createdAt: serializer.fromJson<int>(json['createdAt']),
-      updatedAt: serializer.fromJson<int>(json['updatedAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<String>(id),
-      'name': serializer.toJson<String>(name),
-      'color': serializer.toJson<String>(color),
-      'isArchived': serializer.toJson<bool>(isArchived),
-      'createdAt': serializer.toJson<int>(createdAt),
-      'updatedAt': serializer.toJson<int>(updatedAt),
-    };
-  }
-
-  Tag copyWith(
-          {String? id,
-          String? name,
-          String? color,
-          bool? isArchived,
-          int? createdAt,
-          int? updatedAt}) =>
-      Tag(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        color: color ?? this.color,
-        isArchived: isArchived ?? this.isArchived,
-        createdAt: createdAt ?? this.createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-      );
-  Tag copyWithCompanion(TagsCompanion data) {
-    return Tag(
-      id: data.id.present ? data.id.value : this.id,
-      name: data.name.present ? data.name.value : this.name,
-      color: data.color.present ? data.color.value : this.color,
-      isArchived:
-          data.isArchived.present ? data.isArchived.value : this.isArchived,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('Tag(')
-          ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('color: $color, ')
-          ..write('isArchived: $isArchived, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode =>
-      Object.hash(id, name, color, isArchived, createdAt, updatedAt);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is Tag &&
-          other.id == this.id &&
-          other.name == this.name &&
-          other.color == this.color &&
-          other.isArchived == this.isArchived &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
-}
-
-class TagsCompanion extends UpdateCompanion<Tag> {
-  final Value<String> id;
-  final Value<String> name;
-  final Value<String> color;
-  final Value<bool> isArchived;
-  final Value<int> createdAt;
-  final Value<int> updatedAt;
-  final Value<int> rowid;
-  const TagsCompanion({
-    this.id = const Value.absent(),
-    this.name = const Value.absent(),
-    this.color = const Value.absent(),
-    this.isArchived = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  TagsCompanion.insert({
-    required String id,
-    required String name,
-    this.color = const Value.absent(),
-    this.isArchived = const Value.absent(),
-    required int createdAt,
-    required int updatedAt,
-    this.rowid = const Value.absent(),
-  })  : id = Value(id),
-        name = Value(name),
-        createdAt = Value(createdAt),
-        updatedAt = Value(updatedAt);
-  static Insertable<Tag> custom({
-    Expression<String>? id,
-    Expression<String>? name,
-    Expression<String>? color,
-    Expression<bool>? isArchived,
-    Expression<int>? createdAt,
-    Expression<int>? updatedAt,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (name != null) 'name': name,
-      if (color != null) 'color': color,
-      if (isArchived != null) 'is_archived': isArchived,
-      if (createdAt != null) 'created_at': createdAt,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  TagsCompanion copyWith(
-      {Value<String>? id,
-      Value<String>? name,
-      Value<String>? color,
-      Value<bool>? isArchived,
-      Value<int>? createdAt,
-      Value<int>? updatedAt,
-      Value<int>? rowid}) {
-    return TagsCompanion(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      color: color ?? this.color,
-      isArchived: isArchived ?? this.isArchived,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<String>(id.value);
-    }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    if (color.present) {
-      map['color'] = Variable<String>(color.value);
-    }
-    if (isArchived.present) {
-      map['is_archived'] = Variable<bool>(isArchived.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<int>(createdAt.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<int>(updatedAt.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('TagsCompanion(')
-          ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('color: $color, ')
-          ..write('isArchived: $isArchived, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class $TransactionsTable extends Transactions
     with TableInfo<$TransactionsTable, Transaction> {
   @override
@@ -2244,208 +1897,6 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
           ..write('legacyId: $legacyId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $TransactionTagsTable extends TransactionTags
-    with TableInfo<$TransactionTagsTable, TransactionTag> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $TransactionTagsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _transactionIdMeta =
-      const VerificationMeta('transactionId');
-  @override
-  late final GeneratedColumn<String> transactionId = GeneratedColumn<String>(
-      'transaction_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES transactions (id) ON DELETE CASCADE'));
-  static const VerificationMeta _tagIdMeta = const VerificationMeta('tagId');
-  @override
-  late final GeneratedColumn<String> tagId = GeneratedColumn<String>(
-      'tag_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES tags (id) ON DELETE CASCADE'));
-  @override
-  List<GeneratedColumn> get $columns => [transactionId, tagId];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'transaction_tags';
-  @override
-  VerificationContext validateIntegrity(Insertable<TransactionTag> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('transaction_id')) {
-      context.handle(
-          _transactionIdMeta,
-          transactionId.isAcceptableOrUnknown(
-              data['transaction_id']!, _transactionIdMeta));
-    } else if (isInserting) {
-      context.missing(_transactionIdMeta);
-    }
-    if (data.containsKey('tag_id')) {
-      context.handle(
-          _tagIdMeta, tagId.isAcceptableOrUnknown(data['tag_id']!, _tagIdMeta));
-    } else if (isInserting) {
-      context.missing(_tagIdMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {transactionId, tagId};
-  @override
-  TransactionTag map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return TransactionTag(
-      transactionId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}transaction_id'])!,
-      tagId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}tag_id'])!,
-    );
-  }
-
-  @override
-  $TransactionTagsTable createAlias(String alias) {
-    return $TransactionTagsTable(attachedDatabase, alias);
-  }
-}
-
-class TransactionTag extends DataClass implements Insertable<TransactionTag> {
-  final String transactionId;
-  final String tagId;
-  const TransactionTag({required this.transactionId, required this.tagId});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['transaction_id'] = Variable<String>(transactionId);
-    map['tag_id'] = Variable<String>(tagId);
-    return map;
-  }
-
-  TransactionTagsCompanion toCompanion(bool nullToAbsent) {
-    return TransactionTagsCompanion(
-      transactionId: Value(transactionId),
-      tagId: Value(tagId),
-    );
-  }
-
-  factory TransactionTag.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return TransactionTag(
-      transactionId: serializer.fromJson<String>(json['transactionId']),
-      tagId: serializer.fromJson<String>(json['tagId']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'transactionId': serializer.toJson<String>(transactionId),
-      'tagId': serializer.toJson<String>(tagId),
-    };
-  }
-
-  TransactionTag copyWith({String? transactionId, String? tagId}) =>
-      TransactionTag(
-        transactionId: transactionId ?? this.transactionId,
-        tagId: tagId ?? this.tagId,
-      );
-  TransactionTag copyWithCompanion(TransactionTagsCompanion data) {
-    return TransactionTag(
-      transactionId: data.transactionId.present
-          ? data.transactionId.value
-          : this.transactionId,
-      tagId: data.tagId.present ? data.tagId.value : this.tagId,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('TransactionTag(')
-          ..write('transactionId: $transactionId, ')
-          ..write('tagId: $tagId')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(transactionId, tagId);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is TransactionTag &&
-          other.transactionId == this.transactionId &&
-          other.tagId == this.tagId);
-}
-
-class TransactionTagsCompanion extends UpdateCompanion<TransactionTag> {
-  final Value<String> transactionId;
-  final Value<String> tagId;
-  final Value<int> rowid;
-  const TransactionTagsCompanion({
-    this.transactionId = const Value.absent(),
-    this.tagId = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  TransactionTagsCompanion.insert({
-    required String transactionId,
-    required String tagId,
-    this.rowid = const Value.absent(),
-  })  : transactionId = Value(transactionId),
-        tagId = Value(tagId);
-  static Insertable<TransactionTag> custom({
-    Expression<String>? transactionId,
-    Expression<String>? tagId,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (transactionId != null) 'transaction_id': transactionId,
-      if (tagId != null) 'tag_id': tagId,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  TransactionTagsCompanion copyWith(
-      {Value<String>? transactionId, Value<String>? tagId, Value<int>? rowid}) {
-    return TransactionTagsCompanion(
-      transactionId: transactionId ?? this.transactionId,
-      tagId: tagId ?? this.tagId,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (transactionId.present) {
-      map['transaction_id'] = Variable<String>(transactionId.value);
-    }
-    if (tagId.present) {
-      map['tag_id'] = Variable<String>(tagId.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('TransactionTagsCompanion(')
-          ..write('transactionId: $transactionId, ')
-          ..write('tagId: $tagId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4674,9 +4125,35 @@ class $AiThreadsTable extends AiThreads
   late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
       'updated_at', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _pinnedMeta = const VerificationMeta('pinned');
+  @override
+  late final GeneratedColumn<bool> pinned = GeneratedColumn<bool>(
+      'pinned', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("pinned" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _archivedMeta =
+      const VerificationMeta('archived');
+  @override
+  late final GeneratedColumn<bool> archived = GeneratedColumn<bool>(
+      'archived', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("archived" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _folderMeta = const VerificationMeta('folder');
+  @override
+  late final GeneratedColumn<String> folder = GeneratedColumn<String>(
+      'folder', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
   @override
   List<GeneratedColumn> get $columns =>
-      [id, title, preview, createdAt, updatedAt];
+      [id, title, preview, createdAt, updatedAt, pinned, archived, folder];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -4712,6 +4189,18 @@ class $AiThreadsTable extends AiThreads
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('pinned')) {
+      context.handle(_pinnedMeta,
+          pinned.isAcceptableOrUnknown(data['pinned']!, _pinnedMeta));
+    }
+    if (data.containsKey('archived')) {
+      context.handle(_archivedMeta,
+          archived.isAcceptableOrUnknown(data['archived']!, _archivedMeta));
+    }
+    if (data.containsKey('folder')) {
+      context.handle(_folderMeta,
+          folder.isAcceptableOrUnknown(data['folder']!, _folderMeta));
+    }
     return context;
   }
 
@@ -4731,6 +4220,12 @@ class $AiThreadsTable extends AiThreads
           .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+      pinned: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}pinned'])!,
+      archived: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}archived'])!,
+      folder: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}folder'])!,
     );
   }
 
@@ -4746,12 +4241,18 @@ class AiThread extends DataClass implements Insertable<AiThread> {
   final String preview;
   final int createdAt;
   final int updatedAt;
+  final bool pinned;
+  final bool archived;
+  final String folder;
   const AiThread(
       {required this.id,
       required this.title,
       required this.preview,
       required this.createdAt,
-      required this.updatedAt});
+      required this.updatedAt,
+      required this.pinned,
+      required this.archived,
+      required this.folder});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4760,6 +4261,9 @@ class AiThread extends DataClass implements Insertable<AiThread> {
     map['preview'] = Variable<String>(preview);
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
+    map['pinned'] = Variable<bool>(pinned);
+    map['archived'] = Variable<bool>(archived);
+    map['folder'] = Variable<String>(folder);
     return map;
   }
 
@@ -4770,6 +4274,9 @@ class AiThread extends DataClass implements Insertable<AiThread> {
       preview: Value(preview),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      pinned: Value(pinned),
+      archived: Value(archived),
+      folder: Value(folder),
     );
   }
 
@@ -4782,6 +4289,9 @@ class AiThread extends DataClass implements Insertable<AiThread> {
       preview: serializer.fromJson<String>(json['preview']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      pinned: serializer.fromJson<bool>(json['pinned']),
+      archived: serializer.fromJson<bool>(json['archived']),
+      folder: serializer.fromJson<String>(json['folder']),
     );
   }
   @override
@@ -4793,6 +4303,9 @@ class AiThread extends DataClass implements Insertable<AiThread> {
       'preview': serializer.toJson<String>(preview),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
+      'pinned': serializer.toJson<bool>(pinned),
+      'archived': serializer.toJson<bool>(archived),
+      'folder': serializer.toJson<String>(folder),
     };
   }
 
@@ -4801,13 +4314,19 @@ class AiThread extends DataClass implements Insertable<AiThread> {
           String? title,
           String? preview,
           int? createdAt,
-          int? updatedAt}) =>
+          int? updatedAt,
+          bool? pinned,
+          bool? archived,
+          String? folder}) =>
       AiThread(
         id: id ?? this.id,
         title: title ?? this.title,
         preview: preview ?? this.preview,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
+        pinned: pinned ?? this.pinned,
+        archived: archived ?? this.archived,
+        folder: folder ?? this.folder,
       );
   AiThread copyWithCompanion(AiThreadsCompanion data) {
     return AiThread(
@@ -4816,6 +4335,9 @@ class AiThread extends DataClass implements Insertable<AiThread> {
       preview: data.preview.present ? data.preview.value : this.preview,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      pinned: data.pinned.present ? data.pinned.value : this.pinned,
+      archived: data.archived.present ? data.archived.value : this.archived,
+      folder: data.folder.present ? data.folder.value : this.folder,
     );
   }
 
@@ -4826,13 +4348,17 @@ class AiThread extends DataClass implements Insertable<AiThread> {
           ..write('title: $title, ')
           ..write('preview: $preview, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('pinned: $pinned, ')
+          ..write('archived: $archived, ')
+          ..write('folder: $folder')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, title, preview, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+      id, title, preview, createdAt, updatedAt, pinned, archived, folder);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4841,7 +4367,10 @@ class AiThread extends DataClass implements Insertable<AiThread> {
           other.title == this.title &&
           other.preview == this.preview &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.pinned == this.pinned &&
+          other.archived == this.archived &&
+          other.folder == this.folder);
 }
 
 class AiThreadsCompanion extends UpdateCompanion<AiThread> {
@@ -4850,6 +4379,9 @@ class AiThreadsCompanion extends UpdateCompanion<AiThread> {
   final Value<String> preview;
   final Value<int> createdAt;
   final Value<int> updatedAt;
+  final Value<bool> pinned;
+  final Value<bool> archived;
+  final Value<String> folder;
   final Value<int> rowid;
   const AiThreadsCompanion({
     this.id = const Value.absent(),
@@ -4857,6 +4389,9 @@ class AiThreadsCompanion extends UpdateCompanion<AiThread> {
     this.preview = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.pinned = const Value.absent(),
+    this.archived = const Value.absent(),
+    this.folder = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AiThreadsCompanion.insert({
@@ -4865,6 +4400,9 @@ class AiThreadsCompanion extends UpdateCompanion<AiThread> {
     this.preview = const Value.absent(),
     required int createdAt,
     required int updatedAt,
+    this.pinned = const Value.absent(),
+    this.archived = const Value.absent(),
+    this.folder = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         createdAt = Value(createdAt),
@@ -4875,6 +4413,9 @@ class AiThreadsCompanion extends UpdateCompanion<AiThread> {
     Expression<String>? preview,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
+    Expression<bool>? pinned,
+    Expression<bool>? archived,
+    Expression<String>? folder,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4883,6 +4424,9 @@ class AiThreadsCompanion extends UpdateCompanion<AiThread> {
       if (preview != null) 'preview': preview,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (pinned != null) 'pinned': pinned,
+      if (archived != null) 'archived': archived,
+      if (folder != null) 'folder': folder,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4893,6 +4437,9 @@ class AiThreadsCompanion extends UpdateCompanion<AiThread> {
       Value<String>? preview,
       Value<int>? createdAt,
       Value<int>? updatedAt,
+      Value<bool>? pinned,
+      Value<bool>? archived,
+      Value<String>? folder,
       Value<int>? rowid}) {
     return AiThreadsCompanion(
       id: id ?? this.id,
@@ -4900,6 +4447,9 @@ class AiThreadsCompanion extends UpdateCompanion<AiThread> {
       preview: preview ?? this.preview,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      pinned: pinned ?? this.pinned,
+      archived: archived ?? this.archived,
+      folder: folder ?? this.folder,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4922,6 +4472,15 @@ class AiThreadsCompanion extends UpdateCompanion<AiThread> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
+    if (pinned.present) {
+      map['pinned'] = Variable<bool>(pinned.value);
+    }
+    if (archived.present) {
+      map['archived'] = Variable<bool>(archived.value);
+    }
+    if (folder.present) {
+      map['folder'] = Variable<String>(folder.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4936,6 +4495,9 @@ class AiThreadsCompanion extends UpdateCompanion<AiThread> {
           ..write('preview: $preview, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('pinned: $pinned, ')
+          ..write('archived: $archived, ')
+          ..write('folder: $folder, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6935,16 +6497,216 @@ class CustomReportsCompanion extends UpdateCompanion<CustomReport> {
   }
 }
 
+class $IgnoredRecurringTable extends IgnoredRecurring
+    with TableInfo<$IgnoredRecurringTable, IgnoredRecurringData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $IgnoredRecurringTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _categoryIdMeta =
+      const VerificationMeta('categoryId');
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+      'category_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES categories (id) ON DELETE CASCADE'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [categoryId, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ignored_recurring';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<IgnoredRecurringData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('category_id')) {
+      context.handle(
+          _categoryIdMeta,
+          categoryId.isAcceptableOrUnknown(
+              data['category_id']!, _categoryIdMeta));
+    } else if (isInserting) {
+      context.missing(_categoryIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {categoryId};
+  @override
+  IgnoredRecurringData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return IgnoredRecurringData(
+      categoryId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}category_id'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $IgnoredRecurringTable createAlias(String alias) {
+    return $IgnoredRecurringTable(attachedDatabase, alias);
+  }
+}
+
+class IgnoredRecurringData extends DataClass
+    implements Insertable<IgnoredRecurringData> {
+  /// The category that should never be auto-detected as recurring.
+  final String categoryId;
+  final int createdAt;
+  const IgnoredRecurringData(
+      {required this.categoryId, required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['category_id'] = Variable<String>(categoryId);
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  IgnoredRecurringCompanion toCompanion(bool nullToAbsent) {
+    return IgnoredRecurringCompanion(
+      categoryId: Value(categoryId),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory IgnoredRecurringData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return IgnoredRecurringData(
+      categoryId: serializer.fromJson<String>(json['categoryId']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'categoryId': serializer.toJson<String>(categoryId),
+      'createdAt': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  IgnoredRecurringData copyWith({String? categoryId, int? createdAt}) =>
+      IgnoredRecurringData(
+        categoryId: categoryId ?? this.categoryId,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  IgnoredRecurringData copyWithCompanion(IgnoredRecurringCompanion data) {
+    return IgnoredRecurringData(
+      categoryId:
+          data.categoryId.present ? data.categoryId.value : this.categoryId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IgnoredRecurringData(')
+          ..write('categoryId: $categoryId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(categoryId, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is IgnoredRecurringData &&
+          other.categoryId == this.categoryId &&
+          other.createdAt == this.createdAt);
+}
+
+class IgnoredRecurringCompanion extends UpdateCompanion<IgnoredRecurringData> {
+  final Value<String> categoryId;
+  final Value<int> createdAt;
+  final Value<int> rowid;
+  const IgnoredRecurringCompanion({
+    this.categoryId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  IgnoredRecurringCompanion.insert({
+    required String categoryId,
+    required int createdAt,
+    this.rowid = const Value.absent(),
+  })  : categoryId = Value(categoryId),
+        createdAt = Value(createdAt);
+  static Insertable<IgnoredRecurringData> custom({
+    Expression<String>? categoryId,
+    Expression<int>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (categoryId != null) 'category_id': categoryId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  IgnoredRecurringCompanion copyWith(
+      {Value<String>? categoryId, Value<int>? createdAt, Value<int>? rowid}) {
+    return IgnoredRecurringCompanion(
+      categoryId: categoryId ?? this.categoryId,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IgnoredRecurringCompanion(')
+          ..write('categoryId: $categoryId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $AccountsTable accounts = $AccountsTable(this);
   late final $CategoriesTable categories = $CategoriesTable(this);
   late final $ModesTable modes = $ModesTable(this);
-  late final $TagsTable tags = $TagsTable(this);
   late final $TransactionsTable transactions = $TransactionsTable(this);
-  late final $TransactionTagsTable transactionTags =
-      $TransactionTagsTable(this);
   late final $BudgetsTable budgets = $BudgetsTable(this);
   late final $DueContactsTable dueContacts = $DueContactsTable(this);
   late final $DueSettlementsTable dueSettlements = $DueSettlementsTable(this);
@@ -6954,10 +6716,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $RecurringItemsTable recurringItems = $RecurringItemsTable(this);
   late final $GoalsTable goals = $GoalsTable(this);
   late final $CustomReportsTable customReports = $CustomReportsTable(this);
+  late final $IgnoredRecurringTable ignoredRecurring =
+      $IgnoredRecurringTable(this);
   late final AccountsDao accountsDao = AccountsDao(this as AppDatabase);
   late final CategoriesDao categoriesDao = CategoriesDao(this as AppDatabase);
   late final ModesDao modesDao = ModesDao(this as AppDatabase);
-  late final TagsDao tagsDao = TagsDao(this as AppDatabase);
   late final TransactionsDao transactionsDao =
       TransactionsDao(this as AppDatabase);
   late final BudgetsDao budgetsDao = BudgetsDao(this as AppDatabase);
@@ -6977,9 +6740,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         accounts,
         categories,
         modes,
-        tags,
         transactions,
-        transactionTags,
         budgets,
         dueContacts,
         dueSettlements,
@@ -6988,25 +6749,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         aiMessages,
         recurringItems,
         goals,
-        customReports
+        customReports,
+        ignoredRecurring
       ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
         [
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('transactions',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('transaction_tags', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('tags',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('transaction_tags', kind: UpdateKind.delete),
-            ],
-          ),
           WritePropagation(
             on: TableUpdateQuery.onTableName('accounts',
                 limitUpdateKind: UpdateKind.delete),
@@ -7047,6 +6795,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
                 limitUpdateKind: UpdateKind.delete),
             result: [
               TableUpdate('goals', kind: UpdateKind.update),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('categories',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('ignored_recurring', kind: UpdateKind.delete),
             ],
           ),
         ],
@@ -7661,6 +7416,23 @@ final class $$CategoriesTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<$IgnoredRecurringTable, List<IgnoredRecurringData>>
+      _ignoredRecurringRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.ignoredRecurring,
+              aliasName: $_aliasNameGenerator(
+                  db.categories.id, db.ignoredRecurring.categoryId));
+
+  $$IgnoredRecurringTableProcessedTableManager get ignoredRecurringRefs {
+    final manager = $$IgnoredRecurringTableTableManager(
+            $_db, $_db.ignoredRecurring)
+        .filter((f) => f.categoryId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_ignoredRecurringRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$CategoriesTableFilterComposer
@@ -7751,6 +7523,27 @@ class $$CategoriesTableFilterComposer
             $$RecurringItemsTableFilterComposer(
               $db: $db,
               $table: $db.recurringItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> ignoredRecurringRefs(
+      Expression<bool> Function($$IgnoredRecurringTableFilterComposer f) f) {
+    final $$IgnoredRecurringTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.ignoredRecurring,
+        getReferencedColumn: (t) => t.categoryId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$IgnoredRecurringTableFilterComposer(
+              $db: $db,
+              $table: $db.ignoredRecurring,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -7889,6 +7682,27 @@ class $$CategoriesTableAnnotationComposer
             ));
     return f(composer);
   }
+
+  Expression<T> ignoredRecurringRefs<T extends Object>(
+      Expression<T> Function($$IgnoredRecurringTableAnnotationComposer a) f) {
+    final $$IgnoredRecurringTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.ignoredRecurring,
+        getReferencedColumn: (t) => t.categoryId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$IgnoredRecurringTableAnnotationComposer(
+              $db: $db,
+              $table: $db.ignoredRecurring,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$CategoriesTableTableManager extends RootTableManager<
@@ -7903,7 +7717,10 @@ class $$CategoriesTableTableManager extends RootTableManager<
     (Category, $$CategoriesTableReferences),
     Category,
     PrefetchHooks Function(
-        {bool transactionsRefs, bool budgetsRefs, bool recurringItemsRefs})> {
+        {bool transactionsRefs,
+        bool budgetsRefs,
+        bool recurringItemsRefs,
+        bool ignoredRecurringRefs})> {
   $$CategoriesTableTableManager(_$AppDatabase db, $CategoriesTable table)
       : super(TableManagerState(
           db: db,
@@ -7967,13 +7784,15 @@ class $$CategoriesTableTableManager extends RootTableManager<
           prefetchHooksCallback: (
               {transactionsRefs = false,
               budgetsRefs = false,
-              recurringItemsRefs = false}) {
+              recurringItemsRefs = false,
+              ignoredRecurringRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (transactionsRefs) db.transactions,
                 if (budgetsRefs) db.budgets,
-                if (recurringItemsRefs) db.recurringItems
+                if (recurringItemsRefs) db.recurringItems,
+                if (ignoredRecurringRefs) db.ignoredRecurring
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -8016,6 +7835,19 @@ class $$CategoriesTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.categoryId == item.id),
+                        typedResults: items),
+                  if (ignoredRecurringRefs)
+                    await $_getPrefetchedData<Category, $CategoriesTable,
+                            IgnoredRecurringData>(
+                        currentTable: table,
+                        referencedTable: $$CategoriesTableReferences
+                            ._ignoredRecurringRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CategoriesTableReferences(db, table, p0)
+                                .ignoredRecurringRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.categoryId == item.id),
                         typedResults: items)
                 ];
               },
@@ -8036,7 +7868,10 @@ typedef $$CategoriesTableProcessedTableManager = ProcessedTableManager<
     (Category, $$CategoriesTableReferences),
     Category,
     PrefetchHooks Function(
-        {bool transactionsRefs, bool budgetsRefs, bool recurringItemsRefs})>;
+        {bool transactionsRefs,
+        bool budgetsRefs,
+        bool recurringItemsRefs,
+        bool ignoredRecurringRefs})>;
 typedef $$ModesTableCreateCompanionBuilder = ModesCompanion Function({
   required String id,
   required String name,
@@ -8373,273 +8208,6 @@ typedef $$ModesTableProcessedTableManager = ProcessedTableManager<
     (Mode, $$ModesTableReferences),
     Mode,
     PrefetchHooks Function({bool transactionsRefs, bool recurringItemsRefs})>;
-typedef $$TagsTableCreateCompanionBuilder = TagsCompanion Function({
-  required String id,
-  required String name,
-  Value<String> color,
-  Value<bool> isArchived,
-  required int createdAt,
-  required int updatedAt,
-  Value<int> rowid,
-});
-typedef $$TagsTableUpdateCompanionBuilder = TagsCompanion Function({
-  Value<String> id,
-  Value<String> name,
-  Value<String> color,
-  Value<bool> isArchived,
-  Value<int> createdAt,
-  Value<int> updatedAt,
-  Value<int> rowid,
-});
-
-final class $$TagsTableReferences
-    extends BaseReferences<_$AppDatabase, $TagsTable, Tag> {
-  $$TagsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static MultiTypedResultKey<$TransactionTagsTable, List<TransactionTag>>
-      _transactionTagsRefsTable(_$AppDatabase db) =>
-          MultiTypedResultKey.fromTable(db.transactionTags,
-              aliasName:
-                  $_aliasNameGenerator(db.tags.id, db.transactionTags.tagId));
-
-  $$TransactionTagsTableProcessedTableManager get transactionTagsRefs {
-    final manager =
-        $$TransactionTagsTableTableManager($_db, $_db.transactionTags)
-            .filter((f) => f.tagId.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache =
-        $_typedResult.readTableOrNull(_transactionTagsRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
-}
-
-class $$TagsTableFilterComposer extends Composer<_$AppDatabase, $TagsTable> {
-  $$TagsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get color => $composableBuilder(
-      column: $table.color, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isArchived => $composableBuilder(
-      column: $table.isArchived, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
-
-  Expression<bool> transactionTagsRefs(
-      Expression<bool> Function($$TransactionTagsTableFilterComposer f) f) {
-    final $$TransactionTagsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.transactionTags,
-        getReferencedColumn: (t) => t.tagId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$TransactionTagsTableFilterComposer(
-              $db: $db,
-              $table: $db.transactionTags,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-}
-
-class $$TagsTableOrderingComposer extends Composer<_$AppDatabase, $TagsTable> {
-  $$TagsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get color => $composableBuilder(
-      column: $table.color, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isArchived => $composableBuilder(
-      column: $table.isArchived, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
-}
-
-class $$TagsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $TagsTable> {
-  $$TagsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<String> get color =>
-      $composableBuilder(column: $table.color, builder: (column) => column);
-
-  GeneratedColumn<bool> get isArchived => $composableBuilder(
-      column: $table.isArchived, builder: (column) => column);
-
-  GeneratedColumn<int> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<int> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  Expression<T> transactionTagsRefs<T extends Object>(
-      Expression<T> Function($$TransactionTagsTableAnnotationComposer a) f) {
-    final $$TransactionTagsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.transactionTags,
-        getReferencedColumn: (t) => t.tagId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$TransactionTagsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.transactionTags,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-}
-
-class $$TagsTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $TagsTable,
-    Tag,
-    $$TagsTableFilterComposer,
-    $$TagsTableOrderingComposer,
-    $$TagsTableAnnotationComposer,
-    $$TagsTableCreateCompanionBuilder,
-    $$TagsTableUpdateCompanionBuilder,
-    (Tag, $$TagsTableReferences),
-    Tag,
-    PrefetchHooks Function({bool transactionTagsRefs})> {
-  $$TagsTableTableManager(_$AppDatabase db, $TagsTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$TagsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$TagsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$TagsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> id = const Value.absent(),
-            Value<String> name = const Value.absent(),
-            Value<String> color = const Value.absent(),
-            Value<bool> isArchived = const Value.absent(),
-            Value<int> createdAt = const Value.absent(),
-            Value<int> updatedAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              TagsCompanion(
-            id: id,
-            name: name,
-            color: color,
-            isArchived: isArchived,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String id,
-            required String name,
-            Value<String> color = const Value.absent(),
-            Value<bool> isArchived = const Value.absent(),
-            required int createdAt,
-            required int updatedAt,
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              TagsCompanion.insert(
-            id: id,
-            name: name,
-            color: color,
-            isArchived: isArchived,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-            rowid: rowid,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$TagsTableReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: ({transactionTagsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (transactionTagsRefs) db.transactionTags
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (transactionTagsRefs)
-                    await $_getPrefetchedData<Tag, $TagsTable, TransactionTag>(
-                        currentTable: table,
-                        referencedTable:
-                            $$TagsTableReferences._transactionTagsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$TagsTableReferences(db, table, p0)
-                                .transactionTagsRefs,
-                        referencedItemsForCurrentItem: (item,
-                                referencedItems) =>
-                            referencedItems.where((e) => e.tagId == item.id),
-                        typedResults: items)
-                ];
-              },
-            );
-          },
-        ));
-}
-
-typedef $$TagsTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $TagsTable,
-    Tag,
-    $$TagsTableFilterComposer,
-    $$TagsTableOrderingComposer,
-    $$TagsTableAnnotationComposer,
-    $$TagsTableCreateCompanionBuilder,
-    $$TagsTableUpdateCompanionBuilder,
-    (Tag, $$TagsTableReferences),
-    Tag,
-    PrefetchHooks Function({bool transactionTagsRefs})>;
 typedef $$TransactionsTableCreateCompanionBuilder = TransactionsCompanion
     Function({
   required String id,
@@ -8721,23 +8289,6 @@ final class $$TransactionsTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
-  }
-
-  static MultiTypedResultKey<$TransactionTagsTable, List<TransactionTag>>
-      _transactionTagsRefsTable(_$AppDatabase db) =>
-          MultiTypedResultKey.fromTable(db.transactionTags,
-              aliasName: $_aliasNameGenerator(
-                  db.transactions.id, db.transactionTags.transactionId));
-
-  $$TransactionTagsTableProcessedTableManager get transactionTagsRefs {
-    final manager =
-        $$TransactionTagsTableTableManager($_db, $_db.transactionTags).filter(
-            (f) => f.transactionId.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache =
-        $_typedResult.readTableOrNull(_transactionTagsRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
   }
 
   static MultiTypedResultKey<$DueSettlementsTable, List<DueSettlement>>
@@ -8856,27 +8407,6 @@ class $$TransactionsTableFilterComposer
                   $removeJoinBuilderFromRootComposer,
             ));
     return composer;
-  }
-
-  Expression<bool> transactionTagsRefs(
-      Expression<bool> Function($$TransactionTagsTableFilterComposer f) f) {
-    final $$TransactionTagsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.transactionTags,
-        getReferencedColumn: (t) => t.transactionId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$TransactionTagsTableFilterComposer(
-              $db: $db,
-              $table: $db.transactionTags,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
   }
 
   Expression<bool> dueSettlementsRefs(
@@ -9102,27 +8632,6 @@ class $$TransactionsTableAnnotationComposer
     return composer;
   }
 
-  Expression<T> transactionTagsRefs<T extends Object>(
-      Expression<T> Function($$TransactionTagsTableAnnotationComposer a) f) {
-    final $$TransactionTagsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.transactionTags,
-        getReferencedColumn: (t) => t.transactionId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$TransactionTagsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.transactionTags,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-
   Expression<T> dueSettlementsRefs<T extends Object>(
       Expression<T> Function($$DueSettlementsTableAnnotationComposer a) f) {
     final $$DueSettlementsTableAnnotationComposer composer = $composerBuilder(
@@ -9160,7 +8669,6 @@ class $$TransactionsTableTableManager extends RootTableManager<
         {bool accountId,
         bool categoryId,
         bool modeId,
-        bool transactionTagsRefs,
         bool dueSettlementsRefs})> {
   $$TransactionsTableTableManager(_$AppDatabase db, $TransactionsTable table)
       : super(TableManagerState(
@@ -9246,12 +8754,10 @@ class $$TransactionsTableTableManager extends RootTableManager<
               {accountId = false,
               categoryId = false,
               modeId = false,
-              transactionTagsRefs = false,
               dueSettlementsRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
-                if (transactionTagsRefs) db.transactionTags,
                 if (dueSettlementsRefs) db.dueSettlements
               ],
               addJoins: <
@@ -9302,19 +8808,6 @@ class $$TransactionsTableTableManager extends RootTableManager<
               },
               getPrefetchedDataCallback: (items) async {
                 return [
-                  if (transactionTagsRefs)
-                    await $_getPrefetchedData<Transaction, $TransactionsTable,
-                            TransactionTag>(
-                        currentTable: table,
-                        referencedTable: $$TransactionsTableReferences
-                            ._transactionTagsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$TransactionsTableReferences(db, table, p0)
-                                .transactionTagsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.transactionId == item.id),
-                        typedResults: items),
                   if (dueSettlementsRefs)
                     await $_getPrefetchedData<Transaction, $TransactionsTable,
                             DueSettlement>(
@@ -9350,316 +8843,7 @@ typedef $$TransactionsTableProcessedTableManager = ProcessedTableManager<
         {bool accountId,
         bool categoryId,
         bool modeId,
-        bool transactionTagsRefs,
         bool dueSettlementsRefs})>;
-typedef $$TransactionTagsTableCreateCompanionBuilder = TransactionTagsCompanion
-    Function({
-  required String transactionId,
-  required String tagId,
-  Value<int> rowid,
-});
-typedef $$TransactionTagsTableUpdateCompanionBuilder = TransactionTagsCompanion
-    Function({
-  Value<String> transactionId,
-  Value<String> tagId,
-  Value<int> rowid,
-});
-
-final class $$TransactionTagsTableReferences extends BaseReferences<
-    _$AppDatabase, $TransactionTagsTable, TransactionTag> {
-  $$TransactionTagsTableReferences(
-      super.$_db, super.$_table, super.$_typedResult);
-
-  static $TransactionsTable _transactionIdTable(_$AppDatabase db) =>
-      db.transactions.createAlias($_aliasNameGenerator(
-          db.transactionTags.transactionId, db.transactions.id));
-
-  $$TransactionsTableProcessedTableManager get transactionId {
-    final $_column = $_itemColumn<String>('transaction_id')!;
-
-    final manager = $$TransactionsTableTableManager($_db, $_db.transactions)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_transactionIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
-
-  static $TagsTable _tagIdTable(_$AppDatabase db) => db.tags
-      .createAlias($_aliasNameGenerator(db.transactionTags.tagId, db.tags.id));
-
-  $$TagsTableProcessedTableManager get tagId {
-    final $_column = $_itemColumn<String>('tag_id')!;
-
-    final manager = $$TagsTableTableManager($_db, $_db.tags)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_tagIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
-}
-
-class $$TransactionTagsTableFilterComposer
-    extends Composer<_$AppDatabase, $TransactionTagsTable> {
-  $$TransactionTagsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  $$TransactionsTableFilterComposer get transactionId {
-    final $$TransactionsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.transactionId,
-        referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.id,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$TransactionsTableFilterComposer(
-              $db: $db,
-              $table: $db.transactions,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$TagsTableFilterComposer get tagId {
-    final $$TagsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.tagId,
-        referencedTable: $db.tags,
-        getReferencedColumn: (t) => t.id,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$TagsTableFilterComposer(
-              $db: $db,
-              $table: $db.tags,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-}
-
-class $$TransactionTagsTableOrderingComposer
-    extends Composer<_$AppDatabase, $TransactionTagsTable> {
-  $$TransactionTagsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  $$TransactionsTableOrderingComposer get transactionId {
-    final $$TransactionsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.transactionId,
-        referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.id,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$TransactionsTableOrderingComposer(
-              $db: $db,
-              $table: $db.transactions,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$TagsTableOrderingComposer get tagId {
-    final $$TagsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.tagId,
-        referencedTable: $db.tags,
-        getReferencedColumn: (t) => t.id,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$TagsTableOrderingComposer(
-              $db: $db,
-              $table: $db.tags,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-}
-
-class $$TransactionTagsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $TransactionTagsTable> {
-  $$TransactionTagsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  $$TransactionsTableAnnotationComposer get transactionId {
-    final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.transactionId,
-        referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.id,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$TransactionsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.transactions,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$TagsTableAnnotationComposer get tagId {
-    final $$TagsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.tagId,
-        referencedTable: $db.tags,
-        getReferencedColumn: (t) => t.id,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$TagsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.tags,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-}
-
-class $$TransactionTagsTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $TransactionTagsTable,
-    TransactionTag,
-    $$TransactionTagsTableFilterComposer,
-    $$TransactionTagsTableOrderingComposer,
-    $$TransactionTagsTableAnnotationComposer,
-    $$TransactionTagsTableCreateCompanionBuilder,
-    $$TransactionTagsTableUpdateCompanionBuilder,
-    (TransactionTag, $$TransactionTagsTableReferences),
-    TransactionTag,
-    PrefetchHooks Function({bool transactionId, bool tagId})> {
-  $$TransactionTagsTableTableManager(
-      _$AppDatabase db, $TransactionTagsTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$TransactionTagsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$TransactionTagsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$TransactionTagsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> transactionId = const Value.absent(),
-            Value<String> tagId = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              TransactionTagsCompanion(
-            transactionId: transactionId,
-            tagId: tagId,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String transactionId,
-            required String tagId,
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              TransactionTagsCompanion.insert(
-            transactionId: transactionId,
-            tagId: tagId,
-            rowid: rowid,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable(table),
-                    $$TransactionTagsTableReferences(db, table, e)
-                  ))
-              .toList(),
-          prefetchHooksCallback: ({transactionId = false, tagId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins: <
-                  T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic>>(state) {
-                if (transactionId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.transactionId,
-                    referencedTable: $$TransactionTagsTableReferences
-                        ._transactionIdTable(db),
-                    referencedColumn: $$TransactionTagsTableReferences
-                        ._transactionIdTable(db)
-                        .id,
-                  ) as T;
-                }
-                if (tagId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.tagId,
-                    referencedTable:
-                        $$TransactionTagsTableReferences._tagIdTable(db),
-                    referencedColumn:
-                        $$TransactionTagsTableReferences._tagIdTable(db).id,
-                  ) as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
-        ));
-}
-
-typedef $$TransactionTagsTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $TransactionTagsTable,
-    TransactionTag,
-    $$TransactionTagsTableFilterComposer,
-    $$TransactionTagsTableOrderingComposer,
-    $$TransactionTagsTableAnnotationComposer,
-    $$TransactionTagsTableCreateCompanionBuilder,
-    $$TransactionTagsTableUpdateCompanionBuilder,
-    (TransactionTag, $$TransactionTagsTableReferences),
-    TransactionTag,
-    PrefetchHooks Function({bool transactionId, bool tagId})>;
 typedef $$BudgetsTableCreateCompanionBuilder = BudgetsCompanion Function({
   required String id,
   required String categoryId,
@@ -11455,6 +10639,9 @@ typedef $$AiThreadsTableCreateCompanionBuilder = AiThreadsCompanion Function({
   Value<String> preview,
   required int createdAt,
   required int updatedAt,
+  Value<bool> pinned,
+  Value<bool> archived,
+  Value<String> folder,
   Value<int> rowid,
 });
 typedef $$AiThreadsTableUpdateCompanionBuilder = AiThreadsCompanion Function({
@@ -11463,6 +10650,9 @@ typedef $$AiThreadsTableUpdateCompanionBuilder = AiThreadsCompanion Function({
   Value<String> preview,
   Value<int> createdAt,
   Value<int> updatedAt,
+  Value<bool> pinned,
+  Value<bool> archived,
+  Value<String> folder,
   Value<int> rowid,
 });
 
@@ -11489,6 +10679,15 @@ class $$AiThreadsTableFilterComposer
 
   ColumnFilters<int> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get pinned => $composableBuilder(
+      column: $table.pinned, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get archived => $composableBuilder(
+      column: $table.archived, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get folder => $composableBuilder(
+      column: $table.folder, builder: (column) => ColumnFilters(column));
 }
 
 class $$AiThreadsTableOrderingComposer
@@ -11514,6 +10713,15 @@ class $$AiThreadsTableOrderingComposer
 
   ColumnOrderings<int> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get pinned => $composableBuilder(
+      column: $table.pinned, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get archived => $composableBuilder(
+      column: $table.archived, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get folder => $composableBuilder(
+      column: $table.folder, builder: (column) => ColumnOrderings(column));
 }
 
 class $$AiThreadsTableAnnotationComposer
@@ -11539,6 +10747,15 @@ class $$AiThreadsTableAnnotationComposer
 
   GeneratedColumn<int> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get pinned =>
+      $composableBuilder(column: $table.pinned, builder: (column) => column);
+
+  GeneratedColumn<bool> get archived =>
+      $composableBuilder(column: $table.archived, builder: (column) => column);
+
+  GeneratedColumn<String> get folder =>
+      $composableBuilder(column: $table.folder, builder: (column) => column);
 }
 
 class $$AiThreadsTableTableManager extends RootTableManager<
@@ -11569,6 +10786,9 @@ class $$AiThreadsTableTableManager extends RootTableManager<
             Value<String> preview = const Value.absent(),
             Value<int> createdAt = const Value.absent(),
             Value<int> updatedAt = const Value.absent(),
+            Value<bool> pinned = const Value.absent(),
+            Value<bool> archived = const Value.absent(),
+            Value<String> folder = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               AiThreadsCompanion(
@@ -11577,6 +10797,9 @@ class $$AiThreadsTableTableManager extends RootTableManager<
             preview: preview,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            pinned: pinned,
+            archived: archived,
+            folder: folder,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -11585,6 +10808,9 @@ class $$AiThreadsTableTableManager extends RootTableManager<
             Value<String> preview = const Value.absent(),
             required int createdAt,
             required int updatedAt,
+            Value<bool> pinned = const Value.absent(),
+            Value<bool> archived = const Value.absent(),
+            Value<String> folder = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               AiThreadsCompanion.insert(
@@ -11593,6 +10819,9 @@ class $$AiThreadsTableTableManager extends RootTableManager<
             preview: preview,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            pinned: pinned,
+            archived: archived,
+            folder: folder,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -12910,6 +12139,239 @@ typedef $$CustomReportsTableProcessedTableManager = ProcessedTableManager<
     ),
     CustomReport,
     PrefetchHooks Function()>;
+typedef $$IgnoredRecurringTableCreateCompanionBuilder
+    = IgnoredRecurringCompanion Function({
+  required String categoryId,
+  required int createdAt,
+  Value<int> rowid,
+});
+typedef $$IgnoredRecurringTableUpdateCompanionBuilder
+    = IgnoredRecurringCompanion Function({
+  Value<String> categoryId,
+  Value<int> createdAt,
+  Value<int> rowid,
+});
+
+final class $$IgnoredRecurringTableReferences extends BaseReferences<
+    _$AppDatabase, $IgnoredRecurringTable, IgnoredRecurringData> {
+  $$IgnoredRecurringTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $CategoriesTable _categoryIdTable(_$AppDatabase db) =>
+      db.categories.createAlias($_aliasNameGenerator(
+          db.ignoredRecurring.categoryId, db.categories.id));
+
+  $$CategoriesTableProcessedTableManager get categoryId {
+    final $_column = $_itemColumn<String>('category_id')!;
+
+    final manager = $$CategoriesTableTableManager($_db, $_db.categories)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_categoryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$IgnoredRecurringTableFilterComposer
+    extends Composer<_$AppDatabase, $IgnoredRecurringTable> {
+  $$IgnoredRecurringTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  $$CategoriesTableFilterComposer get categoryId {
+    final $$CategoriesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.categoryId,
+        referencedTable: $db.categories,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CategoriesTableFilterComposer(
+              $db: $db,
+              $table: $db.categories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$IgnoredRecurringTableOrderingComposer
+    extends Composer<_$AppDatabase, $IgnoredRecurringTable> {
+  $$IgnoredRecurringTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  $$CategoriesTableOrderingComposer get categoryId {
+    final $$CategoriesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.categoryId,
+        referencedTable: $db.categories,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CategoriesTableOrderingComposer(
+              $db: $db,
+              $table: $db.categories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$IgnoredRecurringTableAnnotationComposer
+    extends Composer<_$AppDatabase, $IgnoredRecurringTable> {
+  $$IgnoredRecurringTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$CategoriesTableAnnotationComposer get categoryId {
+    final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.categoryId,
+        referencedTable: $db.categories,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CategoriesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.categories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$IgnoredRecurringTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $IgnoredRecurringTable,
+    IgnoredRecurringData,
+    $$IgnoredRecurringTableFilterComposer,
+    $$IgnoredRecurringTableOrderingComposer,
+    $$IgnoredRecurringTableAnnotationComposer,
+    $$IgnoredRecurringTableCreateCompanionBuilder,
+    $$IgnoredRecurringTableUpdateCompanionBuilder,
+    (IgnoredRecurringData, $$IgnoredRecurringTableReferences),
+    IgnoredRecurringData,
+    PrefetchHooks Function({bool categoryId})> {
+  $$IgnoredRecurringTableTableManager(
+      _$AppDatabase db, $IgnoredRecurringTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$IgnoredRecurringTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$IgnoredRecurringTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$IgnoredRecurringTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> categoryId = const Value.absent(),
+            Value<int> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              IgnoredRecurringCompanion(
+            categoryId: categoryId,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String categoryId,
+            required int createdAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              IgnoredRecurringCompanion.insert(
+            categoryId: categoryId,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$IgnoredRecurringTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({categoryId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (categoryId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.categoryId,
+                    referencedTable:
+                        $$IgnoredRecurringTableReferences._categoryIdTable(db),
+                    referencedColumn: $$IgnoredRecurringTableReferences
+                        ._categoryIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$IgnoredRecurringTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $IgnoredRecurringTable,
+    IgnoredRecurringData,
+    $$IgnoredRecurringTableFilterComposer,
+    $$IgnoredRecurringTableOrderingComposer,
+    $$IgnoredRecurringTableAnnotationComposer,
+    $$IgnoredRecurringTableCreateCompanionBuilder,
+    $$IgnoredRecurringTableUpdateCompanionBuilder,
+    (IgnoredRecurringData, $$IgnoredRecurringTableReferences),
+    IgnoredRecurringData,
+    PrefetchHooks Function({bool categoryId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -12920,11 +12382,8 @@ class $AppDatabaseManager {
       $$CategoriesTableTableManager(_db, _db.categories);
   $$ModesTableTableManager get modes =>
       $$ModesTableTableManager(_db, _db.modes);
-  $$TagsTableTableManager get tags => $$TagsTableTableManager(_db, _db.tags);
   $$TransactionsTableTableManager get transactions =>
       $$TransactionsTableTableManager(_db, _db.transactions);
-  $$TransactionTagsTableTableManager get transactionTags =>
-      $$TransactionTagsTableTableManager(_db, _db.transactionTags);
   $$BudgetsTableTableManager get budgets =>
       $$BudgetsTableTableManager(_db, _db.budgets);
   $$DueContactsTableTableManager get dueContacts =>
@@ -12943,4 +12402,6 @@ class $AppDatabaseManager {
       $$GoalsTableTableManager(_db, _db.goals);
   $$CustomReportsTableTableManager get customReports =>
       $$CustomReportsTableTableManager(_db, _db.customReports);
+  $$IgnoredRecurringTableTableManager get ignoredRecurring =>
+      $$IgnoredRecurringTableTableManager(_db, _db.ignoredRecurring);
 }

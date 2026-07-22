@@ -29,7 +29,7 @@ class AppValidators {
     return null;
   }
 
-  // ── Entity names (category, mode, account, tag) ───────────────────────
+  // ── Entity names (category, mode, account) ───────────────────────
 
   static String? entityName(String? value, {int maxLen = 40}) {
     final t = value?.trim() ?? '';

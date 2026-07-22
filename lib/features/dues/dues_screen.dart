@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../app/themes/app_colors.dart';
@@ -140,7 +140,7 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
                             const Spacer(),
                             Text(
                               'net',
-                              style: GoogleFonts.plusJakartaSans(
+                              style: plusJakartaSans(
                                 fontSize: 11,
                                 color: cs.onSurfaceVariant,
                                 fontWeight: FontWeight.w500,
@@ -149,7 +149,7 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
                             const SizedBox(width: 5),
                             Text(
                               '${totalReceivable >= totalPayable ? '+' : '−'}₹${NumberFormat('#,##,###').format((totalReceivable - totalPayable).abs())}',
-                              style: GoogleFonts.plusJakartaSans(
+                              style: plusJakartaSans(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
                                 color: totalReceivable >= totalPayable ? appColors.income : appColors.expense,
@@ -223,7 +223,7 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
                                   const SizedBox(height: 16),
                                   Text(
                                     'No contacts yet',
-                                    style: GoogleFonts.plusJakartaSans(
+                                    style: plusJakartaSans(
                                       fontSize: 17,
                                       fontWeight: FontWeight.w700,
                                       color: cs.onSurface,
@@ -233,7 +233,7 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
                                   Text(
                                     'Your dues contacts will appear here.',
                                     textAlign: TextAlign.center,
-                                    style: GoogleFonts.plusJakartaSans(
+                                    style: plusJakartaSans(
                                       fontSize: 14,
                                       color: cs.onSurfaceVariant,
                                     ),
@@ -320,7 +320,7 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
                                                 contact.name,
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: GoogleFonts.plusJakartaSans(
+                                                style: plusJakartaSans(
                                                   fontSize: 15,
                                                   fontWeight: FontWeight.w600,
                                                   color: cs.onSurface,
@@ -331,7 +331,7 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
                                                 '${summary.unsettledCount} pending entr${summary.unsettledCount == 1 ? 'y' : 'ies'}',
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: GoogleFonts.plusJakartaSans(
+                                                style: plusJakartaSans(
                                                   fontSize: 12, 
                                                   fontWeight: FontWeight.w400,
                                                   color: cs.onSurfaceVariant
@@ -346,7 +346,7 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
                                           children: [
                                             Text(
                                               '₹${summary.balance.abs().toStringAsFixed(0)}',
-                                              style: GoogleFonts.plusJakartaSans(
+                                              style: plusJakartaSans(
                                                 fontSize: 15,
                                                 fontWeight: FontWeight.w700,
                                                 fontFeatures: const [FontFeature.tabularFigures()],
@@ -358,7 +358,7 @@ class _DuesScreenState extends ConsumerState<DuesScreen> {
                                               summary.balance == 0 
                                                   ? 'Settled' 
                                                   : (summary.balance < 0 ? 'Payable' : 'Receivable'),
-                                              style: GoogleFonts.plusJakartaSans(
+                                              style: plusJakartaSans(
                                                 fontSize: 11, 
                                                 fontWeight: FontWeight.w500,
                                                 color: cs.onSurfaceVariant
@@ -441,7 +441,7 @@ class _InlineStat extends StatelessWidget {
         const SizedBox(width: 3),
         Text(
           '₹${NumberFormat('#,##,###').format(value)}',
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
             fontSize: 14,
             fontWeight: FontWeight.w700,
             color: color,
@@ -451,7 +451,7 @@ class _InlineStat extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
             fontSize: 11,
             color: cs.onSurfaceVariant,
             fontWeight: FontWeight.w500,
@@ -489,7 +489,7 @@ class _FilterChip extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
             fontSize: 12,
             color: isSelected ? cs.primary : cs.onSurfaceVariant,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,

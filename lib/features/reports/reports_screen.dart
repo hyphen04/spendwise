@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 import '../../app/widgets/screen_header.dart';
 import '../../data/db/app_database.dart';
 import '../../state/ai_providers.dart';
+import '../../state/app_mode_providers.dart';
 import '../../state/custom_report_providers.dart';
 import '../../state/period_providers.dart';
 import 'widgets/report_card.dart';
@@ -38,6 +39,7 @@ class ReportsScreen extends ConsumerWidget {
     final year = period.year;
     final month = period.month;
     final aiEnabled = ref.watch(aiEnabledProvider);
+    final isOnline = ref.watch(isOnlineProvider);
     final savedReports =
         ref.watch(customReportsStreamProvider).valueOrNull ??
             const <CustomReport>[];
@@ -56,31 +58,34 @@ class ReportsScreen extends ConsumerWidget {
           ),
 
           // ── AI Copilot (two compact side-by-side entry cards) ───────
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
-          SliverToBoxAdapter(child: _SectionHeader('AI COPILOT', cs)),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-              child: SizedBox(
-                height: 140,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: _CompactAiCard(
-                          kind: _AiKind.ask, enabled: aiEnabled),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _CompactAiCard(
-                          kind: _AiKind.report, enabled: aiEnabled),
-                    ),
-                  ],
+          // Hidden in Offline mode (no AI features available).
+          if (isOnline) ...[
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverToBoxAdapter(child: _SectionHeader('AI COPILOT', cs)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                child: SizedBox(
+                  height: 140,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _CompactAiCard(
+                            kind: _AiKind.ask, enabled: aiEnabled),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _CompactAiCard(
+                            kind: _AiKind.report, enabled: aiEnabled),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 28)),
+            const SliverToBoxAdapter(child: SizedBox(height: 28)),
+          ],
 
           // ── Overview ──────────────────────────────────────────────────
           SliverToBoxAdapter(child: _SectionHeader('OVERVIEW', cs)),
@@ -277,7 +282,7 @@ class _CompactAiCard extends ConsumerWidget {
                 isAsk ? 'Ask SpendWise AI' : 'AI Monthly Report',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
                   color: fg,
@@ -293,7 +298,7 @@ class _CompactAiCard extends ConsumerWidget {
                     : 'Enable AI Copilot',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                   fontSize: 11,
                   height: 1.3,
                   fontWeight: FontWeight.w500,
@@ -346,16 +351,16 @@ class _NewCustomReportHero extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Build a custom report',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: plusJakartaSans(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
                             color: cs.onPrimaryContainer)),
                     const SizedBox(height: 3),
                     Text(
-                      'Group by category, account, mode, tag or time — pick a metric, filter, and chart. Runs on-device.',
+                      'Group by category, account, mode or time — pick a metric, filter, and chart. Runs on-device.',
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: plusJakartaSans(
                           fontSize: 11,
                           height: 1.35,
                           fontWeight: FontWeight.w500,
@@ -386,7 +391,7 @@ class _SectionHeader extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: Text(
           title,
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
             fontSize: 12,
             fontWeight: FontWeight.w700,
             color: cs.onSurfaceVariant,

@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 
 import '../../../app/utils/money_format.dart';
 import '../../../utils/color_utils.dart';
@@ -170,11 +170,11 @@ class SpecChart extends StatelessWidget {
           const SizedBox(width: 4),
         ],
         Text(name,
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 12, fontWeight: FontWeight.w600)),
         const SizedBox(width: 6),
         Text(amount,
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 11, color: cs.onSurfaceVariant)),
       ],
     );
@@ -241,7 +241,7 @@ class SpecChart extends StatelessWidget {
                     child: Text(_s(dataset.rows[i], labelField),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.plusJakartaSans(
+                        style: plusJakartaSans(
                             fontSize: 10, color: cs.onSurfaceVariant)),
                   );
                 },
@@ -314,7 +314,7 @@ class SpecChart extends StatelessWidget {
                         padding: const EdgeInsets.only(top: 6),
                         child: Text(
                             _monthNames[(_i(m, 'month') - 1) % 12],
-                            style: GoogleFonts.plusJakartaSans(
+                            style: plusJakartaSans(
                                 fontSize: 10,
                                 color: cs.onSurfaceVariant)),
                       );
@@ -408,7 +408,7 @@ class SpecChart extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(label,
-                        style: GoogleFonts.plusJakartaSans(
+                        style: plusJakartaSans(
                             fontSize: 10, color: cs.onSurfaceVariant)),
                   );
                 },
@@ -445,13 +445,13 @@ class SpecChart extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(_s(r, 'name'),
-                              style: GoogleFonts.plusJakartaSans(
+                              style: plusJakartaSans(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600)),
                           Text(
                             '${fmtMoney(_d(r, 'spent'))} / ${fmtMoney(_d(r, 'effective'))}'
                             '${_b(r, 'isOver') ? '  • over' : ''}',
-                            style: GoogleFonts.plusJakartaSans(
+                            style: plusJakartaSans(
                                 fontSize: 11,
                                 color: cs.onSurfaceVariant),
                           ),
@@ -498,10 +498,10 @@ class SpecChart extends StatelessWidget {
                   child: Text(_s(r, labelField),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.plusJakartaSans(fontSize: 13)),
+                      style: plusJakartaSans(fontSize: 13)),
                 ),
                 Text(fmtMoney(_d(r, field)),
-                    style: GoogleFonts.plusJakartaSans(
+                    style: plusJakartaSans(
                         fontSize: 12, color: cs.onSurfaceVariant)),
               ],
             ),
@@ -521,12 +521,12 @@ class SpecChart extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(fmtMoney(value),
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 28, fontWeight: FontWeight.w800, color: color)),
         if (spec.caption != null) ...[
           const SizedBox(height: 4),
           Text(spec.caption!,
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                   fontSize: 12, color: cs.onSurfaceVariant)),
         ],
       ],
@@ -570,7 +570,7 @@ class SpecChart extends StatelessWidget {
             decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 6),
         Text(label,
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 11, color: cs.onSurfaceVariant)),
       ],
     );
@@ -597,7 +597,7 @@ class _ChartCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                   fontSize: 13, fontWeight: FontWeight.w800)),
           const SizedBox(height: 14),
           child,
@@ -614,7 +614,7 @@ Widget _empty(BuildContext context, String message) {
     child: Center(
       child: Text(message,
           textAlign: TextAlign.center,
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
               fontSize: 12, color: cs.onSurfaceVariant)),
     ),
   );

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 
 /// Action shown on the bottom-right key of the numpad.
 enum NumpadAction { backspace, confirm }
@@ -130,7 +130,7 @@ class _DigitKey extends StatelessWidget {
       keySize: keySize,
       child: Text(
         label,
-        style: GoogleFonts.plusJakartaSans(
+        style: plusJakartaSans(
           fontSize: keySize * 0.36,
           fontWeight: FontWeight.w600,
           color: cs.onSurface,

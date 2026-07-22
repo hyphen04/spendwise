@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../state/app_mode_providers.dart';
 import '../features/ai/presentation/ai_chat_list_screen.dart';
 import '../features/ai/presentation/ai_chat_screen.dart';
 import '../features/ai/presentation/ai_report_screen.dart';
@@ -24,6 +26,17 @@ class AppRouter {
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/home',
     debugLogDiagnostics: false,
+    // Defense-in-depth: in Offline mode every AI route is unreachable from the
+    // UI (entry points are hidden), but if one is opened via a deep link or
+    // back-stack history, bounce to Settings instead of rendering an AI screen.
+    redirect: (context, state) {
+      if (state.matchedLocation.startsWith('/ai')) {
+        final online =
+            ProviderScope.containerOf(context).read(isOnlineProvider);
+        if (!online) return '/settings';
+      }
+      return null;
+    },
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

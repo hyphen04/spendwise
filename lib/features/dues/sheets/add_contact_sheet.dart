@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -382,7 +382,7 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
               children: [
                 Text(
                   isUpdate ? 'Edit Contact' : 'New Contact',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                     color: cs.onSurface,
@@ -391,7 +391,7 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
                 const Spacer(),
                 Text(
                   'Step ${_step + 1} of 2',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: cs.onSurfaceVariant,
@@ -516,7 +516,7 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
           // Icon picker
           Text(
             'Icon',
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: cs.onSurfaceVariant,
@@ -554,7 +554,7 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
           // Color picker
           Text(
             'Color',
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: cs.onSurfaceVariant,
@@ -721,7 +721,7 @@ class _ImportButton extends StatelessWidget {
       icon: Icon(Icons.contact_page_rounded, size: 20, color: cs.primary),
       label: Text(
         'Import from phone',
-        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+        style: plusJakartaSans(fontWeight: FontWeight.w600),
       ),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -777,7 +777,7 @@ class _ImportPreview extends StatelessWidget {
               children: [
                 Text(
                   hasPhone ? formatPhone(phone!) : 'Photo imported',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 13,
                     color: cs.onSurface,
                     fontWeight: FontWeight.w600,
@@ -787,7 +787,7 @@ class _ImportPreview extends StatelessWidget {
                   const SizedBox(height: 1),
                   Text(
                     '+$extra more number${extra == 1 ? '' : 's'}',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: plusJakartaSans(
                       fontSize: 11,
                       color: cs.onSurfaceVariant,
                     ),
@@ -847,7 +847,7 @@ class _TypeToggle extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               label,
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                 color: isSelected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),

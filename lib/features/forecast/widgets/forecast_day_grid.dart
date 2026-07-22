@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 
 import '../../../features/forecast/cashflow_forecast.dart' show ForecastMode;
 
@@ -23,16 +23,22 @@ class ForecastDayGrid extends StatelessWidget {
     required this.mode,
     required this.dayExpense,
     required this.today,
-    this.accent = const Color(0xFF14B8A6),
+    this.accent,
   });
 
   final ForecastMode mode;
   final Map<String, double> dayExpense;
   final DateTime today;
-  final Color accent;
+
+  /// Spend-heatmap colour. Defaults to the theme seed (`cs.primary`) so the
+  /// grid follows the user's chosen colour; pass an override only when you need
+  /// a fixed hue.
+  final Color? accent;
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final resolvedAccent = accent ?? cs.primary;
     final year = today.year;
     final month = today.month;
     final DateTime start;
@@ -49,7 +55,7 @@ class ForecastDayGrid extends StatelessWidget {
       end: end,
       today: today,
       dayExpense: dayExpense,
-      accent: accent,
+      accent: resolvedAccent,
       // 6-month has ~26 columns → small squares fill the width naturally.
       // A single month has only ~6 week-columns, so keep its squares small
       // too (compact GitHub-style grid, not stretched into huge cells).
@@ -282,7 +288,7 @@ class _WeekdayLabels extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.only(right: 4),
                         child: Text(labels[r]!,
-                            style: GoogleFonts.plusJakartaSans(
+                            style: plusJakartaSans(
                                 fontSize: 8,
                                 fontWeight: FontWeight.w600,
                                 color: cs.onSurfaceVariant
@@ -325,7 +331,7 @@ class _MonthLabels extends StatelessWidget {
               left: 16.0 + m * step * 4.43,
               top: 0,
               child: Text(names[m % 12],
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                       fontSize: 8,
                       fontWeight: FontWeight.w600,
                       color: cs.onSurfaceVariant.withValues(alpha: 0.7))),

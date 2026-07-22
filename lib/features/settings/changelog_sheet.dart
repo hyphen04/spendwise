@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 
 import '../../app/widgets/changelog_markdown.dart';
 import '../../app/widgets/spendwise_sheet.dart';
@@ -94,7 +94,7 @@ class _WhatsNewSheet extends StatelessWidget {
                   children: [
                     Text(
                       "What's New",
-                      style: GoogleFonts.plusJakartaSans(
+                      style: plusJakartaSans(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),

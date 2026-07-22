@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 
 /// A fully-rounded monochrome pill used across the app for kind selectors,
 /// filters, the month dropdown, and category/merchant chips.
@@ -58,7 +58,7 @@ class MonoPill extends StatelessWidget {
             ],
             Text(
               label,
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                 fontSize: dense ? 13 : 14,
                 fontWeight: FontWeight.w600,
                 color: fg,

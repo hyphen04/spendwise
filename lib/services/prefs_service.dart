@@ -19,7 +19,8 @@ class PrefsService {
   bool get hideNetWorth => _prefs.getBool('hide_net_worth') ?? true;
   Future<void> setHideNetWorth(bool v) => _prefs.setBool('hide_net_worth', v);
 
-  int get themeSeedColor => _prefs.getInt('theme_seed_color') ?? 0xFF0A0A0A; // Default to Black
+  int get themeSeedColor =>
+      _prefs.getInt('theme_seed_color') ?? 0xFF0A0A0A; // Default to Black
   Future<void> setThemeSeedColor(int v) => _prefs.setInt('theme_seed_color', v);
 
   bool get lockEnabled => _prefs.getBool('lock_enabled') ?? false;
@@ -65,7 +66,8 @@ class PrefsService {
   Future<void> setBackupQuotaMb(int v) => _prefs.setInt('backup_quota_mb', v);
 
   bool get showQuickDuesWidget => _prefs.getBool('show_quick_dues') ?? true;
-  Future<void> setShowQuickDuesWidget(bool v) => _prefs.setBool('show_quick_dues', v);
+  Future<void> setShowQuickDuesWidget(bool v) =>
+      _prefs.setBool('show_quick_dues', v);
 
   /// Whether the user has enabled device-contact access for the Dues import
   /// flow. This is a *user intent* toggle (Settings → Contact Access): it gates
@@ -74,6 +76,14 @@ class PrefsService {
   /// only and never uploaded.
   bool get contactAccess => _prefs.getBool('contact_access') ?? false;
   Future<void> setContactAccess(bool v) => _prefs.setBool('contact_access', v);
+
+  // ── App Mode (master Offline/Online kill switch). Offline (default) hides
+  // every internet-dependent feature — AI Copilot, the GitHub update checker,
+  // and feedback submission — and keeps the app fully on-device. Online
+  // restores the full app with the existing sub-toggles intact. Stored as the
+  // enum name ('online' | 'offline'); see AppMode in app_mode_providers.dart.
+  String get appMode => _prefs.getString('app_mode') ?? 'offline';
+  Future<void> setAppMode(String v) => _prefs.setString('app_mode', v);
 
   // ── AI Copilot (non-secret config; the API key is NOT stored here — it
   // lives in SecureStorageService). AI is entirely opt-in and off by default.

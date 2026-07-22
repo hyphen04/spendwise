@@ -185,9 +185,24 @@ class AiSettingsSection extends ConsumerWidget {
                       title: Text(p.label),
                       subtitle: p.kind == LlmProviderKind.custom
                           ? const Text('You set the base URL + model')
-                          : Text('Default: ${p.model}'),
+                          : Text(p.freeTier
+                              ? 'Default: ${p.model}  ·  free tier'
+                              : 'Default: ${p.model}'),
                       onTap: () async {
-                        await ref.read(prefsServiceProvider).setAiProvider(p.id);
+                        final prefs = ref.read(prefsServiceProvider);
+                        await prefs.setAiProvider(p.id);
+                        // Switching provider must also switch the model: clear
+                        // the stored model override so the new provider's
+                        // default (preset.model) takes effect. The old override
+                        // is almost certainly invalid for the new provider.
+                        // For custom (no default) this leaves it unset, which
+                        // is correct — the user must choose one.
+                        await prefs.setAiModel(null);
+                        // A custom base-URL override must not leak into a preset
+                        // provider, so clear it when leaving the custom preset.
+                        if (p.kind != LlmProviderKind.custom) {
+                          await prefs.setAiBaseUrl(null);
+                        }
                         ref.invalidate(aiConfigProvider);
                         if (ctx.mounted) Navigator.pop(ctx);
                       },

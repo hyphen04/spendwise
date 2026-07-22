@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../app/themes/app_colors.dart';
@@ -18,7 +18,7 @@ import 'custom_report_executor.dart';
 import 'custom_report_spec.dart';
 
 /// The custom-report builder: pick a group-by dimension, metric, kind filter,
-/// date range, optional account/category/mode/tag filters, and a chart type —
+/// date range, optional account/category/mode filters, and a chart type —
 /// with a **live fl_chart preview** that re-runs as you toggle. Save writes a
 /// `custom_reports` row via the DAO (replaces if editing an existing id).
 ///
@@ -41,9 +41,31 @@ class CustomReportBuilderScreen extends ConsumerStatefulWidget {
 
 class _CustomReportBuilderScreenState
     extends ConsumerState<CustomReportBuilderScreen> {
+  /// The report name lives here, NOT in `customReportSpecProvider`. The name
+  /// doesn't affect the on-device query, so syncing it into the spec on every
+  /// keystroke would re-key `customReportDataProvider` and reload the live
+  /// preview each character — the flicker. It's folded into the spec only at
+  /// save time.
+  late final TextEditingController _nameController;
+
+  /// Re-entry guard so a double-tap on Save can't create two uuid-keyed rows.
+  bool _saving = false;
+
+  /// Baseline (loaded / default) spec + name for the "dirty" check. The Update
+  /// button stays hidden until the user actually changes something.
+  CustomReportSpec? _originalSpec;
+  String _originalName = '';
+  bool _dirty = false;
+
   @override
   void initState() {
     super.initState();
+    // Seed from the current spec so the field isn't blank on the first frame;
+    // the post-frame prime below corrects it to the real (possibly async)
+    // loaded / default name.
+    _nameController =
+        TextEditingController(text: ref.read(customReportSpecProvider).name);
+    _nameController.addListener(_onNameChanged);
     // Prime the in-flight spec: load the saved row when editing, otherwise
     // reset to a fresh default so a previous session's spec doesn't leak in.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -52,10 +74,14 @@ class _CustomReportBuilderScreenState
       if (id != null) {
         final row = await ref.read(customReportsDaoProvider).getById(id);
         if (row != null && mounted) {
-          notifier.state = CustomReportSpec.fromJsonString(row.specJson);
+          final spec = CustomReportSpec.fromJsonString(row.specJson);
+          _originalSpec = spec;
+          _originalName = spec.name;
+          notifier.state = spec;
+          _setName(spec.name);
         }
       } else {
-        notifier.state = CustomReportSpec(
+        final spec = CustomReportSpec(
           name: 'Untitled report',
           groupBy: CustomGroupBy.category,
           metric: CustomMetric.sum,
@@ -63,8 +89,41 @@ class _CustomReportBuilderScreenState
           dateRange: CustomDateRange.thisMonth,
           chartType: CustomChartType.bar,
         );
+        _originalSpec = spec;
+        _originalName = 'Untitled report';
+        notifier.state = spec;
+        _setName('Untitled report');
       }
     });
+  }
+
+  void _setName(String name) {
+    _nameController.value = TextEditingValue(
+      text: name,
+      selection: TextSelection.collapsed(offset: name.length),
+    );
+  }
+
+  /// Rebuild only when the dirty state flips — so typing doesn't rebuild the
+  /// whole builder on every keystroke (and never re-keys the preview, since the
+  /// name isn't in `customReportSpecProvider`).
+  void _onNameChanged() {
+    if (!mounted || _originalSpec == null) return;
+    final newDirty = _computeDirty(ref.read(customReportSpecProvider));
+    if (newDirty != _dirty) setState(() {});
+  }
+
+  bool _computeDirty(CustomReportSpec spec) {
+    final original = _originalSpec;
+    if (original == null) return false;
+    return spec != original || _nameController.text != _originalName;
+  }
+
+  @override
+  void dispose() {
+    _nameController.removeListener(_onNameChanged);
+    _nameController.dispose();
+    super.dispose();
   }
 
   @override
@@ -74,11 +133,18 @@ class _CustomReportBuilderScreenState
     final preview = ref.watch(customReportDataProvider(spec));
     final savedAsync = ref.watch(customReportsStreamProvider);
 
+    final isEdit = widget.existingId != null;
+    _dirty = _computeDirty(spec);
+    // New report: always show Save. Editing: hide Update until something
+    // actually changed vs. the loaded row.
+    final showButton = !isEdit || _dirty;
+    final buttonLabel = isEdit ? 'Update report' : 'Save report';
+
     return Scaffold(
       backgroundColor: cs.surface,
       appBar: AppBar(
-        title: Text(widget.existingId == null ? 'New custom report' : 'Edit report',
-            style: GoogleFonts.plusJakartaSans(
+        title: Text(isEdit ? 'Edit report' : 'New custom report',
+            style: plusJakartaSans(
                 fontWeight: FontWeight.w800, fontSize: 18)),
         backgroundColor: cs.surface,
         surfaceTintColor: Colors.transparent,
@@ -89,7 +155,7 @@ class _CustomReportBuilderScreenState
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           // ── Name ──────────────────────────────────────────────────────────
-          _NameField(spec: spec),
+          _NameField(controller: _nameController),
           const SizedBox(height: 20),
 
           // ── Live preview ──────────────────────────────────────────────────
@@ -105,11 +171,10 @@ class _CustomReportBuilderScreenState
               CustomGroupBy.category: 'Category',
               CustomGroupBy.account: 'Account',
               CustomGroupBy.mode: 'Mode',
-              CustomGroupBy.tag: 'Tag',
               CustomGroupBy.day: 'Day',
               CustomGroupBy.month: 'Month',
             },
-            onSelected: (v) => _update(ref, spec..groupBy = v),
+            onSelected: (v) => _update(ref, spec.copy()..groupBy = v),
           ),
           const SizedBox(height: 18),
 
@@ -123,7 +188,7 @@ class _CustomReportBuilderScreenState
               CustomMetric.count: 'Count',
               CustomMetric.avg: 'Average',
             },
-            onSelected: (v) => _update(ref, spec..metric = v),
+            onSelected: (v) => _update(ref, spec.copy()..metric = v),
           ),
           const SizedBox(height: 18),
 
@@ -137,7 +202,7 @@ class _CustomReportBuilderScreenState
               CustomKind.income: 'Income',
               CustomKind.all: 'All',
             },
-            onSelected: (v) => _update(ref, spec..kind = v),
+            onSelected: (v) => _update(ref, spec.copy()..kind = v),
           ),
           const SizedBox(height: 18),
 
@@ -152,7 +217,7 @@ class _CustomReportBuilderScreenState
               CustomDateRange.thisYear: 'This year',
               CustomDateRange.custom: 'Custom',
             },
-            onSelected: (v) => _update(ref, spec..dateRange = v),
+            onSelected: (v) => _update(ref, spec.copy()..dateRange = v),
           ),
           if (spec.dateRange == CustomDateRange.custom) ...[
             const SizedBox(height: 12),
@@ -177,7 +242,7 @@ class _CustomReportBuilderScreenState
               CustomChartType.list: 'List',
               CustomChartType.stat: 'Stat',
             },
-            onSelected: (v) => _update(ref, spec..chartType = v),
+            onSelected: (v) => _update(ref, spec.copy()..chartType = v),
           ),
           const SizedBox(height: 28),
 
@@ -187,89 +252,90 @@ class _CustomReportBuilderScreenState
             _SavedReportsList(rows: savedAsync.value!),
             const SizedBox(height: 24),
           ],
-
-          // ── Save ──────────────────────────────────────────────────────────
-          FilledButton.icon(
-            onPressed: () => _save(context, ref, spec),
-            icon: const Icon(Icons.save_outlined),
-            label: Text(widget.existingId == null ? 'Save report' : 'Update report'),
-          ),
         ],
       ),
+      // ── Sticky save / update bar ────────────────────────────────────────
+      // Fixed at the bottom. When editing, it's hidden entirely until the user
+      // changes something (showButton == false → no bottom bar).
+      bottomNavigationBar: showButton
+          ? SafeArea(
+              top: false,
+              minimum: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              child: FilledButton.icon(
+                onPressed: _saving ? null : () => _save(context, ref),
+                icon: const Icon(Icons.save_outlined),
+                label: Text(buttonLabel),
+              ),
+            )
+          : null,
     );
   }
 
+  /// `spec` is expected to be a fresh copy (call sites do
+  /// `spec.copy()..field=v`) so the watched instance is never mutated in place
+  /// — mutating it would change its hash while it's the live
+  /// `customReportDataProvider` family key.
   void _update(WidgetRef ref, CustomReportSpec spec) {
-    ref.read(customReportSpecProvider.notifier).state = spec.copy();
+    ref.read(customReportSpecProvider.notifier).state = spec;
   }
 
-  Future<void> _save(BuildContext context, WidgetRef ref, CustomReportSpec spec) async {
-    if (spec.name.trim().isEmpty) {
+  Future<void> _save(BuildContext context, WidgetRef ref) async {
+    if (_saving) return;
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
       showFeedbackSnackBar(context, 'Give your report a name first', error: true);
       return;
     }
-    final dao = ref.read(customReportsDaoProvider);
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final id = widget.existingId ?? const Uuid().v4();
-    await dao.upsert(CustomReportsCompanion(
-      id: Value(id),
-      name: Value(spec.name.trim()),
-      specJson: Value(spec.toJsonString()),
-      // Preserve the original creation timestamp on edit; only stamp `now` on
-      // a fresh insert.
-      createdAt: widget.existingId == null ? Value(now) : const Value.absent(),
-      updatedAt: Value(now),
-    ));
-    if (!context.mounted) return;
-    showFeedbackSnackBar(context,
-        widget.existingId == null ? 'Report saved' : 'Report updated');
-    Navigator.of(context).pop();
-  }
-}
-
-// ── In-place name field ──────────────────────────────────────────────────────
-
-class _NameField extends ConsumerStatefulWidget {
-  const _NameField({required this.spec});
-  final CustomReportSpec spec;
-
-  @override
-  ConsumerState<_NameField> createState() => _NameFieldState();
-}
-
-class _NameFieldState extends ConsumerState<_NameField> {
-  late final TextEditingController _c;
-
-  @override
-  void initState() {
-    super.initState();
-    _c = TextEditingController(text: widget.spec.name);
-  }
-
-  @override
-  void didUpdateWidget(covariant _NameField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // When the builder primes the spec from a saved row (async, post-frame),
-    // sync the field so it shows the loaded name rather than the placeholder.
-    if (widget.spec.name != _c.text && widget.spec.name != oldWidget.spec.name) {
-      _c.value = TextEditingValue(
-        text: widget.spec.name,
-        selection: TextSelection.collapsed(offset: widget.spec.name.length),
-      );
+    setState(() => _saving = true);
+    try {
+      // Fold the (possibly renamed) name into the spec at the last moment. The
+      // spec provider holds only the query-affecting fields; the name lives in
+      // the controller so typing it never re-runs the preview.
+      final spec = ref.read(customReportSpecProvider).copy()..name = name;
+      final dao = ref.read(customReportsDaoProvider);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final id = widget.existingId ?? const Uuid().v4();
+      if (widget.existingId == null) {
+        // Fresh insert — every NOT NULL column (incl. createdAt) must be present
+        // because `upsert` validates the INSERT statement.
+        await dao.upsert(CustomReportsCompanion(
+          id: Value(id),
+          name: Value(name),
+          specJson: Value(spec.toJsonString()),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+        ));
+      } else {
+        // Edit — a real UPDATE leaves createdAt untouched (insertOnConflictUpdate
+        // can't do this: it validates the INSERT and rejects an absent createdAt).
+        await dao.updateFields(
+          id,
+          name: name,
+          specJson: spec.toJsonString(),
+          updatedAt: now,
+        );
+      }
+      if (!context.mounted) return;
+      showFeedbackSnackBar(context,
+          widget.existingId == null ? 'Report saved' : 'Report updated');
+      Navigator.of(context).pop();
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
+}
 
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
+// ── Name field ────────────────────────────────────────────────────────────────
+
+class _NameField extends StatelessWidget {
+  const _NameField({required this.controller});
+  final TextEditingController controller;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return TextField(
-      controller: _c,
+      controller: controller,
       decoration: InputDecoration(
         labelText: 'Report name',
         prefixIcon: const Icon(Icons.label_outline),
@@ -288,10 +354,8 @@ class _NameFieldState extends ConsumerState<_NameField> {
           borderSide: BorderSide(color: cs.primary, width: 1.5),
         ),
       ),
-      onChanged: (v) {
-        final spec = widget.spec..name = v;
-        ref.read(customReportSpecProvider.notifier).state = spec.copy();
-      },
+      // No onChanged: the name is owned by the parent controller and only
+      // folded into the spec at save time, so typing never re-runs the preview.
     );
   }
 }
@@ -320,12 +384,12 @@ class _PreviewCard extends StatelessWidget {
           Row(
             children: [
               Text('Live preview',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                       fontSize: 13, fontWeight: FontWeight.w800)),
               const Spacer(),
               Text(
                 '${spec.metric.name} • ${spec.kind.name}',
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                     fontSize: 11, color: cs.onSurfaceVariant),
               ),
             ],
@@ -361,7 +425,7 @@ class _Label extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(text,
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
               fontSize: 12,
               fontWeight: FontWeight.w700,
               color: cs.onSurfaceVariant,
@@ -427,7 +491,7 @@ class _CustomRangePicker extends ConsumerWidget {
               );
               if (d != null) {
                 ref.read(customReportSpecProvider.notifier).state =
-                    (spec..customFrom = d.toIso8601String()).copy();
+                    spec.copy()..customFrom = d.toIso8601String();
               }
             },
           ),
@@ -448,7 +512,7 @@ class _CustomRangePicker extends ConsumerWidget {
               );
               if (d != null) {
                 ref.read(customReportSpecProvider.notifier).state =
-                    (spec..customTo = d.toIso8601String()).copy();
+                    spec.copy()..customTo = d.toIso8601String();
               }
             },
           ),
@@ -484,11 +548,11 @@ class _DateTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label,
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                     fontSize: 10, color: cs.onSurfaceVariant)),
             const SizedBox(height: 2),
             Text(display,
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                     fontSize: 13, fontWeight: FontWeight.w600)),
           ],
         ),
@@ -497,7 +561,7 @@ class _DateTile extends StatelessWidget {
   }
 }
 
-// ── Filter row (account / category / mode / tag pickers) ─────────────────────
+// ── Filter row (account / category / mode pickers) ─────────────────────
 
 class _FilterRow extends ConsumerWidget {
   const _FilterRow({required this.spec});
@@ -509,7 +573,6 @@ class _FilterRow extends ConsumerWidget {
     final categories =
         ref.watch(categoriesStreamProvider).valueOrNull ?? const [];
     final modes = ref.watch(modesStreamProvider).valueOrNull ?? const [];
-    final tags = ref.watch(tagsForCustomReportProvider).valueOrNull ?? const [];
 
     return Wrap(
       spacing: 8,
@@ -521,7 +584,7 @@ class _FilterRow extends ConsumerWidget {
           display: _nameFor(accounts, spec.accountId, (a) => a.name),
           onClear: spec.accountId == null
               ? null
-              : () => _set(ref, spec..accountId = null),
+              : () => _set(ref, spec.copy()..accountId = null),
           onTap: () => _pickAccount(context, ref, spec, accounts),
         ),
         _FilterChip(
@@ -530,7 +593,7 @@ class _FilterRow extends ConsumerWidget {
           display: _nameFor(categories, spec.categoryId, (c) => c.name),
           onClear: spec.categoryId == null
               ? null
-              : () => _set(ref, spec..categoryId = null),
+              : () => _set(ref, spec.copy()..categoryId = null),
           onTap: () => _pickCategory(context, ref, spec, categories),
         ),
         _FilterChip(
@@ -539,24 +602,17 @@ class _FilterRow extends ConsumerWidget {
           display: _nameFor(modes, spec.modeId, (m) => m.name),
           onClear: spec.modeId == null
               ? null
-              : () => _set(ref, spec..modeId = null),
+              : () => _set(ref, spec.copy()..modeId = null),
           onTap: () => _pickMode(context, ref, spec, modes),
-        ),
-        _FilterChip(
-          label: 'Tag',
-          icon: Icons.tag_outlined,
-          display: _nameFor(tags, spec.tagId, (t) => t.name),
-          onClear: spec.tagId == null
-              ? null
-              : () => _set(ref, spec..tagId = null),
-          onTap: () => _pickTag(context, ref, spec, tags),
         ),
       ],
     );
   }
 
+  /// `s` is expected to be a fresh copy (call sites do `spec.copy()..field=v`)
+  /// so the watched instance is never mutated in place.
   void _set(WidgetRef ref, CustomReportSpec s) =>
-      ref.read(customReportSpecProvider.notifier).state = s.copy();
+      ref.read(customReportSpecProvider.notifier).state = s;
 
   String _nameFor<T>(List<T> items, String? id, String Function(T) name) {
     if (id == null) return 'All';
@@ -568,28 +624,27 @@ class _FilterRow extends ConsumerWidget {
       CustomReportSpec spec, List<Account> items) async {
     final id = await _showPicker<Account>(context, 'Account', items,
         (a) => a.name, (a) => a.id, spec.accountId);
-    if (id != null) _set(ref, spec..accountId = id == '__all' ? null : id);
+    if (id != null) {
+      _set(ref, spec.copy()..accountId = id == '__all' ? null : id);
+    }
   }
 
   Future<void> _pickCategory(BuildContext context, WidgetRef ref,
       CustomReportSpec spec, List<Category> items) async {
     final id = await _showPicker<Category>(context, 'Category', items,
         (c) => c.name, (c) => c.id, spec.categoryId);
-    if (id != null) _set(ref, spec..categoryId = id == '__all' ? null : id);
+    if (id != null) {
+      _set(ref, spec.copy()..categoryId = id == '__all' ? null : id);
+    }
   }
 
   Future<void> _pickMode(BuildContext context, WidgetRef ref,
       CustomReportSpec spec, List<Mode> items) async {
     final id = await _showPicker<Mode>(context, 'Mode', items,
         (m) => m.name, (m) => m.id, spec.modeId);
-    if (id != null) _set(ref, spec..modeId = id == '__all' ? null : id);
-  }
-
-  Future<void> _pickTag(BuildContext context, WidgetRef ref,
-      CustomReportSpec spec, List<Tag> items) async {
-    final id = await _showPicker<Tag>(context, 'Tag', items,
-        (t) => t.name, (t) => t.id, spec.tagId);
-    if (id != null) _set(ref, spec..tagId = id == '__all' ? null : id);
+    if (id != null) {
+      _set(ref, spec.copy()..modeId = id == '__all' ? null : id);
+    }
   }
 
   /// A simple bottom-sheet picker rendered via [showSpendWiseSheet]. Returns
@@ -614,7 +669,7 @@ class _FilterRow extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
               child: Text('Filter by $title',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                       fontSize: 16, fontWeight: FontWeight.w800)),
             ),
             Flexible(
@@ -687,11 +742,11 @@ class _FilterChip extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: plusJakartaSans(
                         fontSize: 9,
                         color: active ? cs.onPrimaryContainer : cs.onSurfaceVariant)),
                 Text(display,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: plusJakartaSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: active ? cs.onPrimaryContainer : cs.onSurface)),
@@ -726,7 +781,7 @@ class _SavedReportsList extends ConsumerWidget {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Text('No saved reports yet. Build one and tap Save.',
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 12, color: cs.onSurfaceVariant)),
       );
     }
@@ -785,7 +840,7 @@ class _SavedReportsList extends ConsumerWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(row.name,
-                            style: GoogleFonts.plusJakartaSans(
+                            style: plusJakartaSans(
                                 fontSize: 14, fontWeight: FontWeight.w700)),
                       ),
                       Icon(Icons.chevron_right_rounded,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 
 import '../../../app/utils/money_format.dart';
 import '../../../features/forecast/cashflow_forecast.dart';
@@ -10,9 +10,6 @@ import '../../../features/forecast/widgets/forecast_monthly_ring.dart';
 import '../../../state/forecast_providers.dart';
 import '../../../state/manage_providers.dart';
 import '../widgets/insight_card.dart';
-
-const _kForecastAccent = Color(0xFF14B8A6);
-const _kAmber = Color(0xFFB45309);
 
 /// Month / year run-rate projection. A GitHub-style day grid shows pacing,
 /// the hero number is the projected period-end balance, and (monthly only) a
@@ -36,17 +33,22 @@ class CashflowForecastReport extends ConsumerWidget {
       backgroundColor: cs.surface,
       appBar: AppBar(
         backgroundColor: cs.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-                '${mode == ForecastMode.sixMonths ? '6-Month' : 'Month'} '
-                'Forecast',
-                style: const TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.w600)),
+                mode == ForecastMode.sixMonths ? '6-month forecast' : 'Forecast',
+                style: plusJakartaSans(
+                    fontSize: 18, fontWeight: FontWeight.w800)),
             Text('Run-rate projection · on-device',
-                style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+                style: plusJakartaSans(
+                    fontSize: 13,
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w400)),
           ],
         ),
       ),
@@ -68,7 +70,7 @@ class CashflowForecastReport extends ConsumerWidget {
                   mode == ForecastMode.sixMonths
                       ? 'Daily spend · last 6 months'
                       : 'Daily spend this month',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       color: cs.onSurfaceVariant),
@@ -83,10 +85,9 @@ class CashflowForecastReport extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               decoration: BoxDecoration(
-                color: cs.surfaceContainerHigh,
+                color: cs.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: cs.outlineVariant.withValues(alpha: 0.4)),
+                border: Border.all(color: cs.outline),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,10 +97,11 @@ class CashflowForecastReport extends ConsumerWidget {
                       mode: mode,
                       dayExpense: expenseMap,
                       today: DateTime.now(),
+                      accent: cs.primary,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  _Legend(accent: _kForecastAccent, cs: cs),
+                  _Legend(accent: cs.primary, cs: cs),
                 ],
               ),
             ),
@@ -119,25 +121,12 @@ class CashflowForecastReport extends ConsumerWidget {
           ),
           if (mode == ForecastMode.monthly) ...[
             const SizedBox(height: 24),
-            Row(
-              children: [
-                Container(
-                  width: 6,
-                  height: 18,
-                  decoration: BoxDecoration(
-                    color: _kForecastAccent,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text('RUN-RATE BY CATEGORY',
-                    style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: cs.onSurface,
-                        letterSpacing: 0.5)),
-              ],
-            ),
+            Text('RUN-RATE BY CATEGORY',
+                style: plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: cs.onSurfaceVariant,
+                    letterSpacing: 1.1)),
             const SizedBox(height: 12),
             runRateAsync.when(
               loading: () => const Center(
@@ -155,7 +144,7 @@ class CashflowForecastReport extends ConsumerWidget {
                       'Not enough history yet. After a couple of months of '
                       'spending, your usual pace by this point in the month '
                       'will show here.',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: plusJakartaSans(
                           fontSize: 13, color: cs.onSurfaceVariant),
                     ),
                   );
@@ -205,7 +194,7 @@ class _Legend extends StatelessWidget {
     return Row(
       children: [
         Text('Less',
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
                 color: cs.onSurfaceVariant.withValues(alpha: 0.7))),
@@ -224,13 +213,13 @@ class _Legend extends StatelessWidget {
           ),
         const SizedBox(width: 6),
         Text('More',
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
                 color: cs.onSurfaceVariant.withValues(alpha: 0.7))),
         const Spacer(),
         Text('Today is ringed',
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
                 color: cs.onSurfaceVariant.withValues(alpha: 0.6))),
@@ -251,8 +240,9 @@ class _ForecastCard extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: cs.surfaceContainerHigh,
+          color: cs.surfaceContainerLow,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: cs.outline),
         ),
         child: Text(
           f.mode == ForecastMode.sixMonths
@@ -260,17 +250,17 @@ class _ForecastCard extends StatelessWidget {
                   'your 6-month pace and projection will appear here.'
               : 'No spending recorded this month yet. Once you log a '
                   'transaction, your run-rate projection will appear here.',
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
               fontSize: 14, color: cs.onSurfaceVariant),
         ),
       );
     }
     final negative = f.projectedEnd < 0;
-    final endColor = negative ? _kAmber : cs.onSurface;
+    final endColor = negative ? cs.error : cs.onSurface;
     final calm = !negative && !f.outlook.contains('tight') &&
         !f.outlook.contains('Worth') && !f.outlook.contains('dip');
-    final pillBg = (calm ? _kForecastAccent : _kAmber).withValues(alpha: 0.16);
-    final pillFg = calm ? _kForecastAccent : _kAmber;
+    final pillBg = (calm ? cs.primary : cs.error).withValues(alpha: 0.16);
+    final pillFg = calm ? cs.primary : cs.error;
     final monthly = f.mode == ForecastMode.monthly;
     final outlookPill = Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -279,16 +269,16 @@ class _ForecastCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(f.outlook,
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
               fontSize: 12, fontWeight: FontWeight.w700, color: pillFg)),
     );
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHigh,
+        color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.4)),
+        border: Border.all(color: cs.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -308,7 +298,7 @@ class _ForecastCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text('Projected balance\nat month-end',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: plusJakartaSans(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: cs.onSurfaceVariant)),
@@ -326,7 +316,7 @@ class _ForecastCard extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: _kForecastAccent.withValues(alpha: 0.16),
+                    color: cs.primary.withValues(alpha: 0.16),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
@@ -336,7 +326,7 @@ class _ForecastCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Projected balance in 6 months',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: plusJakartaSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: cs.onSurfaceVariant),
@@ -352,7 +342,7 @@ class _ForecastCard extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Text(
                 '${negative ? '−' : ''}${fmtMoney(f.projectedEnd.abs())}',
-                style: GoogleFonts.spaceGrotesk(
+                style: spaceGrotesk(
                   fontSize: 40,
                   fontWeight: FontWeight.w700,
                   color: endColor,
@@ -370,7 +360,7 @@ class _ForecastCard extends StatelessWidget {
                     'logged.'
                 : '≈ where you\'d be in 6 months if your last 6 months\' '
                     'income and spending pace continues.',
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
                 color: cs.onSurfaceVariant),
@@ -383,7 +373,7 @@ class _ForecastCard extends StatelessWidget {
                 Text(
                   'Day ${f.daysElapsed} of ${f.daysInPeriod} · '
                       '${f.daysLeft} left in ${f.periodLabel}',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: cs.onSurfaceVariant),
@@ -391,7 +381,7 @@ class _ForecastCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   'Opening + income so far − projected spend',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
                       color: cs.onSurfaceVariant.withValues(alpha: 0.7)),
@@ -404,7 +394,7 @@ class _ForecastCard extends StatelessWidget {
               children: [
                 Text(
                   'Based on your last 6 completed months',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: cs.onSurfaceVariant),
@@ -412,7 +402,7 @@ class _ForecastCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   'Now + 6 × avg monthly net',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
                       color: cs.onSurfaceVariant.withValues(alpha: 0.7)),
@@ -443,7 +433,7 @@ class _ForecastCard extends StatelessWidget {
                   value: fmtMoney(f.mode == ForecastMode.sixMonths
                       ? f.projectedIncome
                       : f.incomeSoFar),
-                  accent: _kForecastAccent,
+                  accent: cs.primary,
                 )),
                 const SizedBox(width: 10),
                 Expanded(
@@ -460,7 +450,7 @@ class _ForecastCard extends StatelessWidget {
               f.mode == ForecastMode.sixMonths
                   ? 'Known bills due in the next 6 months'
                   : 'Known bills due before month-end',
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: cs.onSurfaceVariant),
@@ -474,16 +464,15 @@ class _ForecastCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 7),
                   decoration: BoxDecoration(
-                    color: _kAmber.withValues(alpha: 0.12),
+                    color: cs.error.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
-                    border:
-                        Border.all(color: _kAmber.withValues(alpha: 0.3)),
+                    border: Border.all(color: cs.error.withValues(alpha: 0.3)),
                   ),
                   child: Text(b,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: plusJakartaSans(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: _kAmber)),
+                          color: cs.error)),
                 );
               }).toList(),
             ),
@@ -492,7 +481,7 @@ class _ForecastCard extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
                   '+${f.billsDueBeforePeriodEnd.length - 8} more',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: cs.onSurfaceVariant),
@@ -530,7 +519,7 @@ class _StatTile extends StatelessWidget {
           Text(label,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   color: cs.onSurfaceVariant,
@@ -541,7 +530,7 @@ class _StatTile extends StatelessWidget {
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(value,
-                style: GoogleFonts.spaceGrotesk(
+                style: spaceGrotesk(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: accent,
@@ -565,16 +554,16 @@ class _RunRateTile extends StatelessWidget {
     final ratio = o.typical > 0 ? (o.actual / o.typical) : 0.0;
     final over = ratio > 1.0;
     final barFill = ratio.clamp(0.0, 1.3);
-    final barColor = over ? _kAmber : _kForecastAccent;
-    final labelColor = over ? _kAmber : cs.primary;
+    final barColor = over ? cs.error : cs.primary;
+    final labelColor = over ? cs.error : cs.primary;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHigh,
+        color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.4)),
+        border: Border.all(color: cs.outline),
       ),
       child: Row(
         children: [
@@ -599,7 +588,7 @@ class _RunRateTile extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(o.categoryName,
-                          style: GoogleFonts.plusJakartaSans(
+                          style: plusJakartaSans(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: cs.onSurface),
@@ -607,7 +596,7 @@ class _RunRateTile extends StatelessWidget {
                           overflow: TextOverflow.ellipsis),
                     ),
                     Text(o.label,
-                        style: GoogleFonts.plusJakartaSans(
+                        style: plusJakartaSans(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: labelColor)),
@@ -627,7 +616,7 @@ class _RunRateTile extends StatelessWidget {
                 Text(
                   'Usually ${fmtMoney(o.typical)} by now · '
                   'now ${fmtMoney(o.actual)}',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
                       color: cs.onSurfaceVariant),
@@ -675,14 +664,14 @@ class _ModePill extends StatelessWidget {
         duration: const Duration(milliseconds: 160),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
         decoration: BoxDecoration(
-          color: selected ? _kForecastAccent : Colors.transparent,
+          color: selected ? cs.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(label,
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: selected ? Colors.white : cs.onSurfaceVariant)),
+                color: selected ? cs.onPrimary : cs.onSurfaceVariant)),
       ),
     );
   }

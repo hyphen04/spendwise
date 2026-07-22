@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 
 /// A reusable "Load more" affordance shown as the fallback for infinite-scroll
 /// lists — and the only control when a list is shorter than the viewport (so
@@ -41,7 +41,7 @@ class LoadMoreButton extends StatelessWidget {
           minimumSize: const Size(double.infinity, 44),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           textStyle:
-              GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w500),
+              plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w500),
         ),
         child: Text('Load $loadNext more  ·  $remaining remaining'),
       ),

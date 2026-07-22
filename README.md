@@ -21,6 +21,7 @@ SpendWise is a beautifully crafted, privacy-first personal finance tracker. It h
 ## ✨ Features
 
 - 📵 **100% Offline & Private:** All data resides securely on your device. We respect your privacy.
+- 🌐 **Offline / Online Mode:** A master toggle in Settings lets you run the app fully offline. **Offline** (the default) hides every internet-dependent feature — AI Copilot, update checks, and feedback — from all screens and keeps everything on-device; no online operation runs. **Online** restores the full app with your existing sub-toggles intact (your AI / auto-update choices stay dormant while offline and resume exactly as-is when you switch back). Fonts are bundled locally too, so the app renders identically with no connection.
 - 🎨 **Material You Design:** Clean, fluid, and deeply integrated Material 3 UI. Support for Dark Mode, OLED pure black, and dynamic accent colors.
 - 🔒 **App Lock Security:** Keep your financial data safe with PIN code protection and Biometric (Face ID / Fingerprint) unlock.
 - 📊 **Budgets & Analytics:** Track expenses against custom budgets. Visualize your spending with beautiful, intuitive charts.
@@ -36,7 +37,7 @@ Built with modern Flutter architecture to ensure stability, speed, and maintaina
 - **State Management:** [Riverpod](https://riverpod.dev/) (with code generation)
 - **Local Database:** [Drift (SQLite)](https://drift.simonbinder.eu/) for typesafe and fast offline storage
 - **Routing:** [GoRouter](https://pub.dev/packages/go_router)
-- **Styling:** Dynamic Color, Google Fonts, Phosphor Icons
+- **Styling:** Dynamic Color, bundled local fonts (Plus Jakarta Sans + Space Grotesk), Phosphor Icons
 - **Security:** Flutter Secure Storage, Local Auth (Biometrics)
 
 ## 🚀 Getting Started

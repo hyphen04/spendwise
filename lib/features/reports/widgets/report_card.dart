@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 
 /// A report-launch tile in the Reports hub grid: circular emoji badge, title,
 /// and a 2-line description. The single source of truth for report cards —
@@ -59,7 +59,7 @@ class ReportCard extends StatelessWidget {
                 const Spacer(),
                 Text(
                   title,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: cs.onSurface,
@@ -70,7 +70,7 @@ class ReportCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   description,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     color: cs.onSurfaceVariant,
@@ -121,7 +121,7 @@ class ReportCard extends StatelessWidget {
                       Text(title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.plusJakartaSans(
+                          style: plusJakartaSans(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: cs.onSurface)),
@@ -129,7 +129,7 @@ class ReportCard extends StatelessWidget {
                       Text(description,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.plusJakartaSans(
+                          style: plusJakartaSans(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
                               color: cs.onSurfaceVariant,

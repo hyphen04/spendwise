@@ -208,12 +208,20 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 isExpanded: true,
                 initialValue: _cadence,
                 decoration: const InputDecoration(labelText: 'Repeats'),
-                items: _cadences.entries
-                    .map((e) => DropdownMenuItem(
-                          value: e.key,
-                          child: Text(e.value),
-                        ))
-                    .toList(),
+                items: [
+                  // The detector emits a free-form "every N days" cadence for
+                  // gaps that don't fit a clean bucket. Keep it as a selectable
+                  // item when editing such a row so the dropdown's value matches
+                  // exactly one entry (otherwise DropdownButton asserts). The
+                  // engine's _addCadence handles "every N days" via regex.
+                  if (_cadence.isNotEmpty && !_cadences.containsKey(_cadence))
+                    DropdownMenuItem(value: _cadence, child: Text(_cadence)),
+                  for (final e in _cadences.entries)
+                    DropdownMenuItem(
+                      value: e.key,
+                      child: Text(e.value),
+                    ),
+                ],
                 onChanged: (v) => setState(() => _cadence = v ?? 'monthly'),
               ),
               const SizedBox(height: 16),

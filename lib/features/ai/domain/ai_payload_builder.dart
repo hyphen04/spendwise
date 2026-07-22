@@ -41,7 +41,7 @@ typedef BillSummary = ({
 /// contact name, phone, or photo path.
 ///
 /// It applies [AiConfig.shareNames]: when false (the default) it replaces
-/// category/account/mode/tag/goal/bill *names* with opaque rank keys
+/// category/account/mode/goal/bill *names* with opaque rank keys
 /// (`cat_0`, `acc_1`, `goal_N`, `bill_N`) and embeds no `legend` in the
 /// outbound JSON — the LLM sees only numbers and anonymous labels. When true
 /// it attaches a `legend` mapping each rank key to its real name so advice can
@@ -65,7 +65,7 @@ class AiPayloadBuilder {
   ///
   /// Inputs are the current-month [summary], the month's [budgets], and the
   /// rolling 6-month [cashflow]. The optional aggregates (modes, account
-  /// balances, tags, category trend, tx frequency, day distribution, goals,
+  /// balances, category trend, tx frequency, day distribution, goals,
   /// recurring bills) are anonymized and omitted when empty. Returns the JSON
   /// payload plus the on-device legend (see [AiContext]).
   AiContext buildAskContext({
@@ -75,7 +75,6 @@ class AiPayloadBuilder {
     required String period,
     List<ModeTotal> modeBreakdown = const [],
     List<AccountBalance> accountBalances = const [],
-    List<TagTotal> tagBreakdown = const [],
     List<List<CategoryTotal>> categoryBreakdown3mo = const [],
     int? expenseCount,
     int? daysInPeriod,
@@ -84,7 +83,6 @@ class AiPayloadBuilder {
     List<BillSummary> recurringBills = const [],
     List<AiEntityName> allCategories = const [],
     List<AiEntityName> allModes = const [],
-    List<AiEntityName> allTags = const [],
   }) {
     final labeler = _Labeler();
     final expense = summary.expense;
@@ -93,7 +91,6 @@ class AiPayloadBuilder {
         allCategories, categoryBreakdown3mo, labeler, expense);
     final modes = _buildAllModes(allModes, modeBreakdown, labeler, expense);
     final accBalances = _buildAccountBalances(accountBalances, labeler);
-    final tags = _buildAllTags(allTags, tagBreakdown, labeler, expense);
     final txFrequency = _buildTxFrequency(expenseCount, daysInPeriod);
     final dayDist = _buildDayDistribution(dailyExpenseByDay);
     final goalsList = _buildGoals(goals, labeler);
@@ -137,7 +134,6 @@ class AiPayloadBuilder {
         if (allModes.isNotEmpty) 'payment_modes': modes,
         if (accountBalances.isNotEmpty) 'account_balances': accBalances,
         if (budgetList.isNotEmpty) 'budgets': budgetList,
-        if (allTags.isNotEmpty) 'tag_breakdown': tags,
         if (txFrequency != null) 'tx_frequency': txFrequency,
         if (dayDist.isNotEmpty) 'day_distribution': dayDist,
         if (goalsList.isNotEmpty) 'goals': goalsList,
@@ -147,7 +143,6 @@ class AiPayloadBuilder {
         'category_count': allCategories.length,
         'account_count': accountBalances.length,
         'mode_count': allModes.length,
-        'tag_count': allTags.length,
         'goal_count': goals.length,
         'bill_count': recurringBills.length,
         // biggestSpendNote / biggestSpendTitle / biggestSpendAmount are
@@ -175,7 +170,6 @@ class AiPayloadBuilder {
     required List<ModeTotal> modeBreakdown,
     required String period,
     List<AccountBalance> accountBalances = const [],
-    List<TagTotal> tagBreakdown = const [],
     List<List<CategoryTotal>> categoryBreakdown3mo = const [],
     int? expenseCount,
     int? daysInPeriod,
@@ -222,7 +216,6 @@ class AiPayloadBuilder {
     }
 
     final accBalances = _buildAccountBalances(accountBalances, labeler);
-    final tags = _buildTags(tagBreakdown, labeler);
     final trendCats =
         _buildCategoryTrend(categoryBreakdown3mo, topExpenseCategories, labeler);
     final txFrequency = _buildTxFrequency(expenseCount, daysInPeriod);
@@ -247,7 +240,6 @@ class AiPayloadBuilder {
         'payment_modes': modes,
         if (accBalances.isNotEmpty) 'account_balances': accBalances,
         if (budgetList.isNotEmpty) 'budgets': budgetList,
-        if (tags.isNotEmpty) 'tag_breakdown': tags,
         if (trendCats.isNotEmpty) 'category_trend_3mo': trendCats,
         if (txFrequency != null) 'tx_frequency': txFrequency,
         if (dayDist.isNotEmpty) 'day_distribution': dayDist,
@@ -322,28 +314,6 @@ class AiPayloadBuilder {
     return out;
   }
 
-  /// Every active tag (incl 0-spend), labeled, sorted by amount desc. Used by
-  /// [buildAskContext].
-  List<Map<String, Object?>> _buildAllTags(
-      List<AiEntityName> all,
-      List<TagTotal> tagBreakdown,
-      _Labeler labeler,
-      double expense) {
-    final amtMap = {for (final t in tagBreakdown) t.tagId: t.total};
-    final out = <Map<String, Object?>>[];
-    for (final t in all) {
-      final key = labeler.tag(t.id, t.name);
-      final amt = amtMap[t.id] ?? 0.0;
-      out.add({
-        'id': key,
-        'amount': _round(amt),
-        'pct_of_expense': expense > 0 ? _round1(amt / expense * 100) : 0.0,
-      });
-    }
-    out.sort((a, b) => (b['amount'] as double).compareTo(a['amount'] as double));
-    return out;
-  }
-
   List<Map<String, Object?>> _buildModes(
       List<ModeTotal> modeBreakdown, _Labeler labeler, double expense) {
     final modes = <Map<String, Object?>>[];
@@ -364,16 +334,6 @@ class AiPayloadBuilder {
     for (final a in accountBalances) {
       final key = labeler.account(a.id, a.name);
       out.add({'id': key, 'balance': _round(a.balance)});
-    }
-    return out;
-  }
-
-  List<Map<String, Object?>> _buildTags(
-      List<TagTotal> tagBreakdown, _Labeler labeler) {
-    final out = <Map<String, Object?>>[];
-    for (final t in tagBreakdown) {
-      final key = labeler.tag(t.tagId, t.name);
-      out.add({'id': key, 'amount': _round(t.total)});
     }
     return out;
   }
@@ -532,10 +492,9 @@ class _Labeler {
   final _catKeys = <String, String>{};
   final _accKeys = <String, String>{};
   final _modeKeys = <String, String>{};
-  final _tagKeys = <String, String>{};
   final _goalKeys = <String, String>{};
   final _billKeys = <String, String>{};
-  int _catN = 0, _accN = 0, _modeN = 0, _tagN = 0, _goalN = 0, _billN = 0;
+  int _catN = 0, _accN = 0, _modeN = 0, _goalN = 0, _billN = 0;
 
   String category(String id, String name) =>
       _key(_catKeys, 'cat', _catN, id, name, () => _catN++);
@@ -543,14 +502,12 @@ class _Labeler {
       _key(_accKeys, 'acc', _accN, id, name, () => _accN++);
   String mode(String id, String name) =>
       _key(_modeKeys, 'mode', _modeN, id, name, () => _modeN++);
-  String tag(String id, String name) =>
-      _key(_tagKeys, 'tag', _tagN, id, name, () => _tagN++);
   String goal(String id, String name) =>
       _key(_goalKeys, 'goal', _goalN, id, name, () => _goalN++);
   String bill(String id, String name) =>
       _key(_billKeys, 'bill', _billN, id, name, () => _billN++);
 
-  /// Inverse of all six `_*Keys` maps: `label → real id`. On-device only; the
+  /// Inverse of all five `_*Keys` maps: `label → real id`. On-device only; the
   /// executor uses it to resolve labels the LLM emits back to real ids.
   Map<String, String> get labelToId {
     final out = <String, String>{};
@@ -561,9 +518,6 @@ class _Labeler {
       out[e.value] = e.key;
     }
     for (final e in _modeKeys.entries) {
-      out[e.value] = e.key;
-    }
-    for (final e in _tagKeys.entries) {
       out[e.value] = e.key;
     }
     for (final e in _goalKeys.entries) {

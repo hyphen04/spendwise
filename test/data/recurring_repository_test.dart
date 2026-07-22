@@ -267,5 +267,50 @@ void main() {
       final reports = ReportsRepository(db);
       expect(await repo.autoRefreshFromTransactions(reports), 0);
     });
+
+    test('ignored category is not re-seeded on re-detect', () async {
+      final cat = await _cat(db, 'Food & Dining');
+      final mode = await _mode(db, 'Online / UPI');
+      final acc = await _acc(db, 'Cash');
+
+      final now = DateTime.now();
+      for (final d in [
+        now.subtract(const Duration(days: 90)),
+        now.subtract(const Duration(days: 60)),
+        now.subtract(const Duration(days: 30)),
+        now.subtract(const Duration(days: 2)),
+      ]) {
+        await txRepo.create(
+          amount: 499,
+          transactionDate: d.toIso8601String(),
+          accountId: acc.id,
+          categoryId: cat.id,
+          modeId: mode.id,
+          kind: 'expense',
+        );
+      }
+
+      final reports = ReportsRepository(db);
+      await repo.autoRefreshFromTransactions(reports);
+      final detected = (await repo.getAll()).firstWhere((r) => r.source == 'detected');
+      expect(detected.categoryId, cat.id);
+
+      // User marks it "not a bill" → row removed + category ignored.
+      await repo.ignoreDetected(detected);
+      expect(await repo.getById(detected.id), isNull);
+      expect(await repo.ignoredCategoryIds(), contains(cat.id));
+
+      // Re-detect must NOT resurrect it (the whole point of the ignore list).
+      expect(await repo.autoRefreshFromTransactions(reports), 0);
+      expect((await repo.getAll()).where((r) => r.source == 'detected'), isEmpty);
+
+      // Undo: unignore → re-detect seeds it again.
+      await repo.unignoreCategory(cat.id);
+      expect(await repo.autoRefreshFromTransactions(reports), greaterThanOrEqualTo(1));
+      expect(
+        (await repo.getAll()).any((r) => r.source == 'detected' && r.categoryId == cat.id),
+        isTrue,
+      );
+    });
   });
 }

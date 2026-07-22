@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 import '../../app/widgets/mono_numpad.dart';
 import '../../services/biometric_service.dart';
 import '../../services/secure_storage_service.dart';
@@ -90,7 +90,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                 // Wordmark
                 Text(
                   'spendwise',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 32,
                     fontWeight: FontWeight.w800,
                     color: cs.onSurface,
@@ -100,7 +100,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                 const SizedBox(height: 6),
                 Text(
                   'Enter your PIN',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
                     color: cs.onSurfaceVariant,
@@ -136,7 +136,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                   const SizedBox(height: 10),
                   Text(
                     'Incorrect PIN',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: plusJakartaSans(
                       fontSize: 13,
                       color: cs.onSurfaceVariant,
                     ),

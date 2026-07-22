@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 
 import '../../../state/ai_providers.dart';
 import 'ai_settings_section.dart';
@@ -94,11 +94,11 @@ class _StatusBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: plusJakartaSans(
                         fontWeight: FontWeight.w800, color: onTint)),
                 const SizedBox(height: 2),
                 Text(detail,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: plusJakartaSans(
                         fontSize: 12,
                         height: 1.35,
                         color: onTint.withValues(alpha: 0.85))),
@@ -131,7 +131,7 @@ class _PrivacyCard extends StatelessWidget {
             Icon(Icons.shield_outlined, size: 18, color: cs.primary),
             const SizedBox(width: 8),
             Text('Privacy at a glance',
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                     fontWeight: FontWeight.w800, color: cs.onSurface)),
           ]),
           const SizedBox(height: 12),
@@ -156,7 +156,7 @@ class _PrivacyCard extends StatelessWidget {
             'You bring your own API key and use this at your own risk. The key '
             'is stored securely on this device only. Your chats are also saved '
             'on this device only — never uploaded.',
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 12,
                 height: 1.4,
                 color: cs.onSurfaceVariant),
@@ -181,13 +181,13 @@ class _PrivacyCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
                       color: Theme.of(context).colorScheme.onSurface)),
               const SizedBox(height: 2),
               Text(body,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                       fontSize: 12,
                       height: 1.35,
                       color: Theme.of(context).colorScheme.onSurfaceVariant)),

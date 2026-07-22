@@ -337,31 +337,6 @@ class ReportsRepository {
     return (openingBalance, closingBalance);
   }
 
-  Future<List<TagTotal>> tagBreakdown({
-    required String from,
-    required String to,
-  }) async {
-    final rows = await _db.customSelect(
-      'SELECT tt.tag_id, tg.name, tg.color, SUM(tx.amount) AS total '
-      'FROM transaction_tags tt '
-      'JOIN tags tg ON tt.tag_id = tg.id '
-      'JOIN transactions tx ON tt.transaction_id = tx.id '
-      'WHERE tx.kind = \'expense\' '
-      'AND tx.transaction_date >= ? AND tx.transaction_date < ? '
-      'GROUP BY tt.tag_id ORDER BY total DESC',
-      variables: [Variable.withString(from), Variable.withString(to)],
-    ).get();
-
-    return rows
-        .map((r) => TagTotal(
-              tagId: r.data['tag_id'] as String? ?? '',
-              name: r.data['name'] as String? ?? 'Unknown',
-              color: r.data['color'] as String? ?? '#475569',
-              total: (r.data['total'] as num).toDouble(),
-            ))
-        .toList();
-  }
-
   /// Per-day expense totals over [from, to), keyed by ISO date "yyyy-MM-dd".
   /// One grouped query — used by the forecast day-grid (monthly + yearly)
   /// to color each cell by spend intensity. Income/transfer rows are excluded;
@@ -479,9 +454,9 @@ class ReportsRepository {
   }
 
   /// Aggregate count + total over `[from, to)` with optional filters, plus
-  /// per-group breakdowns by category / mode / account / tag. Used by the AI
-  /// tool layer's `filtered_totals` tool. Fixed, parameterized, read-only.
-  /// Never selects `note` or `receipt_path`; never touches `due_*` / `ai_*` /
+  /// per-group breakdowns by category / mode / account. Used by the AI tool
+  /// layer's `filtered_totals` tool. Fixed, parameterized, read-only. Never
+  /// selects `note` or `receipt_path`; never touches `due_*` / `ai_*` /
   /// `goals` / `recurring_items`. `name` fields are real names — the executor
   /// anonymizes them to labels (or keeps them when `shareNames` is on).
   Future<({
@@ -490,7 +465,6 @@ class ReportsRepository {
     List<({String id, String name, double amount, int count})> byCategory,
     List<({String id, String name, double amount, int count})> byMode,
     List<({String id, String name, double amount, int count})> byAccount,
-    List<({String id, String name, double amount, int count})> byTag,
   })> filteredTotals({
     required String from,
     required String to,
@@ -498,7 +472,6 @@ class ReportsRepository {
     String? accountId,
     String? categoryId,
     String? modeId,
-    String? tagId,
     double? amountMin,
     double? amountMax,
   }) async {
@@ -533,21 +506,9 @@ class ReportsRepository {
     }
     final whereClause = where.join(' AND ');
 
-    // tagId filter: for count/by_* we apply an IN subquery (appends one var).
-    // For byTag we already join transaction_tags, so the tag filter is folded
-    // into the join condition there (consuming the same trailing var) — see below.
-    String tagFilterClause = '';
-    if (tagId != null) {
-      tagFilterClause = " AND t.id IN (SELECT transaction_id FROM transaction_tags WHERE tag_id = ?)";
-      vars.add(Variable.withString(tagId));
-    }
-    // byTag joins transaction_tags directly; when tagId is set we add a
-    // `tt.tag_id = ?` predicate that consumes the same trailing tagId var.
-    final byTagTagClause = tagId != null ? ' AND tt.tag_id = ?' : '';
-
     final countRow = await _db.customSelect(
       "SELECT COUNT(*) AS cnt, COALESCE(SUM(t.amount),0) AS total "
-      "FROM transactions t WHERE $whereClause $tagFilterClause",
+      "FROM transactions t WHERE $whereClause",
       variables: vars,
     ).getSingle();
     final count = (countRow.data['cnt'] as int?) ?? 0;
@@ -557,7 +518,7 @@ class ReportsRepository {
       "SELECT t.category_id AS id, COALESCE(c.name,'Unknown') AS name, "
       "COALESCE(SUM(t.amount),0) AS amount, COUNT(*) AS cnt "
       "FROM transactions t LEFT JOIN categories c ON t.category_id = c.id "
-      "WHERE $whereClause $tagFilterClause "
+      "WHERE $whereClause "
       "GROUP BY t.category_id ORDER BY amount DESC",
       variables: vars,
     ).get();
@@ -574,7 +535,7 @@ class ReportsRepository {
       "SELECT t.mode_id AS id, COALESCE(m.name,'Unknown') AS name, "
       "COALESCE(SUM(t.amount),0) AS amount, COUNT(*) AS cnt "
       "FROM transactions t LEFT JOIN modes m ON t.mode_id = m.id "
-      "WHERE $whereClause $tagFilterClause "
+      "WHERE $whereClause "
       "GROUP BY t.mode_id ORDER BY amount DESC",
       variables: vars,
     ).get();
@@ -591,30 +552,11 @@ class ReportsRepository {
       "SELECT t.account_id AS id, COALESCE(a.name,'Unknown') AS name, "
       "COALESCE(SUM(t.amount),0) AS amount, COUNT(*) AS cnt "
       "FROM transactions t LEFT JOIN accounts a ON t.account_id = a.id "
-      "WHERE $whereClause $tagFilterClause "
+      "WHERE $whereClause "
       "GROUP BY t.account_id ORDER BY amount DESC",
       variables: vars,
     ).get();
     final byAccount = byAccRows
-        .map((r) => (
-              id: r.data['id'] as String? ?? '',
-              name: r.data['name'] as String? ?? '',
-              amount: (r.data['amount'] as num).toDouble(),
-              count: (r.data['cnt'] as int?) ?? 0,
-            ))
-        .toList();
-
-    final byTagRows = await _db.customSelect(
-      "SELECT tt.tag_id AS id, COALESCE(tg.name,'Unknown') AS name, "
-      "COALESCE(SUM(t.amount),0) AS amount, COUNT(*) AS cnt "
-      "FROM transactions t "
-      "JOIN transaction_tags tt ON tt.transaction_id = t.id "
-      "JOIN tags tg ON tg.id = tt.tag_id "
-      "WHERE $whereClause$byTagTagClause "
-      "GROUP BY tt.tag_id ORDER BY amount DESC",
-      variables: vars,
-    ).get();
-    final byTag = byTagRows
         .map((r) => (
               id: r.data['id'] as String? ?? '',
               name: r.data['name'] as String? ?? '',
@@ -629,7 +571,6 @@ class ReportsRepository {
       byCategory: byCategory,
       byMode: byMode,
       byAccount: byAccount,
-      byTag: byTag,
     );
   }
 

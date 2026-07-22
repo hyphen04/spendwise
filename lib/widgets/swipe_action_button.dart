@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../app/themes/app_fonts.dart';
 
 class SwipeActionButton extends StatefulWidget {
   const SwipeActionButton({
@@ -57,7 +57,7 @@ class _SwipeActionButtonState extends State<SwipeActionButton> {
                     padding: const EdgeInsets.only(left: 48),
                     child: Text(
                       widget.label,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: plusJakartaSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: widget.color,

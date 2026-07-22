@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 
 import '../../../app/utils/phone_utils.dart';
 import '../../../app/widgets/spendwise_sheet.dart';
@@ -31,7 +31,7 @@ Future<ContactPhone?> showPhoneChooser(
             const SizedBox(height: 12),
             Text(
               title,
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: cs.onSurface,
@@ -39,7 +39,7 @@ Future<ContactPhone?> showPhoneChooser(
             ),
             Text(
               subtitle,
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                 fontSize: 13,
                 color: cs.onSurfaceVariant,
               ),
@@ -73,7 +73,7 @@ Future<ContactPhone?> showPhoneChooser(
                               children: [
                                 Text(
                                   formatted,
-                                  style: GoogleFonts.plusJakartaSans(
+                                  style: plusJakartaSans(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
                                     color: cs.onSurface,
@@ -83,7 +83,7 @@ Future<ContactPhone?> showPhoneChooser(
                                   const SizedBox(height: 2),
                                   Text(
                                     ph.label!,
-                                    style: GoogleFonts.plusJakartaSans(
+                                    style: plusJakartaSans(
                                       fontSize: 12,
                                       color: cs.onSurfaceVariant,
                                     ),

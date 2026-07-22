@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -260,7 +260,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
               children: [
                 Text(
                   'Send Feedback',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
                   ),
@@ -268,7 +268,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
                 const SizedBox(height: 8),
                 Text(
                   'Let us know what you think, report a bug, or request a feature.',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 14,
                     color: cs.onSurfaceVariant,
                   ),

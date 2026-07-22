@@ -122,9 +122,6 @@ class AiToolExecutor {
       case 'mode':
         return directory.modes.firstWhere(
           (m) => m.id == id, orElse: () => (id: id, name: id)).name;
-      case 'tag':
-        return directory.tags.firstWhere(
-          (t) => t.id == id, orElse: () => (id: id, name: id)).name;
       case 'goal':
         return goals.firstWhere(
           (g) => g.id == id,
@@ -205,11 +202,6 @@ class AiToolExecutor {
           out.add({'id': _labelOf(m.id, 'mode'), if (shareNames) 'name': m.name});
         }
         break;
-      case 'tag':
-        for (final t in directory.tags) {
-          out.add({'id': _labelOf(t.id, 'tag'), if (shareNames) 'name': t.name});
-        }
-        break;
       case 'goal':
         for (final g in goals) {
           out.add({'id': _labelOf(g.id, 'goal'), if (shareNames) 'name': g.name});
@@ -272,21 +264,6 @@ class AiToolExecutor {
         }).toList();
         totalForPct = data.fold<double>(0, (s, m) => s + m.total);
         break;
-      case 'tag':
-        // tagBreakdown is expense-only in the repo; ignore kind for tags.
-        final data = await reports.tagBreakdown(from: range.from, to: range.to);
-        rows = data.map((t) {
-          final amt = t.total;
-          _emit(amt);
-          if (shareNames) _emitName(t.name);
-          return {
-            'id': _labelOf(t.tagId, 'tag'),
-            if (shareNames) 'name': t.name,
-            'amount': amt,
-          };
-        }).toList();
-        totalForPct = data.fold<double>(0, (s, t) => s + t.total);
-        break;
       case 'account':
         // No per-range account breakdown in the repo → reuse filteredTotals'
         // by_account with no filters, kind only.
@@ -343,17 +320,16 @@ class AiToolExecutor {
   Future<AiToolResult> _filteredTotals(Map<String, Object?> args) async {
     final range = _dateRange(args);
     final kind = _kind(args);
-    String? catId, accId, modeId, tagId;
+    String? catId, accId, modeId;
     if (args['category'] is String) catId = _resolveLabel(args['category'] as String, 'category');
     if (args['account'] is String) accId = _resolveLabel(args['account'] as String, 'account');
     if (args['mode'] is String) modeId = _resolveLabel(args['mode'] as String, 'mode');
-    if (args['tag'] is String) tagId = _resolveLabel(args['tag'] as String, 'tag');
     final amountMin = _numOpt(args, 'amount_min');
     final amountMax = _numOpt(args, 'amount_max');
 
     final r = await reports.filteredTotals(
       from: range.from, to: range.to, kind: kind,
-      accountId: accId, categoryId: catId, modeId: modeId, tagId: tagId,
+      accountId: accId, categoryId: catId, modeId: modeId,
       amountMin: amountMin, amountMax: amountMax,
     );
     _emit(r.total);
@@ -387,7 +363,6 @@ class AiToolExecutor {
         'by_category': cap(r.byCategory, 'category'),
         'by_mode': cap(r.byMode, 'mode'),
         'by_account': cap(r.byAccount, 'account'),
-        'by_tag': cap(r.byTag, 'tag'),
       },
       amounts: _amounts,
       names: _names,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../app/themes/app_fonts.dart';
 
 enum AmountSignMode { none, auto, income, expense }
 
@@ -29,7 +29,7 @@ class AmountDisplay extends StatelessWidget {
     final c = color ?? Theme.of(context).colorScheme.onSurface;
     return Text(
       '${_sign()}$prefix${_fmt(amount.abs())}',
-      style: GoogleFonts.plusJakartaSans(
+      style: plusJakartaSans(
         fontSize: fontSize,
         fontWeight: fontWeight,
         color: c,

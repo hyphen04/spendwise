@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 
 import '../../app/themes/app_colors.dart';
 import '../../app/utils/feedback.dart';
+import '../../app/utils/money_format.dart';
 import '../../app/widgets/load_more_button.dart';
 import '../../app/widgets/screen_header.dart';
 import '../../app/widgets/spendwise_sheet.dart';
@@ -460,10 +461,10 @@ class _Header extends StatelessWidget {
               child: TextField(
                 controller: searchCtrl,
                 onChanged: onQueryChanged,
-                style: GoogleFonts.plusJakartaSans(fontSize: 14),
+                style: plusJakartaSans(fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Search transactions…',
-                  hintStyle: GoogleFonts.plusJakartaSans(
+                  hintStyle: plusJakartaSans(
                       fontSize: 14, color: cs.onSurfaceVariant),
                   prefixIcon: Icon(Icons.search_rounded,
                       size: 18, color: cs.onSurfaceVariant),
@@ -523,7 +524,7 @@ class _StatsRow extends StatelessWidget {
           const Spacer(),
           Text(
             '$netPrefix₹${_fmt(totals.net.abs())}',
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: netColor,
@@ -533,7 +534,7 @@ class _StatsRow extends StatelessWidget {
           const SizedBox(width: 5),
           Text(
             'net',
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
               fontSize: 11,
               color: cs.onSurfaceVariant,
               fontWeight: FontWeight.w500,
@@ -571,7 +572,7 @@ class _InlineStat extends StatelessWidget {
         const SizedBox(width: 3),
         Text(
           '₹${_fmt(value)}',
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
             fontSize: 14,
             fontWeight: FontWeight.w700,
             color: color,
@@ -635,7 +636,7 @@ class _ActiveFilterChips extends StatelessWidget {
                     ),
                     child: Text(
                       label,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: plusJakartaSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: cs.primary,
@@ -651,7 +652,7 @@ class _ActiveFilterChips extends StatelessWidget {
             onTap: onClear,
             child: Text(
               'Clear',
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: cs.onSurfaceVariant,
@@ -686,7 +687,7 @@ class _GroupHeader extends StatelessWidget {
         children: [
           Text(
             label,
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
               fontSize: 12,
               fontWeight: FontWeight.w700,
               color: cs.onSurface,
@@ -697,7 +698,7 @@ class _GroupHeader extends StatelessWidget {
           if (income > 0)
             Text(
               '+₹${_fmt(income)}',
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: appColors.income,
@@ -709,7 +710,7 @@ class _GroupHeader extends StatelessWidget {
           if (expense > 0)
             Text(
               '−₹${_fmt(expense)}',
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: appColors.expense,
@@ -754,7 +755,7 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               hasFilter ? 'No results' : 'No transactions yet',
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
                 color: cs.onSurface,
@@ -872,7 +873,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                     children: [
                       Text(
                         'Filters',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: plusJakartaSans(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: cs.onSurface,
@@ -1005,7 +1006,7 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label.toUpperCase(),
-      style: GoogleFonts.plusJakartaSans(
+      style: plusJakartaSans(
         fontSize: 11,
         fontWeight: FontWeight.w700,
         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -1054,7 +1055,7 @@ class _KindRow extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     label,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: active ? cs.onPrimary : cs.onSurfaceVariant,
@@ -1115,7 +1116,7 @@ class _DateRangeGrid extends StatelessWidget {
               ),
               child: Text(
                 label,
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: active ? cs.onPrimary : cs.onSurface,
@@ -1140,7 +1141,7 @@ class _DateRangeGrid extends StatelessWidget {
             ),
             child: Text(
               customLabel ?? 'Custom…',
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color:
@@ -1205,7 +1206,7 @@ class _MultiSelect<T> extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   labelOf(item),
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     color: active ? cs.onPrimary : cs.onSurface,
@@ -1238,7 +1239,7 @@ class _AmountField extends StatelessWidget {
       keyboardType: TextInputType.number,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.plusJakartaSans(
+        hintStyle: plusJakartaSans(
             fontSize: 13, color: cs.onSurfaceVariant),
         filled: true,
         fillColor: cs.surfaceContainer,
@@ -1249,7 +1250,7 @@ class _AmountField extends StatelessWidget {
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       ),
-      style: GoogleFonts.plusJakartaSans(fontSize: 13),
+      style: plusJakartaSans(fontSize: 13),
       onChanged: (v) => onChanged(v.isEmpty ? null : double.tryParse(v)),
     );
   }
@@ -1331,13 +1332,9 @@ String _humanDate(String dateKey) {
   }
 }
 
-String _fmt(double v) {
-  if (v >= 10000000) return '${(v / 10000000).toStringAsFixed(1)}Cr';
-  if (v >= 100000) return '${(v / 100000).toStringAsFixed(1)}L';
-  if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
-  if (v == v.truncateToDouble()) return v.toInt().toString();
-  return v.toStringAsFixed(2);
-}
+// Full Indian-grouped amount (no K/L/Cr abbreviation) so totals and per-row
+// amounts are clearly readable. See `fmtGrouped` in money_format.dart.
+String _fmt(double v) => fmtGrouped(v);
 
 const _months = [
   'Jan',

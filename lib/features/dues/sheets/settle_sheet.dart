@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/themes/app_colors.dart';
@@ -173,7 +173,7 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
                   Expanded(
                     child: Text(
                       'Settle ${widget.contact.name}',
-                      style: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.w800, color: cs.onSurface),
+                      style: plusJakartaSans(fontSize: 20, fontWeight: FontWeight.w800, color: cs.onSurface),
                     ),
                   ),
                 ],
@@ -183,7 +183,7 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
               if (_step == 0) ...[
                 Text(
                   'Select entries to settle (${_selectedEntryIds.length}/${widget.entries.length}):',
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, color: cs.onSurfaceVariant),
+                  style: plusJakartaSans(fontWeight: FontWeight.w600, color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: 8),
                 
@@ -213,14 +213,14 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
                         },
                         title: Text(
                           '₹${e.amount.toStringAsFixed(0)} • ${e.note.isEmpty ? 'Entry' : e.note}',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: plusJakartaSans(
                             decoration: selected ? null : TextDecoration.lineThrough,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         subtitle: Text(
                           DateFormat('dd MMM').format(DateTime.parse(e.entryDate)),
-                          style: GoogleFonts.plusJakartaSans(),
+                          style: plusJakartaSans(),
                         ),
                         secondary: Icon(
                           e.direction == 'payable' ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
@@ -238,7 +238,7 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
                   icon: const Icon(Icons.arrow_forward_rounded),
                   label: Text(
                     'Next (₹${total.abs().toStringAsFixed(0)}) • ${_selectedEntryIds.length} entries',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700),
+                    style: plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -263,7 +263,7 @@ class _SettleSheetState extends ConsumerState<_SettleSheet> {
                       ),
                     ),
                     child: Text(_formatDate(_selectedDate),
-                        style: GoogleFonts.plusJakartaSans(
+                        style: plusJakartaSans(
                             fontWeight: FontWeight.w600)),
                   ),
                 ),

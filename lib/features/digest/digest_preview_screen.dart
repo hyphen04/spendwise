@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../app/utils/money_format.dart';
 import '../../state/ai_providers.dart';
+import '../../state/app_mode_providers.dart';
 import '../../state/digest_providers.dart';
 import '../../state/manage_providers.dart';
 import 'weekly_digest.dart';
@@ -51,7 +52,7 @@ class DigestPreviewScreen extends ConsumerWidget {
             children: [
               Text(
                 '${_fmtDate(d.weekStart)} – ${_fmtDate(d.weekEnd)}',
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: cs.onSurfaceVariant,
@@ -64,7 +65,7 @@ class DigestPreviewScreen extends ConsumerWidget {
               Text(
                 '$deltaText · ${d.txnCountThisWeek} '
                 '${d.txnCountThisWeek == 1 ? 'transaction' : 'transactions'}',
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                   fontSize: 12,
                   color: cs.onSurfaceVariant,
                 ),
@@ -83,7 +84,7 @@ class DigestPreviewScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
               ],
               Text('OBSERVATIONS',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: cs.onSurfaceVariant,
@@ -99,7 +100,7 @@ class DigestPreviewScreen extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(o,
-                            style: GoogleFonts.plusJakartaSans(
+                            style: plusJakartaSans(
                                 fontSize: 14, color: cs.onSurface)),
                       ),
                     ],
@@ -122,13 +123,13 @@ class DigestPreviewScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('One tip',
-                              style: GoogleFonts.plusJakartaSans(
+                              style: plusJakartaSans(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                   color: cs.onSurfaceVariant)),
                           const SizedBox(height: 4),
                           Text(d.tip,
-                              style: GoogleFonts.plusJakartaSans(
+                              style: plusJakartaSans(
                                   fontSize: 14, color: cs.onSurface)),
                         ],
                       ),
@@ -147,7 +148,7 @@ class DigestPreviewScreen extends ConsumerWidget {
                 'Computed on your device. Sharing sends only what you see above — '
                 'nothing is uploaded to a server.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                   fontSize: 11,
                   color: cs.onSurfaceVariant.withValues(alpha: 0.7),
                 ),
@@ -176,7 +177,7 @@ class _BigStat extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: cs.onSurfaceVariant,
@@ -186,7 +187,7 @@ class _BigStat extends StatelessWidget {
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
           child: Text(value,
-              style: GoogleFonts.spaceGrotesk(
+              style: spaceGrotesk(
                   fontSize: 38,
                   fontWeight: FontWeight.w700,
                   color: cs.onSurface,
@@ -208,7 +209,7 @@ class _AiSummaryCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
-    final aiOn = ref.watch(aiEnabledProvider);
+    final aiOn = ref.watch(aiEffectiveEnabledProvider);
     final hasKey = ref.watch(aiHasApiKeyProvider).valueOrNull ?? false;
     final polish = ref.watch(weeklyDigestPolishProvider);
 
@@ -233,7 +234,7 @@ class _AiSummaryCard extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text('AI summary',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: plusJakartaSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: cs.onSurfaceVariant)),
@@ -264,17 +265,17 @@ class _AiSummaryCard extends ConsumerWidget {
           else if (polish.title != null) ...[
             const SizedBox(height: 6),
             Text(polish.title!,
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                     fontSize: 14, fontWeight: FontWeight.w700, color: cs.onSurface)),
             const SizedBox(height: 4),
             Text(polish.body!,
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                     fontSize: 13, color: cs.onSurface)),
           ] else if (polish.error != null)
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(polish.error!,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                       fontSize: 12, color: cs.error)),
             ),
         ],
@@ -316,12 +317,12 @@ class _SectionTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: cs.onSurfaceVariant)),
               Text(value,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: cs.onSurface)),

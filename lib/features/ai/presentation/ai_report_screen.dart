@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../app/utils/feedback.dart';
 import '../../../state/ai_providers.dart';
+import '../../../state/app_mode_providers.dart';
 import '../../../state/dynamic_report_providers.dart';
 import '../../../state/period_providers.dart';
 import '../dynamic_report/chart_spec.dart';
@@ -83,9 +84,23 @@ class _AiReportScreenState extends ConsumerState<AiReportScreen> {
     if (!state.hasResult) return;
     final messenger = ScaffoldMessenger.maybeOf(context);
     try {
+      // Pass the full report context (spec + datasets + gatekeeper status) so
+      // the PDF can render the charts inline at the LLM's {{chart:N}} markers,
+      // a monthly-summary row, and the "Checked on-device" note — not just the
+      // narrative text. Datasets are warm by export time (status == done).
+      final spec = ref.read(reportSpecProvider);
+      final datasets = ref
+              .read(dynamicReportDatasetsProvider(
+                  (_selectedMonth.year, _selectedMonth.month)))
+              .valueOrNull ??
+          const <ChartDataset>[];
       final path = await AiPdfExporter.export(
         markdown: state.markdown,
         periodLabel: _label(state.periodMonth ?? _selectedMonth),
+        spec: spec,
+        datasets: datasets,
+        flagged: state.flagged,
+        issues: state.issues,
       );
       if (!mounted) return;
       await SharePlus.instance.share(
@@ -103,7 +118,7 @@ class _AiReportScreenState extends ConsumerState<AiReportScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final enabled = ref.watch(aiEnabledProvider);
+    final enabled = ref.watch(aiEffectiveEnabledProvider);
     final state = ref.watch(aiReportProvider);
     final matchesSelected = state.periodMonth != null &&
         state.periodMonth!.year == _selectedMonth.year &&
@@ -127,7 +142,7 @@ class _AiReportScreenState extends ConsumerState<AiReportScreen> {
                 fit: BoxFit.scaleDown,
                 child: Text(
                   _label(_selectedMonth),
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                  style: plusJakartaSans(fontWeight: FontWeight.w700),
                 ),
               ),
             ),
@@ -368,7 +383,7 @@ class _AiReportScreenState extends ConsumerState<AiReportScreen> {
               size: 32, color: cs.onSurfaceVariant),
           const SizedBox(height: 12),
           Text('AI Copilot is off',
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                   fontSize: 15, fontWeight: FontWeight.w700)),
           const SizedBox(height: 6),
           Text(
@@ -377,7 +392,7 @@ class _AiReportScreenState extends ConsumerState<AiReportScreen> {
             'aggregated, anonymized numbers are sent to the AI you choose, and '
             'real names are restored on-device.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 12, color: cs.onSurfaceVariant, height: 1.5),
           ),
           const SizedBox(height: 16),
@@ -399,7 +414,7 @@ class _AiReportScreenState extends ConsumerState<AiReportScreen> {
               size: 32, color: cs.primary.withValues(alpha: 0.7)),
           const SizedBox(height: 12),
           Text('Generate an AI narrative',
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                   fontSize: 15, fontWeight: FontWeight.w700)),
           const SizedBox(height: 6),
           Text(
@@ -407,7 +422,7 @@ class _AiReportScreenState extends ConsumerState<AiReportScreen> {
             'budgets, cashflow, and actionable takeaways. Real names are '
             'restored on-device; only anonymized numbers are sent.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 12, color: cs.onSurfaceVariant, height: 1.5),
           ),
           const SizedBox(height: 16),
@@ -430,7 +445,7 @@ class _AiReportScreenState extends ConsumerState<AiReportScreen> {
             const CircularProgressIndicator(),
             const SizedBox(height: 14),
             Text('Generating your report…',
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                     fontSize: 13, color: cs.onSurfaceVariant)),
           ],
         ),
@@ -446,7 +461,7 @@ class _AiReportScreenState extends ConsumerState<AiReportScreen> {
           const SizedBox(height: 12),
           Text(message,
               textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                   fontSize: 13, color: cs.onSurfaceVariant, height: 1.5)),
           const SizedBox(height: 16),
           FilledButton.icon(
@@ -465,7 +480,7 @@ class _AiReportScreenState extends ConsumerState<AiReportScreen> {
       child: Center(
         child: Text(message,
             textAlign: TextAlign.center,
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 13, color: cs.onSurfaceVariant, height: 1.5)),
       ),
     );
@@ -484,7 +499,7 @@ class _AiReportScreenState extends ConsumerState<AiReportScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(message,
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                     fontSize: 13, color: cs.onErrorContainer)),
           ),
         ],
@@ -504,7 +519,7 @@ class _AiReportScreenState extends ConsumerState<AiReportScreen> {
           ),
           const SizedBox(width: 10),
           Text('Writing…',
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                   fontSize: 12, color: cs.onSurfaceVariant)),
         ],
       ),

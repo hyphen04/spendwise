@@ -53,9 +53,7 @@ class RawDbImporter {
         final accounts = await tempDb.select(tempDb.accounts).get();
         final categories = await tempDb.select(tempDb.categories).get();
         final modes = await tempDb.select(tempDb.modes).get();
-        final tags = await tempDb.select(tempDb.tags).get();
         final transactions = await tempDb.select(tempDb.transactions).get();
-        final transactionTags = await tempDb.select(tempDb.transactionTags).get();
         final budgets = await tempDb.select(tempDb.budgets).get();
         final dueContacts = await tempDb.select(tempDb.dueContacts).get();
         final dueEntries = await tempDb.select(tempDb.dueEntries).get();
@@ -64,7 +62,6 @@ class RawDbImporter {
         // 5. Upsert into main DB
         await mainDb.transaction(() async {
           // Delete all current data first to prevent duplicates
-          await mainDb.delete(mainDb.transactionTags).go();
           await mainDb.delete(mainDb.transactions).go();
           await mainDb.delete(mainDb.dueEntries).go();
           await mainDb.delete(mainDb.dueSettlements).go();
@@ -73,7 +70,6 @@ class RawDbImporter {
           await mainDb.delete(mainDb.accounts).go();
           await mainDb.delete(mainDb.categories).go();
           await mainDb.delete(mainDb.modes).go();
-          await mainDb.delete(mainDb.tags).go();
 
           for (final row in accounts) {
             await mainDb.into(mainDb.accounts).insert(row, mode: InsertMode.insertOrReplace);
@@ -84,9 +80,6 @@ class RawDbImporter {
           for (final row in modes) {
             await mainDb.into(mainDb.modes).insert(row, mode: InsertMode.insertOrReplace);
           }
-          for (final row in tags) {
-            await mainDb.into(mainDb.tags).insert(row, mode: InsertMode.insertOrReplace);
-          }
           for (final row in budgets) {
             await mainDb.into(mainDb.budgets).insert(row, mode: InsertMode.insertOrReplace);
           }
@@ -95,9 +88,6 @@ class RawDbImporter {
           }
           for (final row in transactions) {
             await mainDb.into(mainDb.transactions).insert(row, mode: InsertMode.insertOrReplace);
-          }
-          for (final row in transactionTags) {
-            await mainDb.into(mainDb.transactionTags).insert(row, mode: InsertMode.insertOrReplace);
           }
           for (final row in dueEntries) {
             await mainDb.into(mainDb.dueEntries).insert(row, mode: InsertMode.insertOrReplace);

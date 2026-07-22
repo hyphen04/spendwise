@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -48,7 +48,7 @@ class AiMarkdown extends StatelessWidget {
   /// App-styled sheet: PlusJakartaSans body, colorScheme-driven headings, a
   /// quiet surface for code blocks, and bordered tables.
   static MarkdownStyleSheet _styleSheet(ThemeData theme, ColorScheme cs) {
-    final base = GoogleFonts.plusJakartaSans(
+    final base = plusJakartaSans(
       fontSize: 14,
       height: 1.5,
       color: cs.onSurface,
@@ -78,7 +78,7 @@ class AiMarkdown extends StatelessWidget {
         border: Border(left: BorderSide(color: cs.outlineVariant, width: 2)),
       ),
       blockquotePadding: const EdgeInsets.only(left: 12),
-      code: GoogleFonts.spaceGrotesk(
+      code: spaceGrotesk(
         fontSize: 12.5,
         color: cs.primary,
         backgroundColor: cs.surfaceContainer,
@@ -155,7 +155,7 @@ class _CodeBlock extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 12, 36, 12),
             child: Text(
               code,
-              style: GoogleFonts.spaceGrotesk(
+              style: spaceGrotesk(
                 fontSize: 12.5,
                 height: 1.45,
                 color: cs.onSurface,

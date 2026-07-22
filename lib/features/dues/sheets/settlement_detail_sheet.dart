@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/themes/app_colors.dart';
@@ -84,7 +84,7 @@ class _SettlementDetailSheetState extends ConsumerState<SettlementDetailSheet> {
                       child: Center(
                         child: Text(
                           'Settlement Details',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: plusJakartaSans(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
                             color: cs.onSurface,
@@ -103,7 +103,7 @@ class _SettlementDetailSheetState extends ConsumerState<SettlementDetailSheet> {
               const SizedBox(height: 16),
               Text(
                 '₹${widget.settlement.totalAmount.toStringAsFixed(0)}',
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                   fontSize: 36,
                   fontWeight: FontWeight.w800,
                   fontFeatures: const [FontFeature.tabularFigures()],
@@ -122,7 +122,7 @@ class _SettlementDetailSheetState extends ConsumerState<SettlementDetailSheet> {
                     children: [
                       Text(
                         DateFormat('dd MMM yyyy').format(_date),
-                        style: GoogleFonts.plusJakartaSans(
+                        style: plusJakartaSans(
                           fontSize: 14,
                           color: cs.onSurfaceVariant,
                         ),
@@ -144,7 +144,7 @@ class _SettlementDetailSheetState extends ConsumerState<SettlementDetailSheet> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(widget.settlement.note,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: plusJakartaSans(
                           color: cs.onSurfaceVariant)),
                 ),
               ],
@@ -156,7 +156,7 @@ class _SettlementDetailSheetState extends ConsumerState<SettlementDetailSheet> {
                     entriesAsync.when(
                       data: (entries) => Text(
                         '${entries.length} Entries Included',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: plusJakartaSans(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: cs.onSurface,
@@ -164,7 +164,7 @@ class _SettlementDetailSheetState extends ConsumerState<SettlementDetailSheet> {
                       ),
                       loading: () => Text(
                         'Entries Included',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: plusJakartaSans(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: cs.onSurface,
@@ -172,7 +172,7 @@ class _SettlementDetailSheetState extends ConsumerState<SettlementDetailSheet> {
                       ),
                       error: (_, __) => Text(
                         'Entries Included',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: plusJakartaSans(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: cs.onSurface,
@@ -233,7 +233,7 @@ class _SettlementDetailSheetState extends ConsumerState<SettlementDetailSheet> {
                                       e.note.isEmpty ? 'Entry' : e.note,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.plusJakartaSans(
+                                      style: plusJakartaSans(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w600,
                                         color: cs.onSurface,
@@ -244,7 +244,7 @@ class _SettlementDetailSheetState extends ConsumerState<SettlementDetailSheet> {
                                       children: [
                                         Text(
                                           date,
-                                          style: GoogleFonts.plusJakartaSans(
+                                          style: plusJakartaSans(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w400,
                                             color: cs.onSurfaceVariant,
@@ -253,7 +253,7 @@ class _SettlementDetailSheetState extends ConsumerState<SettlementDetailSheet> {
                                         if (e.mealSlot != null) ...[
                                           Text(' • ',
                                               style:
-                                                  GoogleFonts.plusJakartaSans(
+                                                  plusJakartaSans(
                                                       fontSize: 12,
                                                       color:
                                                           cs.onSurfaceVariant)),
@@ -269,7 +269,7 @@ class _SettlementDetailSheetState extends ConsumerState<SettlementDetailSheet> {
                                             e.mealSlot == 'lunch'
                                                 ? 'Lunch'
                                                 : 'Dinner',
-                                            style: GoogleFonts.plusJakartaSans(
+                                            style: plusJakartaSans(
                                                 fontSize: 12,
                                                 color: cs.onSurfaceVariant),
                                           ),
@@ -282,7 +282,7 @@ class _SettlementDetailSheetState extends ConsumerState<SettlementDetailSheet> {
                               const SizedBox(width: 12),
                               Text(
                                 '₹${e.amount.toStringAsFixed(0)}',
-                                style: GoogleFonts.plusJakartaSans(
+                                style: plusJakartaSans(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w700,
                                   fontFeatures: const [

@@ -333,7 +333,6 @@ void main() {
         period: '2026-07',
         allCategories: const [(id: 'c1', name: 'A'), (id: 'c2', name: 'B'), (id: 'c3', name: 'C')],
         allModes: const [(id: 'm1', name: 'UPI')],
-        allTags: const [(id: 't1', name: 'work'), (id: 't2', name: 'home')],
         accountBalances: const [(id: 'a1', name: 'HDFC', balance: 1000)],
         goals: const [
           (id: 'g1', name: 'Phone', target: 60000, saved: 15000, monthsLeft: 10, monthlyCommitment: 4500),
@@ -345,13 +344,12 @@ void main() {
       ).json;
       expect(payload['category_count'], 3);
       expect(payload['mode_count'], 1);
-      expect(payload['tag_count'], 2);
       expect(payload['account_count'], 1);
       expect(payload['goal_count'], 1);
       expect(payload['bill_count'], 2);
     });
 
-    test('payment_modes and tag_breakdown include 0-spend entities', () {
+    test('payment_modes include 0-spend entities', () {
       final payload = b.buildAskContext(
         summary: _summary(expense: 62000, topCats: const []),
         budgets: const [],
@@ -359,16 +357,11 @@ void main() {
         period: '2026-07',
         allModes: const [(id: 'm-upi', name: 'UPI'), (id: 'm-card', name: 'Card')],
         modeBreakdown: const [ModeTotal(modeId: 'm-upi', name: 'UPI', icon: '', total: 40000)],
-        allTags: const [(id: 't-work', name: 'work')],
-        tagBreakdown: const [],
       ).json;
       final modes = (payload['payment_modes']! as List).cast<Map>();
       expect(modes.length, 2);
       final card = modes.firstWhere((m) => (m['amount'] as double) == 0.0);
       expect(card['id'], startsWith('mode_'));
-      final tags = (payload['tag_breakdown']! as List).cast<Map>();
-      expect(tags.length, 1);
-      expect((tags[0])['amount'], 0.0);
     });
 
     test('cashflow_12mo field name replaces cashflow_6mo', () {
@@ -405,7 +398,6 @@ void main() {
         period: '2026-07',
         allCategories: const [(id: 'c-fuel', name: 'Fuel'), (id: 'c-food', name: 'Food')],
         allModes: const [(id: 'm-upi', name: 'UPI')],
-        allTags: const [(id: 't-work', name: 'work')],
         accountBalances: const [(id: 'a1', name: 'HDFC', balance: 1000)],
         goals: const [
           (id: 'g1', name: 'Phone', target: 60000, saved: 15000, monthsLeft: 10, monthlyCommitment: 4500),
@@ -421,7 +413,7 @@ void main() {
         expect(ctx.labelToId[label], isNotNull);
         expect(ctx.labelToId[label]!.startsWith('c-'), isTrue);
       }
-      expect(ctx.labelToId.values, containsAll(const ['m-upi', 't-work', 'a1', 'g1', 'b1']));
+      expect(ctx.labelToId.values, containsAll(const ['m-upi', 'a1', 'g1', 'b1']));
     });
   });
 }

@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../state/ai_providers.dart';
+import '../../../state/app_mode_providers.dart';
 import '../../../state/bills_providers.dart';
 import '../../../state/dynamic_report_providers.dart';
 import '../../../state/goals_providers.dart';
@@ -89,6 +90,17 @@ class AiReportNotifier extends StateNotifier<AiReportState> {
 
   /// Generate (or regenerate) the report for [month].
   Future<void> generate(DateTime month) async {
+    // Defense-in-depth: the screen only shows the Generate/Regenerate controls
+    // when AI is effectively enabled, but refuse here too so a future caller
+    // can never trigger an outbound LLM call in Offline mode (or with AI off).
+    if (!_ref.read(aiEffectiveEnabledProvider)) {
+      state = AiReportState(
+        status: AiReportStatus.error,
+        error: 'AI Copilot is off or the app is in Offline mode.',
+        periodMonth: month,
+      );
+      return;
+    }
     final config = await aiConfigWithKey(_ref);
     if (config == null) {
       state = AiReportState(
@@ -240,7 +252,6 @@ class AiReportNotifier extends StateNotifier<AiReportState> {
       modeBreakdown: data.modes,
       period: '${month.year}-${month.month.toString().padLeft(2, '0')}',
       accountBalances: extras.accountBalances,
-      tagBreakdown: extras.tagBreakdown,
       categoryBreakdown3mo: extras.categoryBreakdown3mo,
       expenseCount: extras.expenseCount,
       daysInPeriod: extras.daysInPeriod,

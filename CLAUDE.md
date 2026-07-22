@@ -189,6 +189,42 @@ Run this checklist **every time** you modify a Drift table definition:
   field references + filters only; `specJson` is a `CustomReportSpec.toJson`
   blob, never a row's contents). DAO `CustomReportsDao`. Created by the Custom
   Report builder (Track 3) — user-authored, on-device, never sent to the AI.
+- **v15 → v16 — tags feature removal (DESTRUCTIVE drop).** The `tags` +
+  `transaction_tags` tables are dropped in `onUpgrade`:
+  `await customStatement('DROP TABLE IF EXISTS transaction_tags')` then
+  `await customStatement('DROP TABLE IF EXISTS tags')` (join table first). This
+  is the **only** destructive (non-additive) migration in the app's history —
+  it is acceptable because no UI ever existed to create or assign tags; the only
+  possible tag data was from a prior JSON import, which is deleted on upgrade.
+  The `Tags`, `TransactionTags`, `TagsDao`, `tags_repository` and the AI payload
+  `tag_N` aggregates / `tag_count` / `tag_breakdown` are removed in lockstep.
+  Tightens the AI privacy posture (one fewer entity kind labeled + sent) and the
+  custom-report safe-table allow-list.
+- **v16 → v17 — `ignored_recurring` table (additive).** `m.createTable(
+  ignoredRecurring)` in `onUpgrade`. New table
+  `lib/data/db/tables/ignored_recurring_table.dart`: `categoryId` (PK, FK →
+  `categories`, `onDelete: cascade`), `createdAt`. No NOT NULL columns without a
+  default beyond the PK. No PII — a category id only. The table records
+  categories the user marked "Not a bill" from a detected row in the Bills
+  screen; `RecurringRepository.autoRefreshFromTransactions` skips any detected
+  group whose `categoryId` is listed here so a false positive (e.g. Fuel bought
+  at a regular price) isn't re-seeded on re-detect. The user can still manually
+  add a bill in an ignored category — only auto-detection is suppressed. The
+  table is **never listed in `schema_metadata`** and never queried by AI tools;
+  it never reaches the AI (it only affects on-device seeding, not the outbound
+  payload).
+- **v17 → v18 — `ai_threads` organization columns (additive).** Three
+  `m.addColumn` calls in `onUpgrade`: `pinned` (bool, default false),
+  `archived` (bool, default false), `folder` (text, default ''). All defaulted,
+  so existing rows are untouched. No PII beyond the chat content already in
+  `ai_threads` (a PII table). These power the Chats screen's folders / pin /
+  archive / bulk-select (rename/delete/move/pin/archive). `folder` is a plain
+  text column (not a separate table) — folders are the distinct non-empty
+  values; rename rewrites all threads in the old name, delete clears them to
+  unfiled (so a folder only exists while a chat is in it). The columns are
+  **never listed in `schema_metadata`**, never read by `AiPayloadBuilder`, the
+  tool executor, or the gatekeeper — they are local-only organizational
+  metadata and never reach the AI.
 
 ---
 
@@ -256,9 +292,9 @@ accounts, categories, modes, budgets, contacts, due entries).
   `schema_metadata` blob + opaque labels). Never build a prompt body from raw
   rows, real names, notes, or amounts anywhere else. Use the
   `spendwise-ai-payload-extension` skill to add a field end-to-end safely. The
-  chat payload now sends **all** categories/modes/tags (including 0-spend
+  chat payload now sends **all** categories/modes (including 0-spend
   entities, not just the top-5 spend categories) plus `category_count` /
-  `mode_count` / `tag_count` scalars and a 12-month cashflow series — privacy is
+  `mode_count` scalars and a 12-month cashflow series — privacy is
   unchanged (same aggregates + opaque labels, just more of them; the name↔label
   legend still leaves only with `shareNames`).
 - **On-device tool-calling (Phase 2).** The chat may now answer questions the
@@ -297,9 +333,10 @@ accounts, categories, modes, budgets, contacts, due entries).
   `AiToolExecutor` / `AiToolRunner` / `ai_tool_catalog.dart` /
   `ai_tool_protocol.dart` / the tool-calling controller path.
 - **On-device restore + validation.** `AiGatekeeper` runs on **every** LLM text
-  surface (chat replies, digest polish, report `title`/
-  `caption`/`narrativeSeed`, report narrative) to restore opaque labels + scrub
-  PII + sanity-check numbers — **no surface bypasses the gatekeeper.** In
+  surface (chat replies, **auto-generated chat thread titles**, digest polish,
+  report `title`/`caption`/`narrativeSeed`, report narrative) to restore opaque
+  labels + scrub PII + sanity-check numbers — **no surface bypasses the
+  gatekeeper.** In
   addition to the existing empty/garbage, leftover-label, PII-scrub, and
   `>max*10` numeric checks, the gatekeeper now does:
   - **Numeric correspondence** — parses currency-ish numbers from the reply and
@@ -307,7 +344,7 @@ accounts, categories, modes, budgets, contacts, due entries).
     rounded figures the payload sent) nor a sane derived figure
     (≤ `maxContextAmount * 1.5`). Catches hallucinated figures.
   - **Hallucinated-name detection** (only when `shareNames` is on) — flags
-    category/account/mode/tag/goal/bill names in the reply that are not in the
+    category/account/mode/goal/bill names in the reply that are not in the
     `sentNameVocabulary` the payload sent.
   The digest polish path runs its LLM reply through `AiGatekeeper`
   (built from the `InsightAnonymizer` legend) for `restore` **and** `check` —
@@ -320,9 +357,9 @@ accounts, categories, modes, budgets, contacts, due entries).
   map a name the user *types* ("fuel") to a label — so it would wrongly claim
   "no category named fuel." `AiMentionResolver` (`lib/features/ai/domain/
   ai_mention_resolver.dart`) bridges this **on-device**: it scans the user's
-  **own** message for category/account/mode/tag names that match the on-device
+  **own** message for category/account/mode names that match the on-device
   directory (`AiMentionData` from `gatherAiContextExtras`'s sibling
-  `gatherAiMentionData` — reads only `categories`/`accounts`/`modes`/`tags`,
+  `gatherAiMentionData` — reads only `categories`/`accounts`/`modes`,
   never `due_*`/`ai_*`/`goals`/`recurring_items`, never `note`/`receipt_path`/
   contact columns) and appends a `[Context note: …]` to that user message **as
   sent to the LLM only — never persisted to the DB, never shown in the UI.**
@@ -336,14 +373,34 @@ accounts, categories, modes, budgets, contacts, due entries).
   named — `AiPayloadBuilder` remains the sole constructor of the aggregate
   payload; the resolver only re-uses the user's own words + labels already in
   context. `ai_chat_controller._resolveLastUserMessage` is the only call site.
+- **Auto-generated chat titles (a derived LLM surface, not a second boundary).**
+  After the opening exchange (1 user + 1 assistant reply) of a new chat,
+  `ai_chat_controller._maybeGenerateTitle` asks the LLM for a short,
+  tone-matched title (`kTitleSystemPrompt`) and persists it to `ai_threads.title`
+  (a PII table — local-only, never in `schema_metadata`, never queried by AI
+  tools, never sent back to the AI). This is **not** a second outbound boundary
+  and introduces no new real names or aggregates: it re-sends only conversation
+  text that already left the device for the chat itself — the user's first
+  message (their own words) and the assistant's reply. The reply was
+  label-restored on-device before being persisted, so in anonymize-by-default
+  mode it carries real names the chat LLM never saw — `_anonymizeReplyForTitle`
+  reverses that (name→label via the on-device legend, using `LabelReplacer`)
+  so the title LLM sees the same opaque labels the chat LLM saw; in `shareNames`
+  mode the reply goes as-is (names already permitted). The generated title runs
+  through `AiGatekeeper` (`restore` + `check`) before saving — if the gatekeeper
+  is null or returns `bad`, the first-message placeholder title is kept. A
+  manual rename done while the (slow) title call is in flight is never
+  clobbered (before/after title snapshot guard). Best-effort: any failure
+  leaves the placeholder. Run `spendwise-privacy-audit` after any change to
+  `_maybeGenerateTitle` / `_anonymizeReplyForTitle` / `kTitleSystemPrompt`.
 - **API key.** Stored in `flutter_secure_storage` via `SecureStorageService`
   (NOT SharedPreferences). Read on demand, never logged, never held in
   long-lived Riverpod state.
 - **Never sent, in any mode:** transaction `note`s; `due_contacts`
   name/phone/phones/photoPath/deviceContactId/defaultNote; `due_entries` /
   `due_settlements` notes; receipt paths; raw rows; real amounts; real
-  category/account/mode/tag/**goal**/**bill** names (anonymized to
-  `cat_0`/`acc_1`/`mode_1`/`tag_1`/`goal_N`/`bill_N` by default; real names are
+  category/account/mode/**goal**/**bill** names (anonymized to
+  `cat_0`/`acc_1`/`mode_1`/`goal_N`/`bill_N` by default; real names are
   an opt-in toggle that attaches a `legend`, still restored on-device).
 - **Goals + recurring bills reach the AI as anonymized aggregates ONLY.** They
   are sent as `goal_N` (target/saved/pct/`months_left?`/`monthly_commitment?`)
@@ -362,6 +419,56 @@ accounts, categories, modes, budgets, contacts, due entries).
   remains the changelog / What's New parser with its existing supported-subset
   rules (unchanged) — do not route changelog text through `AiMarkdown` or relax
   the changelog format rules.
+
+### App Mode (Offline/Online) — the master kill switch
+
+A master **Mode** toggle (top of Settings) gates *every* internet-dependent
+feature. `app_mode` pref (`'online'` | `'offline'`, default **offline**) in
+`PrefsService`; providers in `lib/state/app_mode_providers.dart`:
+`appModeProvider`, `isOnlineProvider`, and `aiEffectiveEnabledProvider`
+(= `isOnline && aiEnabled`).
+
+- **Offline (default):** AI Copilot entry points, the GitHub update checker,
+  and feedback submission are **hidden** from every screen and their online
+  operations are skipped. The startup `UpdateService.checkForUpdateIfDue`
+  (`main.dart`) is gated by `appMode == 'online'`; the Home update banner is
+  gated by `isOnlineProvider`; the Settings "AI Copilot" / "Auto-check for
+  updates" / "Check for Update" / "Send Feedback" rows and the Reports hub
+  "AI COPILOT" section are wrapped in `if (isOnline)`. The router redirects
+  any `/ai/*` route to `/settings` when offline (defense-in-depth). AI screens
+  and `AiChatController.canUseAi` read `aiEffectiveEnabledProvider`, so even if
+  reached they render the disabled banner / refuse to call the LLM.
+  `AiReportController.generate` and `WeeklyDigestPolishController.polish` also
+  check `aiEffectiveEnabledProvider` internally — the gate lives at the
+  network-issuing code, not just the UI, so no outbound LLM call can fire in
+  Offline mode even if a future caller bypasses the screen. User-tapped
+  external handoffs (`url_launcher` → OS browser / phone / WhatsApp: Dues
+  contact call/WhatsApp buttons, changelog links, About GitHub/portfolio
+  links) are deliberately **not** gated — the app opens no socket; the OS
+  handles connectivity.
+- **Dormant, not reset:** switching to Offline does **not** clear `ai_enabled`,
+  `auto_check_updates`, etc. — they stay dormant and resume verbatim on
+  switch-back. Never force-disable them on mode change.
+- **What's New stays local both modes:** `changelog_sheet.dart` reads only the
+  installed version's entry from the bundled `CHANGELOG.md` asset — never the
+  network. Do not gate the "What's New" tile by mode.
+- **Rule:** any new internet-dependent feature or entry point **must** gate on
+  `isOnlineProvider` (and AI ones on `aiEffectiveEnabledProvider`). This is a
+  visibility/skip gate only — it does **not** touch the AI outbound boundary,
+  the gatekeeper, `schema_metadata`, `sql_guard`, or PII tables, so it needs no
+  `spendwise-privacy-audit` (Offline *strengthens* privacy — no outbound at all).
+
+### Fonts are fully local (no `google_fonts`)
+
+The app's fonts (Plus Jakarta Sans + Space Grotesk) are **bundled** as
+OFL-licensed variable TTFs in `assets/fonts/` and declared as the
+`PlusJakartaSans` / `SpaceGrotesk` families in `pubspec.yaml`. Drop-in helpers
+`plusJakartaSans(...)` / `spaceGrotesk(...)` in
+`lib/app/themes/app_fonts.dart` replace the old `GoogleFonts.*` calls
+(same named-arg surface; return a `TextStyle` bound to the bundled family). The
+`google_fonts` dependency is **removed** — never re-add it; never fetch fonts
+at runtime. When adding a new font weight, just pass `fontWeight:` to the
+helper (the variable font resolves it).
 
 ### Dynamic report (`lib/features/ai/dynamic_report/`)
 

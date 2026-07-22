@@ -44,7 +44,8 @@ void main() {
       final rows = [
         _expense('2026-02-03T08:00:00.000', 199.0),
         _expense('2026-03-19T08:00:00.000', 199.0), // 44-day gap
-        _expense('2026-04-02T08:00:00.000', 199.0), // 14-day gap — too irregular
+        _expense(
+            '2026-04-02T08:00:00.000', 199.0), // 14-day gap — too irregular
         _expense('2026-05-21T08:00:00.000', 199.0),
       ];
       expect(LocalInsightEngine.detectRecurring(rows), isEmpty);

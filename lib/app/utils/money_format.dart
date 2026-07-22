@@ -10,6 +10,8 @@
 // accounts without FX conversion, so these helpers are currency-symbol-only;
 // they do not perform any conversion.
 
+import 'package:intl/intl.dart';
+
 /// Abbreviate a money amount Indian-style with the ₹ symbol.
 ///
 ///   950       → "₹950.00"
@@ -23,6 +25,39 @@ String fmtMoney(double v) {
   if (abs >= 100000) return '$prefix₹${(abs / 100000).toStringAsFixed(1)}L';
   if (abs >= 1000) return '$prefix₹${(abs / 1000).toStringAsFixed(1)}K';
   return '$prefix₹${abs.toStringAsFixed(2)}';
+}
+
+/// Full Indian-grouped amount with no abbreviation and no currency symbol.
+/// Whole numbers drop the decimal tail; fractional amounts keep up to two
+/// places. The sign is the caller's responsibility (callers pass a positive
+/// magnitude and prepend their own `+`/`−`/`₹`), so the magnitude is what's
+/// formatted here.
+///
+///   950       → "950"
+///   12500     → "12,500"
+///   150000    → "1,50,000"
+///   12000000  → "1,20,00,000"
+///   12500.5   → "12,500.5"
+///
+/// Use this for surfaces where the full amount must be clearly readable
+/// (transaction rows, home/transactions totals) — prefer [fmtMoney] for
+/// compact report/forecast contexts where K/L/Cr keeps big totals short.
+String fmtGrouped(double v) {
+  return NumberFormat('#,##,##0.##', 'en_IN').format(v.abs());
+}
+
+/// Full Indian-grouped amount with the ₹ symbol and a leading `−` for
+/// negatives — no K/L/Cr abbreviation. Use where the exact figure must be
+/// readable (e.g. the Home net-worth display), prefer [fmtMoney] for compact
+/// contexts where K/L/Cr keeps big totals short.
+///
+///   950       → "₹950"
+///   12500     → "₹12,500"
+///   150000    → "₹1,50,000"
+///   -150000   → "−₹1,50,000"
+String fmtFullMoney(double v) {
+  final prefix = v < 0 ? '−' : '';
+  return '$prefix₹${fmtGrouped(v)}';
 }
 
 /// Plain grouped number without symbol or abbreviation, e.g. 12500 → "12,500".

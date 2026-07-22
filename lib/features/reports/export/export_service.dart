@@ -30,7 +30,6 @@ enum ExportEntity {
   categories,
   modes,
   budgets,
-  tags,
 }
 
 enum ExportColumn {
@@ -520,7 +519,6 @@ class _ExportOptionsSheetState extends ConsumerState<_ExportOptionsSheet> {
                           ExportEntity.categories => 'Categories',
                           ExportEntity.modes => 'Modes',
                           ExportEntity.budgets => 'Budgets',
-                          ExportEntity.tags => 'Tags',
                         };
                         final selected = _cfg.entities.contains(ent);
                         final isOnlyOne = _cfg.entities.length == 1 && selected;

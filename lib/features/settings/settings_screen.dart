@@ -18,6 +18,7 @@ import '../../app/widgets/spendwise_sheet.dart';
 import '../../services/biometric_service.dart';
 import '../../services/secure_storage_service.dart';
 import '../../state/database_provider.dart';
+import '../../state/app_mode_providers.dart';
 import '../../state/prefs_providers.dart';
 import 'update_sheet.dart';
 import 'changelog_sheet.dart';
@@ -281,7 +282,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
     final db = ref.read(appDatabaseProvider);
     await db.transaction(() async {
       await db.delete(db.transactions).go();
-      await db.delete(db.transactionTags).go();
       await db.delete(db.dueEntries).go();
       await db.delete(db.dueSettlements).go();
       await db.delete(db.dueContacts).go();
@@ -301,6 +301,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
     final oledDark = ref.watch(oledDarkProvider);
     final lockEnabled = ref.watch(lockEnabledProvider);
     final biometricEnabled = ref.watch(biometricEnabledProvider);
+    final appMode = ref.watch(appModeProvider);
+    final isOnline = ref.watch(isOnlineProvider);
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -318,6 +320,58 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
               children: [
+
+          // ── Mode ────────────────────────────────────────────────────────────
+          // Master Offline/Online kill switch. Offline hides AI Copilot, update
+          // checks, and feedback, and keeps everything on-device. Online restores
+          // the full app with the existing sub-toggles intact.
+          _sectionHeader('Mode', context),
+          Card(
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.cloud_off_outlined, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text('App Mode',
+                            style: Theme.of(context).textTheme.bodyLarge),
+                      ),
+                      SegmentedButton<AppMode>(
+                        segments: const [
+                          ButtonSegment(
+                              value: AppMode.offline,
+                              icon: Icon(Icons.cloud_off_outlined),
+                              label: Text('Offline')),
+                          ButtonSegment(
+                              value: AppMode.online,
+                              icon: Icon(Icons.cloud_outlined),
+                              label: Text('Online')),
+                        ],
+                        selected: {appMode},
+                        onSelectionChanged: (s) =>
+                            ref.read(appModeProvider.notifier).set(s.first),
+                        style: const ButtonStyle(
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    isOnline
+                        ? 'Online — all features available. AI Copilot, update checks, and feedback are enabled per their own toggles.'
+                        : 'Offline — AI Copilot, update checks, and feedback are hidden. Everything stays on-device; no internet-dependent feature runs.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+          ),
 
           // ── General ──────────────────────────────────────────────────────────
           _sectionHeader('General', context),
@@ -485,17 +539,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
 
           // ── AI Copilot ──────────────────────────────────────────────────────
           // AI config lives on its own dedicated screen (feature-scoped) so this
-          // list stays lean — just an entry point here.
-          _sectionHeader('AI Copilot', context),
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.auto_awesome_rounded),
-              title: const Text('AI Copilot'),
-              subtitle: const Text('API key, provider, privacy'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => context.push('/ai/settings'),
+          // list stays lean — just an entry point here. Hidden in Offline mode.
+          if (isOnline) ...[
+            _sectionHeader('AI Copilot', context),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.auto_awesome_rounded),
+                title: const Text('AI Copilot'),
+                subtitle: const Text('API key, provider, privacy'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push('/ai/settings'),
+              ),
             ),
-          ),
+          ],
 
           // ── Data ────────────────────────────────────────────────────────────
           _sectionHeader('Data', context),
@@ -608,7 +664,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
           Card(
             child: Column(
               children: [
-                if (Platform.isAndroid) ...[
+                if (isOnline && Platform.isAndroid) ...[
                   SwitchListTile(
                     secondary: const Icon(Icons.update_outlined),
                     title: const Text('Auto-check for updates'),
@@ -637,14 +693,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreenV2> {
                   onTap: () =>
                       showWhatsNewSheet(context, version: _appVersion),
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.bug_report_outlined),
-                  title: const Text('Send Feedback'),
-                  subtitle: const Text('Report bugs or request features'),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => showFeedbackSheet(context),
-                ),
+                if (isOnline) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.bug_report_outlined),
+                    title: const Text('Send Feedback'),
+                    subtitle: const Text('Report bugs or request features'),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => showFeedbackSheet(context),
+                  ),
+                ],
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.article_outlined),

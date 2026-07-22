@@ -1,7 +1,7 @@
 name: spendwise
 description: SpendWise — smart expense tracker.
 publish_to: 'none'
-version: 2.14.0+19
+version: 3.0.0+20
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
@@ -29,7 +29,6 @@ dependencies:
 
   # --- Utils (new) ---
   uuid: ^4.0.0
-  google_fonts: ^6.0.0
   dynamic_color: ^1.7.0
   flutter_animate: ^4.5.0
 
@@ -89,3 +88,17 @@ flutter:
     - assets/logo/
     - .env
     - CHANGELOG.md
+    # Also loadable via rootBundle so the AI report PDF can use it as the
+    # default Unicode font (covers ₹, em dash, bullets — Helvetica doesn't).
+    - assets/fonts/PlusJakartaSans.ttf
+
+  # Fonts are bundled locally (OFL-licensed variable fonts) — no runtime fetch.
+  # A single variable-font asset per family; Flutter resolves `fontWeight` from
+  # the TextStyle against the font's `wght` axis. See lib/app/themes/app_fonts.dart.
+  fonts:
+    - family: PlusJakartaSans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans.ttf
+    - family: SpaceGrotesk
+      fonts:
+        - asset: assets/fonts/SpaceGrotesk.ttf

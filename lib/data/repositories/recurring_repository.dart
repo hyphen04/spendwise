@@ -82,6 +82,39 @@ class RecurringRepository {
 
   Future<int> delete(String id) => _db.recurringItemsDao.deleteById(id);
 
+  // ── "Not a bill" ignore list ───────────────────────────────────────────────
+  // A category the user marked as not-a-recurring-bill. The detector skips it
+  // (see [autoRefreshFromTransactions]) so a false positive like Fuel isn't
+  // re-seeded on re-detect. Category id only — no PII, never sent to the AI.
+
+  Future<Set<String>> ignoredCategoryIds() async {
+    final rows = await _db.select(_db.ignoredRecurring).get();
+    return rows.map((r) => r.categoryId).toSet();
+  }
+
+  Future<void> ignoreCategory(String categoryId) async {
+    await _db.into(_db.ignoredRecurring).insertOnConflictUpdate(
+          IgnoredRecurringCompanion.insert(
+            categoryId: categoryId,
+            createdAt: DateTime.now().millisecondsSinceEpoch,
+          ),
+        );
+  }
+
+  Future<void> unignoreCategory(String categoryId) async {
+    await (_db.delete(_db.ignoredRecurring)
+          ..where((r) => r.categoryId.equals(categoryId)))
+        .go();
+  }
+
+  /// Mark [item]'s category as "not a bill" and remove the detected row in one
+  /// step. Only meaningful for `source == 'detected'` rows. Manual re-add in the
+  /// same category is still allowed — this only suppresses auto-detection.
+  Future<void> ignoreDetected(RecurringItem item) async {
+    await ignoreCategory(item.categoryId);
+    await delete(item.id);
+  }
+
   /// Active items whose next due date falls within [days] days from today
   /// (inclusive of today). Used for the "upcoming bills" reminder surface.
   Future<List<RecurringItem>> dueInDays(int days) async {
@@ -118,12 +151,14 @@ class RecurringRepository {
   ///
   /// Category/mode names from the detector are resolved to ids on-device; a
   /// detected group whose category no longer exists is skipped (no valid FK).
+  /// Categories the user marked "not a bill" ([ignoredCategoryIds]) are skipped
+  /// too, so a dismissed false positive isn't re-seeded on re-detect.
   Future<int> autoRefreshFromTransactions(ReportsRepository reports) async {
     final now = DateTime.now();
     final from = DateTime(now.year, now.month - 12).toIso8601String();
     final to = DateTime(now.year, now.month + 1).toIso8601String();
-    final expenses =
-        await reports.transactionsForExport(from: from, to: to, kind: 'expense');
+    final expenses = await reports.transactionsForExport(
+        from: from, to: to, kind: 'expense');
     final detected = LocalInsightEngine.detectRecurring(expenses);
     if (detected.isEmpty) return 0;
 
@@ -137,12 +172,17 @@ class RecurringRepository {
       for (final r in existing) _key(r.name, r.amount, r.cadence),
     };
 
+    // Skip categories the user has marked "not a bill" so false positives
+    // (e.g. Fuel bought at a regular price) aren't re-seeded.
+    final ignored = await ignoredCategoryIds();
+
     var inserted = 0;
     for (final d in detected) {
       final key = _key(d.categoryName, d.amount, d.cadence);
       if (existingKeys.contains(key)) continue;
       final cat = catByName[d.categoryName];
       if (cat == null) continue; // category gone — can't create a valid FK
+      if (ignored.contains(cat.id)) continue; // user marked "not a bill"
 
       final last = DateTime.tryParse(d.lastDate);
       var nextDue = last != null ? _addCadence(last, d.cadence) : now;

@@ -29,11 +29,36 @@ void main() {
       expect(out, isNot(contains('cat_')));
     });
 
-    test('word-boundary: cat_0 is not matched inside cat_01', () {
-      // cat_01 is not a valid label; restore must leave it alone rather than
-      // turning it into "Food & Dining1".
+    test('case-insensitive: Cat_0 / CAT_0 are restored too', () {
+      // The LLM often capitalizes a label at a sentence start; restore must
+      // catch it regardless of case.
+      expect(gatekeeper.restore('Cat_0 spiked, and CAT_0 also rose.'),
+          'Food & Dining spiked, and Food & Dining also rose.');
+    });
+
+    test('fuzzy: cate_0 / category_0 / cat 0 / cat-0 restore to the real name', () {
+      // The LLM sometimes invents malformed prefixes/separators. Each
+      // canonicalizes to cat_0 → the real name, never leaking the raw token.
+      expect(gatekeeper.restore('cate_0 spiked.'), 'Food & Dining spiked.');
+      expect(gatekeeper.restore('category_0 spiked.'), 'Food & Dining spiked.');
+      expect(gatekeeper.restore('categories_0 spiked.'), 'Food & Dining spiked.');
+      expect(gatekeeper.restore('cat 0 spiked.'), 'Food & Dining spiked.');
+      expect(gatekeeper.restore('cat-0 spiked.'), 'Food & Dining spiked.');
+    });
+
+    test('scrubs an unknown label number to a generic noun (no raw leak)', () {
+      // cat_99 is not in the legend → the exact pass leaves it, the fuzzy pass
+      // scrubs it to "category" so the user never sees cat_99.
+      expect(gatekeeper.restore('You spent a lot on cat_99 this month.'),
+          'You spent a lot on category this month.');
+    });
+
+    test('scrubs an invalid label like cat_01 to a noun (not corrupted)', () {
+      // cat_01 is not a valid legend key; the old pass left it raw. The fuzzy
+      // pass canonicalizes it to cat_01 (unknown) and scrubs it to "category"
+      // rather than corrupting it into "<Food & Dining>1" or leaking it raw.
       final out = gatekeeper.restore('cat_01 is unknown here.');
-      expect(out, 'cat_01 is unknown here.');
+      expect(out, 'category is unknown here.');
     });
 
     test('is a no-op on partial streamed text', () {
@@ -41,10 +66,15 @@ void main() {
       expect(gatekeeper.restore('You spent cat_'), 'You spent cat_');
     });
 
-    test('is identity when the legend is empty (shareNames=true path)', () {
+    test('scrubs leaked labels to nouns even when the legend is empty', () {
+      // shareNames=true path: the legend may be empty, but a leaked label-shaped
+      // token is still scrubbed to a generic noun instead of shown raw.
       final g = AiGatekeeper(legend: const {}, validLabels: const {});
-      expect(g.restore('Food & Dining spending spiked.'), isNotEmpty);
-      expect(g.restore('cat_0'), 'cat_0'); // nothing to restore
+      expect(g.restore('Food & Dining spending spiked.'),
+          'Food & Dining spending spiked.');
+      expect(g.restore('cat_0'), 'category');
+      expect(g.restore('acc_1'), 'account');
+      expect(g.restore('mode_2'), 'payment mode');
     });
   });
 
@@ -78,6 +108,27 @@ void main() {
       expect(res.severity, AiCheckSeverity.flagged);
       expect(res.issues, isNotEmpty);
       expect(res.issues.first, contains('cat_9'));
+    });
+
+    test('flagged: unknown malformed label (cate_99) is flagged', () {
+      final res = g(
+        legend: const {'cat_0': 'Food'},
+        validLabels: const {'cat_0'},
+      ).check('You spent a lot on cate_99 this month.');
+      expect(res.severity, AiCheckSeverity.flagged);
+      // The issue references the raw leaked token so it's debuggable.
+      expect(res.issues.any((i) => i.contains('cate_99')), isTrue);
+    });
+
+    test('ok: a malformed label that DOES restore is not flagged', () {
+      // cate_0 canonicalizes to cat_0, which is valid + in the legend → restored
+      // successfully. The gatekeeper must not flag it (no false noise).
+      final res = g(
+        legend: const {'cat_0': 'Food & Dining'},
+        validLabels: const {'cat_0'},
+      ).check('You spent most on cate_0 this month.');
+      expect(res.severity, AiCheckSeverity.ok);
+      expect(res.issues, isEmpty);
     });
 
     test('flagged: valid label missing from legend (could not restore)', () {

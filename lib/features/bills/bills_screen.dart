@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 
 import '../../app/themes/app_colors.dart';
 import '../../app/utils/feedback.dart';
@@ -79,7 +79,8 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
     final count = await ref.read(seedDetectedRecurringProvider.future);
     if (!context.mounted) return;
     if (count > 0) {
-      showFeedbackSnackBar(context, 'Found $count new recurring bill${count == 1 ? '' : 's'}.');
+      showFeedbackSnackBar(
+          context, 'Found $count new recurring bill${count == 1 ? '' : 's'}.');
     } else {
       showFeedbackSnackBar(context, 'No new recurring bills found.');
     }
@@ -96,7 +97,8 @@ class _RecurringTile extends ConsumerWidget {
     final appColors = Theme.of(context).extension<AppColors>()!;
     final repo = ref.read(recurringRepositoryProvider);
 
-    final cats = ref.watch(categoriesStreamProvider).valueOrNull ?? const <Category>[];
+    final cats =
+        ref.watch(categoriesStreamProvider).valueOrNull ?? const <Category>[];
     final cat = cats.where((c) => c.id == item.categoryId).firstOrNull;
     final color = hexToColor(cat?.color);
     final dueDays = repo.daysUntilDue(item);
@@ -158,12 +160,13 @@ class _RecurringTile extends ConsumerWidget {
                             item.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  decoration: item.isActive
-                                      ? null
-                                      : TextDecoration.lineThrough,
-                                ),
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      decoration: item.isActive
+                                          ? null
+                                          : TextDecoration.lineThrough,
+                                    ),
                           ),
                         ),
                         if (item.source == 'detected') ...[
@@ -184,6 +187,23 @@ class _RecurringTile extends ConsumerWidget {
                   ],
                 ),
               ),
+              // "Not a bill" — only for detected items. Marks the category as
+              // not-recurring so re-detect won't resurrect it, and removes the
+              // row. Undo re-enables detection and re-seeds.
+              if (item.source == 'detected')
+                PopupMenuButton<String>(
+                  tooltip: 'More',
+                  padding: EdgeInsets.zero,
+                  icon: Icon(Icons.more_vert,
+                      color: cs.onSurfaceVariant, size: 20),
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(
+                        value: 'not_a_bill', child: Text('Not a bill')),
+                  ],
+                  onSelected: (v) {
+                    if (v == 'not_a_bill') _markNotABill(context, ref, repo);
+                  },
+                ),
               if (item.isActive && dueDays != null) _DueBadge(dueDays: dueDays),
             ],
           ),
@@ -192,7 +212,8 @@ class _RecurringTile extends ConsumerWidget {
     );
   }
 
-  Future<void> _confirmDelete(BuildContext context, RecurringRepository repo) async {
+  Future<void> _confirmDelete(
+      BuildContext context, RecurringRepository repo) async {
     final ok = await showConfirmDeleteDialog(
       context,
       title: 'Delete Bill',
@@ -202,6 +223,34 @@ class _RecurringTile extends ConsumerWidget {
       await repo.delete(item.id);
       if (context.mounted) showFeedbackSnackBar(context, 'Bill deleted');
     }
+  }
+
+  /// Mark this detected item's category as "not a bill": record the ignore +
+  /// drop the row. Reversible via the snackbar's Undo (unignore + re-seed).
+  /// Uses a custom SnackBar (not [showFeedbackSnackBar]) because the helper
+  /// doesn't support an action button.
+  Future<void> _markNotABill(
+      BuildContext context, WidgetRef ref, RecurringRepository repo) async {
+    final categoryId = item.categoryId;
+    final name = item.name;
+    await repo.ignoreDetected(item);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(
+            '"$name" marked as not a bill — won\'t be detected again'),
+        duration: const Duration(seconds: 5),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () async {
+            await repo.unignoreCategory(categoryId);
+            // Re-seed so the dismissed detection is restored.
+            ref.invalidate(seedDetectedRecurringProvider);
+            await ref.read(seedDetectedRecurringProvider.future);
+          },
+        ),
+      ));
   }
 }
 
@@ -241,7 +290,7 @@ class _DueBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(label,
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
               fontSize: 11, fontWeight: FontWeight.w600, color: fg)),
     );
   }
@@ -255,9 +304,10 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
+        decoration:
+            BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
         child: Text(label,
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
                 fontSize: 10, fontWeight: FontWeight.w600, color: fg)),
       );
 }

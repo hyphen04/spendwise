@@ -5,20 +5,16 @@ AiMentionData _data({
   List<AiEntityName> categories = const [],
   List<AiEntityName> accounts = const [],
   List<AiEntityName> modes = const [],
-  List<AiEntityName> tags = const [],
   Map<String, double> categoryAmount = const {},
   Map<String, double> modeAmount = const {},
-  Map<String, double> tagAmount = const {},
   Map<String, double> accountBalance = const {},
 }) =>
     AiMentionData(
       categories: categories,
       accounts: accounts,
       modes: modes,
-      tags: tags,
       categoryAmount: categoryAmount,
       modeAmount: modeAmount,
-      tagAmount: tagAmount,
       accountBalance: accountBalance,
     );
 

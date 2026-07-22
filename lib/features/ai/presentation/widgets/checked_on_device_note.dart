@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../../app/themes/app_fonts.dart';
 
 /// A small "Checked on-device" badge shown above the AI narrative.
 ///
@@ -30,7 +30,7 @@ class CheckedOnDeviceNote extends StatelessWidget {
                       'items were flagged for review.'
                   : 'Checked on-device — real names restored locally, nothing '
                       'personal was sent to the AI.',
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                   fontSize: 11,
                   color: flagged ? cs.tertiary : cs.onSurfaceVariant,
                   height: 1.4),

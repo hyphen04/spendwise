@@ -8,6 +8,4 @@ mixin _$TransactionsDaoMixin on DatabaseAccessor<AppDatabase> {
   $CategoriesTable get categories => attachedDatabase.categories;
   $ModesTable get modes => attachedDatabase.modes;
   $TransactionsTable get transactions => attachedDatabase.transactions;
-  $TagsTable get tags => attachedDatabase.tags;
-  $TransactionTagsTable get transactionTags => attachedDatabase.transactionTags;
 }

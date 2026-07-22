@@ -23,6 +23,10 @@ class AiChatRepository {
 
   Stream<AiThread?> watchThread(String id) => _db.aiThreadsDao.watchById(id);
 
+  /// One-shot fetch of a thread row (used by the auto-titler to detect a
+  /// manual rename done while the title LLM call was in flight).
+  Future<AiThread?> getThread(String id) => _db.aiThreadsDao.getById(id);
+
   Future<AiThread> createThread({String? title}) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     final id = _uuid.v4();
@@ -38,6 +42,9 @@ class AiChatRepository {
       preview: '',
       createdAt: now,
       updatedAt: now,
+      pinned: false,
+      archived: false,
+      folder: '',
     );
   }
 
@@ -51,6 +58,47 @@ class AiChatRepository {
       await _db.aiThreadsDao.hardDelete(id);
     });
   }
+
+  /// Delete many threads (+ their messages) in one transaction.
+  Future<void> bulkDelete(List<String> ids) async {
+    if (ids.isEmpty) return;
+    await _db.transaction(() async {
+      for (final id in ids) {
+        await _db.aiMessagesDao.deleteForThread(id);
+        await _db.aiThreadsDao.hardDelete(id);
+      }
+    });
+  }
+
+  // ── Organization: pin / archive / folder ───────────────────────────────────
+  // Local-only metadata on ai_threads; never reaches the AI (see DAO comments).
+
+  Future<void> pinThread(String id, bool pinned) =>
+      _db.aiThreadsDao.setPinned(id, pinned);
+
+  Future<void> archiveThread(String id, bool archived) =>
+      _db.aiThreadsDao.setArchived(id, archived);
+
+  /// Move a thread into [folder]; pass '' to unfile.
+  Future<void> moveToFolder(String id, String folder) =>
+      _db.aiThreadsDao.setFolder(id, folder);
+
+  Future<void> bulkPin(List<String> ids, bool pinned) =>
+      _db.aiThreadsDao.bulkSetPinned(ids, pinned);
+
+  Future<void> bulkArchive(List<String> ids, bool archived) =>
+      _db.aiThreadsDao.bulkSetArchived(ids, archived);
+
+  Future<void> bulkMove(List<String> ids, String folder) =>
+      _db.aiThreadsDao.bulkSetFolder(ids, folder);
+
+  Future<void> renameFolder(String oldName, String newName) =>
+      _db.aiThreadsDao.renameFolder(oldName, newName);
+
+  Future<void> deleteFolder(String name) =>
+      _db.aiThreadsDao.deleteFolder(name);
+
+  Stream<List<String>> watchFolders() => _db.aiThreadsDao.watchFolders();
 
   // ── Messages ─────────────────────────────────────────────────────────────
 

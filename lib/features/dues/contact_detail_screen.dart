@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -200,7 +200,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> {
                       children: [
                         Text(
                           'unsettled entries',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: plusJakartaSans(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: cs.onSurface,
@@ -209,7 +209,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> {
                         const SizedBox(width: 7),
                         Text(
                           '${summary.unsettledCount}',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: plusJakartaSans(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: cs.onSurfaceVariant,
@@ -259,7 +259,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> {
                             child: Center(
                               child: Text(
                                 'No pending entries',
-                                style: GoogleFonts.plusJakartaSans(
+                                style: plusJakartaSans(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                   color: cs.onSurfaceVariant.withValues(alpha: 0.7),
@@ -333,7 +333,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> {
                                               e.note.isEmpty ? 'Entry' : e.note,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: GoogleFonts.plusJakartaSans(
+                                              style: plusJakartaSans(
                                                 fontSize: 15,
                                                 fontWeight: FontWeight.w600,
                                                 color: cs.onSurface,
@@ -344,7 +344,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> {
                                               children: [
                                                 Text(
                                                   date,
-                                                  style: GoogleFonts.plusJakartaSans(
+                                                  style: plusJakartaSans(
                                                     fontSize: 12,
                                                     fontWeight: FontWeight.w400,
                                                     color: cs.onSurfaceVariant,
@@ -353,7 +353,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> {
                                                 if (e.mealSlot != null) ...[
                                                   Text('  •  ',
                                                       style:
-                                                          GoogleFonts.plusJakartaSans(
+                                                          plusJakartaSans(
                                                               fontSize: 12,
                                                               color: cs
                                                                   .onSurfaceVariant)),
@@ -370,7 +370,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> {
                                                         ? 'Lunch'
                                                         : 'Dinner',
                                                     style:
-                                                        GoogleFonts.plusJakartaSans(
+                                                        plusJakartaSans(
                                                             fontSize: 12,
                                                             color: cs
                                                                 .onSurfaceVariant),
@@ -384,7 +384,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> {
                                       const SizedBox(width: 12),
                                       Text(
                                         '₹${NumberFormat('#,##,###').format(e.amount)}',
-                                        style: GoogleFonts.spaceGrotesk(
+                                        style: spaceGrotesk(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w700,
                                           fontFeatures: const [
@@ -440,7 +440,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> {
                             children: [
                               Text(
                                 'settlement history',
-                                style: GoogleFonts.plusJakartaSans(
+                                style: plusJakartaSans(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                   color: cs.onSurface,
@@ -449,7 +449,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> {
                               const SizedBox(width: 7),
                               Text(
                                 '${settlementsWithCount.length}',
-                                style: GoogleFonts.plusJakartaSans(
+                                style: plusJakartaSans(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: cs.onSurfaceVariant,
@@ -480,7 +480,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> {
                             child: Center(
                               child: Text(
                                 'No settlements yet',
-                                style: GoogleFonts.plusJakartaSans(
+                                style: plusJakartaSans(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                   color:
@@ -526,7 +526,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> {
                                         children: [
                                           Text(
                                             'Settled ₹${NumberFormat('#,##,###').format(s.totalAmount)}',
-                                            style: GoogleFonts.plusJakartaSans(
+                                            style: plusJakartaSans(
                                               fontSize: 15,
                                               fontWeight: FontWeight.w600,
                                               color: cs.onSurface,
@@ -538,7 +538,7 @@ class _ContactDetailScreenState extends ConsumerState<ContactDetailScreen> {
                                           const SizedBox(height: 3),
                                           Text(
                                             '${item.entryCount} entries  •  ${DateFormat('dd MMM yyyy').format(DateTime.parse(s.settledDate))}',
-                                            style: GoogleFonts.plusJakartaSans(
+                                            style: plusJakartaSans(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w400,
                                               color: cs.onSurfaceVariant,
@@ -683,7 +683,7 @@ class _HeroCard extends StatelessWidget {
                       contact.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: plusJakartaSans(
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
                         color: cs.onSurface,
@@ -702,7 +702,7 @@ class _HeroCard extends StatelessWidget {
                               formatPhone(phones.first.number),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.plusJakartaSans(
+                              style: plusJakartaSans(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 color: cs.onSurfaceVariant,
@@ -721,7 +721,7 @@ class _HeroCard extends StatelessWidget {
                               ),
                               child: Text(
                                 '+${phones.length - 1}',
-                                style: GoogleFonts.plusJakartaSans(
+                                style: plusJakartaSans(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                   color: cs.onSurfaceVariant,
@@ -744,7 +744,7 @@ class _HeroCard extends StatelessWidget {
                 ),
                 child: Text(
                   isVendor ? 'vendor' : 'person',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.4,
@@ -767,7 +767,7 @@ class _HeroCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   'all settled up',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: cs.onSurface,
@@ -785,7 +785,7 @@ class _HeroCard extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     '$sign₹${NumberFormat('#,##,###').format(balance.abs())}',
-                    style: GoogleFonts.spaceGrotesk(
+                    style: spaceGrotesk(
                       fontSize: 40,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -1.0,
@@ -806,7 +806,7 @@ class _HeroCard extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       balanceLabel,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: plusJakartaSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: cs.onSurfaceVariant,
@@ -987,7 +987,7 @@ class _ReachButton extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 label,
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: cs.onSurface,

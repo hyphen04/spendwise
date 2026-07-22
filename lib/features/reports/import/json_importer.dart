@@ -43,15 +43,6 @@ class JsonImporter {
         }
       }
 
-      if (data.containsKey('tags')) {
-        for (final item in data['tags']) {
-          await db.into(db.tags).insert(
-                Tag.fromJson(item),
-                mode: InsertMode.insertOrReplace,
-              );
-        }
-      }
-
       // 2. Dependents
       if (data.containsKey('budgets')) {
         for (final item in data['budgets']) {
@@ -76,15 +67,6 @@ class JsonImporter {
         for (final item in data['transactions']) {
           await db.into(db.transactions).insert(
                 Transaction.fromJson(item),
-                mode: InsertMode.insertOrReplace,
-              );
-        }
-      }
-
-      if (data.containsKey('transaction_tags')) {
-        for (final item in data['transaction_tags']) {
-          await db.into(db.transactionTags).insert(
-                TransactionTag.fromJson(item),
                 mode: InsertMode.insertOrReplace,
               );
         }

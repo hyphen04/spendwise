@@ -1,6 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Renders the subset of Markdown used in SpendWise release notes:
@@ -318,7 +318,7 @@ class ChangelogMarkdown extends StatelessWidget {
       } else if (match.group(7) != null) {
         spans.add(TextSpan(
           text: match.group(7),
-          style: GoogleFonts.spaceGrotesk(
+          style: spaceGrotesk(
             fontSize: (base.fontSize ?? 14) * 0.9,
             color: cs.primary,
             backgroundColor: cs.surfaceContainer,

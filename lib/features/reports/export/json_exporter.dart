@@ -34,14 +34,6 @@ class JsonExporter {
       dataMap['budgets'] = rows.map((r) => r.toJson()).toList();
     }
 
-    if (config.entities.contains(ExportEntity.tags)) {
-      final tags = await db.select(db.tags).get();
-      dataMap['tags'] = tags.map((r) => r.toJson()).toList();
-      
-      final txTags = await db.select(db.transactionTags).get();
-      dataMap['transaction_tags'] = txTags.map((r) => r.toJson()).toList();
-    }
-
     if (config.entities.contains(ExportEntity.dues)) {
       final contacts = await db.select(db.dueContacts).get();
       dataMap['due_contacts'] = contacts.map((r) => r.toJson()).toList();

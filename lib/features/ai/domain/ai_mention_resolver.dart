@@ -7,8 +7,8 @@ import '../../../app/utils/money_format.dart';
 typedef AiEntityName = ({String id, String name});
 
 /// The kind of entity a mention resolved to. Mirrors the opaque-label prefixes
-/// the payload uses (`cat_`/`acc_`/`mode_`/`tag_`).
-enum AiMentionKind { category, account, mode, tag }
+/// the payload uses (`cat_`/`acc_`/`mode_`).
+enum AiMentionKind { category, account, mode }
 
 /// The on-device directory + current-month figures used to resolve the user's
 /// real-name mentions. Everything here stays on-device; the resolver emits only
@@ -18,34 +18,28 @@ class AiMentionData {
     required this.categories,
     required this.accounts,
     required this.modes,
-    required this.tags,
     required this.categoryAmount,
     required this.modeAmount,
-    required this.tagAmount,
     required this.accountBalance,
   });
 
-  /// All active categories/accounts/modes/tags as `(id, name)`.
+  /// All active categories/accounts/modes as `(id, name)`.
   final List<AiEntityName> categories;
   final List<AiEntityName> accounts;
   final List<AiEntityName> modes;
-  final List<AiEntityName> tags;
 
   /// Current-month spend per entity id (0 for entities with no activity — they
   /// are simply absent from these maps). `accountBalance` is the live balance.
   final Map<String, double> categoryAmount;
   final Map<String, double> modeAmount;
-  final Map<String, double> tagAmount;
   final Map<String, double> accountBalance;
 
   static const empty = AiMentionData(
     categories: [],
     accounts: [],
     modes: [],
-    tags: [],
     categoryAmount: {},
     modeAmount: {},
-    tagAmount: {},
     accountBalance: {},
   );
 }
@@ -106,7 +100,7 @@ class AiMentionResolver {
   /// Resolve every known entity name mentioned in [userMessage]. Names are
   /// matched case-insensitively on word boundaries, longest name first (so
   /// "Food & Dining" wins over "Food"), and each distinct name resolves once.
-  /// When a name matches several kinds, category > account > mode > tag.
+  /// When a name matches several kinds, category > account > mode.
   AiMentionResolution resolve(String userMessage) {
     if (userMessage.trim().isEmpty) {
       return const AiMentionResolution(
@@ -125,10 +119,7 @@ class AiMentionResolver {
     for (final m in data.modes) {
       candidates.add(_Candidate(AiMentionKind.mode, m.id, m.name));
     }
-    for (final t in data.tags) {
-      candidates.add(_Candidate(AiMentionKind.tag, t.id, t.name));
-    }
-    // Longest name first; prefer category > account > mode > tag on ties.
+    // Longest name first; prefer category > account > mode on ties.
     candidates.sort((a, b) {
       final byLen = b.name.length.compareTo(a.name.length);
       if (byLen != 0) return byLen;
@@ -197,8 +188,6 @@ class AiMentionResolver {
         return data.accountBalance[c.id] ?? 0.0;
       case AiMentionKind.mode:
         return data.modeAmount[c.id] ?? 0.0;
-      case AiMentionKind.tag:
-        return data.tagAmount[c.id] ?? 0.0;
     }
   }
 
@@ -228,14 +217,6 @@ class AiMentionResolver {
               '(spent $spent this month).';
         }
         return '"${c.name}" is one of your payment modes '
-            '(spent $spent this month).';
-      case AiMentionKind.tag:
-        final spent = _fmt(amt ?? 0.0);
-        if (label != null) {
-          return '"${c.name}" refers to tag $label '
-              '(spent $spent this month).';
-        }
-        return '"${c.name}" is one of your tags '
             '(spent $spent this month).';
     }
   }

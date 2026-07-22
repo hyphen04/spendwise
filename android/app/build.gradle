@@ -35,6 +35,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // App ships English-only; prunes other locale resources from the APK.
+        resConfigs "en"
     }
 
     signingConfigs {
@@ -49,6 +51,14 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.release
+            // R8 code shrinking + resource shrinking — keeps the release APK
+            // small. See CLAUDE.md "APK size levers (always on)". Smoke-test
+            // after enabling (add tx, open report, AI chat, export PDF); add a
+            // -keep rule to proguard-rules.pro if a reflectively-loaded plugin
+            // breaks rather than disabling minify.
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }

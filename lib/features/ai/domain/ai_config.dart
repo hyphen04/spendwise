@@ -24,6 +24,7 @@ class LlmProviderPreset {
     required this.model,
     required this.helpUrl,
     required this.isGemini,
+    this.freeTier = false,
   });
 
   final LlmProviderKind kind;
@@ -33,6 +34,9 @@ class LlmProviderPreset {
   final String model;
   final String helpUrl; // where the user gets an API key
   final bool isGemini; // Gemini has a different REST shape
+  /// True when the default model is usable on the provider's free tier (no
+  /// card / no payment required). Shown as a hint in the provider picker.
+  final bool freeTier;
 
   static const List<LlmProviderPreset> all = [
     LlmProviderPreset(
@@ -43,15 +47,22 @@ class LlmProviderPreset {
       model: 'gpt-4o-mini',
       helpUrl: 'https://platform.openai.com/api-keys',
       isGemini: false,
+      // OpenAI has no free API tier; gpt-4o-mini is the cheap-but-powerful pick.
+      freeTier: false,
     ),
     LlmProviderPreset(
       kind: LlmProviderKind.openrouter,
       id: 'openrouter',
       label: 'OpenRouter',
       baseUrl: 'https://openrouter.ai/api/v1',
-      model: 'openai/gpt-4o-mini',
+      // `openrouter/free` auto-routes to whatever free model is currently
+      // available, so the default won't break when an individual free model is
+      // retired (e.g. llama-3.3-70b:free is being deprecated). Free models may
+      // lack JSON mode — the AI Report falls back to its default charts then.
+      model: 'openrouter/free',
       helpUrl: 'https://openrouter.ai/keys',
       isGemini: false,
+      freeTier: true,
     ),
     LlmProviderPreset(
       kind: LlmProviderKind.groq,
@@ -61,15 +72,19 @@ class LlmProviderPreset {
       model: 'llama-3.3-70b-versatile',
       helpUrl: 'https://console.groq.com/keys',
       isGemini: false,
+      freeTier: true,
     ),
     LlmProviderPreset(
       kind: LlmProviderKind.gemini,
       id: 'gemini',
       label: 'Google Gemini',
       baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
-      model: 'gemini-2.0-flash',
+      // gemini-2.5-flash is on the free tier (1,500 req/day, no card) and is
+      // more capable than 2.0-flash. Stable through Oct 2026.
+      model: 'gemini-2.5-flash',
       helpUrl: 'https://aistudio.google.com/app/apikey',
       isGemini: true,
+      freeTier: true,
     ),
     LlmProviderPreset(
       kind: LlmProviderKind.custom,
@@ -79,6 +94,7 @@ class LlmProviderPreset {
       model: '',
       helpUrl: '',
       isGemini: false,
+      freeTier: false,
     ),
   ];
 

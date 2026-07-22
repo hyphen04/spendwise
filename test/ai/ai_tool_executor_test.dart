@@ -50,8 +50,7 @@ void main() {
       categories: const [(id: 'c-fuel', name: 'Fuel'), (id: 'c-food', name: 'Food')],
       accounts: const [(id: 'a1', name: 'HDFC')],
       modes: const [(id: 'm-upi', name: 'UPI')],
-      tags: const [],
-      categoryAmount: const {}, modeAmount: const {}, tagAmount: const {}, accountBalance: const {},
+      categoryAmount: const {}, modeAmount: const {}, accountBalance: const {},
     );
     exec = AiToolExecutor(
       reports: reports,
@@ -152,8 +151,7 @@ void main() {
         categories: const [(id: 'c-fuel', name: 'Fuel'), (id: 'c-food', name: 'Food')],
         accounts: const [(id: 'a1', name: 'HDFC')],
         modes: const [(id: 'm-upi', name: 'UPI')],
-        tags: const [],
-        categoryAmount: const {}, modeAmount: const {}, tagAmount: const {}, accountBalance: const {},
+        categoryAmount: const {}, modeAmount: const {}, accountBalance: const {},
       ),
       goals: const [], bills: const [],
       labelToId: labelToId, shareNames: true,
@@ -170,8 +168,8 @@ void main() {
     final execG = AiToolExecutor(
       reports: reports, budgets: budgets,
       directory: AiMentionData(
-        categories: const [], accounts: const [], modes: const [], tags: const [],
-        categoryAmount: const {}, modeAmount: const {}, tagAmount: const {}, accountBalance: const {},
+        categories: const [], accounts: const [], modes: const [],
+        categoryAmount: const {}, modeAmount: const {}, accountBalance: const {},
       ),
       goals: const [(id: 'g1', name: 'Phone', target: 60000, saved: 15000, monthsLeft: 10, monthlyCommitment: 4500)],
       bills: const [],
@@ -225,8 +223,7 @@ void main() {
         categories: dirCats,
         accounts: const [(id: 'a1', name: 'HDFC')],
         modes: const [(id: 'm-upi', name: 'UPI')],
-        tags: const [],
-        categoryAmount: const {}, modeAmount: const {}, tagAmount: const {}, accountBalance: const {},
+        categoryAmount: const {}, modeAmount: const {}, accountBalance: const {},
       ),
       goals: const [], bills: const [],
       labelToId: labelMap, shareNames: false,

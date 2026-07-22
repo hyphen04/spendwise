@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 import '../../../app/themes/app_colors.dart';
 import '../../../app/utils/infinite_scroll.dart';
 import '../../../app/widgets/load_more_button.dart';
@@ -399,24 +399,31 @@ class _StatementSummaryCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: cs.primaryContainer.withValues(alpha: 0.4),
+                color: cs.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: cs.outline),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.account_balance_wallet_outlined, size: 18, color: cs.onPrimaryContainer),
+                  Icon(Icons.account_balance_wallet_outlined,
+                      size: 18, color: cs.onSurfaceVariant),
                   const SizedBox(width: 8),
-                  Text('Current Balance: ', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w500, color: cs.onPrimaryContainer)),
+                  Text('Current Balance: ',
+                      style: plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: cs.onSurfaceVariant)),
                   currentBalanceAsync.when(
                     loading: () => const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
                     error: (e, _) => Text('Error', style: TextStyle(color: cs.error, fontSize: 13)),
                     data: (balance) => Text(
                       '₹${_fmt(balance)}',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
+                      style: plusJakartaSans(
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: balance >= 0 ? appColors.income : appColors.expense,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                   ),
@@ -451,7 +458,7 @@ class _FlowRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
             color: color,
             fontSize: isBold ? 15 : 14,
             fontWeight: isBold ? FontWeight.w600 : FontWeight.w500,
@@ -459,7 +466,7 @@ class _FlowRow extends StatelessWidget {
         ),
         Text(
           '$prefix₹${_fmt(amount.abs())}',
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
             color: color,
             fontSize: isBold ? 16 : 15,
             fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,

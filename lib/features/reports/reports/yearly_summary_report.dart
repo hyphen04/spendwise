@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 import '../../../app/themes/app_colors.dart';
 import '../../../data/models/report_models.dart';
 import '../../../state/reports_providers.dart';
@@ -119,7 +119,7 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: GoogleFonts.plusJakartaSans(
+        style: plusJakartaSans(
           fontSize: 12,
           fontWeight: FontWeight.w700,
           color: cs.onSurfaceVariant,
@@ -156,7 +156,7 @@ class _NetGainCard extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             'Net Gain: $prefix₹${_fmt(net.abs())}', 
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
               fontWeight: FontWeight.w700, 
               fontSize: 15, 
               color: color,
@@ -231,7 +231,7 @@ class _FlowRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
             color: color,
             fontSize: isBold ? 15 : 14,
             fontWeight: isBold ? FontWeight.w600 : FontWeight.w500,
@@ -239,7 +239,7 @@ class _FlowRow extends StatelessWidget {
         ),
         Text(
           '$prefix₹${_fmt(amount)}',
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
             color: color,
             fontSize: isBold ? 16 : 15,
             fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
@@ -587,7 +587,7 @@ class _YearTopSpends extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(cat.name, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(cat.name, style: plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 6),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(2),
@@ -597,7 +597,7 @@ class _YearTopSpends extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Text('₹${_fmt(cat.total)}', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 15, color: appColors.expense)),
+                  Text('₹${_fmt(cat.total)}', style: plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 15, color: appColors.expense)),
                 ],
               ),
             );

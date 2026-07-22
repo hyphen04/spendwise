@@ -6,10 +6,10 @@ import 'custom_report_spec.dart';
 /// One normalized result row from executing a [CustomReportSpec].
 ///
 /// `value` is the metric (sum / count / avg of `amount`). `key` is the stable
-/// group identifier (a UUID for category/account/mode/tag, or a `yyyy-MM-dd` /
+/// group identifier (a UUID for category/account/mode, or a `yyyy-MM-dd` /
 /// `yyyy-MM` string for day/month). `label` is the human label shown on the
 /// chart axis / legend. `icon`/`color` are present when the group dimension
-/// carries them (category/account/mode/tag).
+/// carries them (category/account/mode).
 class CustomReportRow {
   const CustomReportRow({
     required this.key,
@@ -39,7 +39,7 @@ class CustomReportRow {
 ///
 /// **Privacy (the primary invariant):** the executor is hard-constrained to the
 /// safe table subset — `transactions` joined to `accounts` / `categories` /
-/// `modes` / `tags` / `transaction_tags` only. It NEVER reads `note` or
+/// `modes` only. It NEVER reads `note` or
 /// `receipt_path`, and NEVER touches `due_*` / `ai_*` / `recurring_items` /
 /// `goals`. This mirrors `SqlGuard`'s allow/deny philosophy, but unlike
 /// `customSql` the SQL is built from a fixed enum vocabulary + UUID filter ids
@@ -56,8 +56,6 @@ class CustomReportExecutor {
     'accounts',
     'categories',
     'modes',
-    'tags',
-    'transaction_tags',
   };
 
   /// Columns the executor never selects (PII). Enforced by construction — the
@@ -130,8 +128,6 @@ class CustomReportExecutor {
       if (spec.accountId != null) 't.account_id = ?',
       if (spec.categoryId != null) 't.category_id = ?',
       if (spec.modeId != null) 't.mode_id = ?',
-      if (spec.tagId != null && spec.groupBy != CustomGroupBy.tag)
-        't.id IN (SELECT transaction_id FROM transaction_tags WHERE tag_id = ?)',
     ];
 
     final aggregate = _aggregate(spec.metric);
@@ -172,9 +168,6 @@ class CustomReportExecutor {
     if (spec.accountId != null) args.add(Variable.withString(spec.accountId!));
     if (spec.categoryId != null) args.add(Variable.withString(spec.categoryId!));
     if (spec.modeId != null) args.add(Variable.withString(spec.modeId!));
-    if (spec.tagId != null && spec.groupBy != CustomGroupBy.tag) {
-      args.add(Variable.withString(spec.tagId!));
-    }
     return args;
   }
 
@@ -210,8 +203,6 @@ class CustomReportExecutor {
         return 't.account_id';
       case CustomGroupBy.mode:
         return 't.mode_id';
-      case CustomGroupBy.tag:
-        return 'tt.tag_id';
       case CustomGroupBy.day:
         return 'substr(t.transaction_date,1,10)';
       case CustomGroupBy.month:
@@ -227,8 +218,6 @@ class CustomReportExecutor {
         return 'COALESCE(a.name,\'Unknown\')';
       case CustomGroupBy.mode:
         return 'COALESCE(m.name,\'Unknown\')';
-      case CustomGroupBy.tag:
-        return 'COALESCE(tg.name,\'Untagged\')';
       case CustomGroupBy.day:
         // "yyyy-MM-dd" is a fine axis label; the renderer can shorten it.
         return 'substr(t.transaction_date,1,10)';
@@ -246,7 +235,6 @@ class CustomReportExecutor {
         return "COALESCE(a.icon,'')";
       case CustomGroupBy.mode:
         return "COALESCE(m.icon,'')";
-      case CustomGroupBy.tag:
       case CustomGroupBy.day:
       case CustomGroupBy.month:
         return null;
@@ -259,8 +247,6 @@ class CustomReportExecutor {
         return "COALESCE(c.color,'#475569')";
       case CustomGroupBy.account:
         return "COALESCE(a.color,'#475569')";
-      case CustomGroupBy.tag:
-        return "COALESCE(tg.color,'#475569')";
       case CustomGroupBy.mode:
       case CustomGroupBy.day:
       case CustomGroupBy.month:
@@ -276,11 +262,6 @@ class CustomReportExecutor {
         return 'LEFT JOIN accounts a ON t.account_id = a.id';
       case CustomGroupBy.mode:
         return 'LEFT JOIN modes m ON t.mode_id = m.id';
-      case CustomGroupBy.tag:
-        // JOIN (not LEFT) so untagged transactions are excluded from a tag
-        // breakdown — they don't belong to any tag group.
-        return 'JOIN transaction_tags tt ON tt.transaction_id = t.id '
-            'JOIN tags tg ON tt.tag_id = tg.id';
       case CustomGroupBy.day:
       case CustomGroupBy.month:
         return '';

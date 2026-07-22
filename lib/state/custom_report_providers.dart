@@ -17,15 +17,13 @@ final customReportsDaoProvider = Provider<CustomReportsDao>(
 final customReportsStreamProvider = StreamProvider<List<CustomReport>>(
     (ref) => ref.watch(customReportsDaoProvider).watchAll());
 
-/// Active tags (for the tag filter picker in the builder). Tags have no
-/// existing top-level stream provider, so we expose one here scoped to the
-/// custom-report feature.
-final tagsForCustomReportProvider = StreamProvider<List<Tag>>(
-    (ref) => ref.watch(appDatabaseProvider).tagsDao.watchAll());
-
 /// A single saved spec by id, or null. Future-based (used by the view screen).
+/// Watches `customReportsStreamProvider` so it re-runs when a report is
+/// saved/deleted — otherwise the view screen header would show a stale name
+/// after editing in the builder and popping back.
 final customReportByIdProvider =
     FutureProvider.family<CustomReport?, String>((ref, id) {
+  ref.watch(customReportsStreamProvider);
   return ref.watch(customReportsDaoProvider).getById(id);
 });
 

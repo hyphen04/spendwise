@@ -178,6 +178,11 @@ final aiThreadStreamProvider =
     StreamProvider.family<AiThread?, String>(
         (ref, id) => ref.watch(aiChatRepositoryProvider).watchThread(id));
 
+/// Distinct chat folder names (alpha-sorted) for the chat list filter chips.
+final aiFoldersStreamProvider =
+    StreamProvider<List<String>>((ref) =>
+        ref.watch(aiChatRepositoryProvider).watchFolders());
+
 // ── AI Report on-device data (Phase 4 visuals + gatekeeper parity) ──────────
 
 /// The month's real aggregations, gathered once and consumed by BOTH the

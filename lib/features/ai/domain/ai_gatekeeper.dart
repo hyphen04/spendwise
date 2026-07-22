@@ -51,9 +51,9 @@ class AiGatekeeper {
   final Map<String, String> _legend;
 
   /// The full set of label tokens the LLM was allowed to emit (`legend.keys`
-  /// plus anything else the caller considers valid). Any `(cat|acc|mode|tag|
-  /// goal|bill)_N` token found in the reply that is NOT in this set was
-  /// invented by the LLM.
+  /// plus anything else the caller considers valid). Any
+  /// `(cat|acc|mode|goal|bill)_N` token found in the reply that is NOT in this
+  /// set was invented by the LLM.
   final Set<String> _validLabels;
 
   /// Optional upper bound for the conservative numeric sanity check. Any
@@ -74,9 +74,12 @@ class AiGatekeeper {
   /// Null = names were never sent (anonymized mode) → skip the name check.
   final Set<String>? _sentNameVocabulary;
 
-  /// Replace every opaque label in [text] with its real name. No-op when the
+  /// Replace every opaque label in [text] with its real name. Case-insensitive
+  /// + fuzzy (catches `Cat_0`, `cate_0`, `category_0`, `cat 0`, `cat-0`) and
+  /// scrubs unresolvable label-shaped tokens to a generic noun. No-op when the
   /// legend is empty.
-  String restore(String text) => LabelReplacer.replace(text, _legend);
+  String restore(String text) => LabelReplacer.replace(text, _legend,
+      caseInsensitive: true, fuzzy: true);
 
   /// Validate [text]: run [restore] first, then apply the checks. Returns the
   /// severity + human-readable issue strings (for a tooltip / debug).
@@ -95,15 +98,21 @@ class AiGatekeeper {
 
     final issues = <String>[];
 
-    // 2) Leftover / invented label tokens after restore.
-    final labelRe = RegExp(r'\b(?:cat|acc|mode|tag|goal|bill)_\d+\b');
-    for (final match in labelRe.allMatches(restored)) {
-      final token = match.group(0)!;
-      if (!_validLabels.contains(token)) {
-        issues.add('AI used an unknown label: $token');
-      } else if (!_legend.containsKey(token)) {
+    // 2) Leftover / invented / malformed label tokens. Scan the ORIGINAL text
+    //    (not `restored`): restore now scrubs every label-shaped token to a
+    //    real name or generic noun, so the restored text is clean by design.
+    //    Scanning pre-restore lets the gatekeeper still flag genuine problems
+    //    — an unknown label number, or a valid label the legend can't resolve —
+    //    while staying quiet for malformed variants (e.g. `cate_0`, `Cat_0`,
+    //    `cat 0`) that were successfully restored.
+    final seenTokens = <String>{};
+    for (final f in LabelReplacer.findLabelTokens(text)) {
+      if (!seenTokens.add(f.canonical)) continue;
+      if (!_validLabels.contains(f.canonical)) {
+        issues.add('AI used an unknown label: ${f.raw}');
+      } else if (!_legend.containsKey(f.canonical)) {
         // Valid label but missing from legend → couldn't be restored.
-        issues.add('Could not restore label: $token');
+        issues.add('Could not restore label: ${f.raw}');
       }
     }
 
@@ -156,7 +165,7 @@ class AiGatekeeper {
     // 6) Hallucinated-name detection — only when real names were shared. Best-
     //    effort: extract capitalized words (not the first on a line, which is
     //    usually a heading/sentence start) and flag any that don't correspond
-    //    to a sent name. Catches invented category/account/mode/tag names.
+    //    to a sent name. Catches invented category/account/mode names.
     if (_sentNameVocabulary != null && _sentNameVocabulary.isNotEmpty) {
       final candidates = _extractNameCandidates(restored);
       final vocabLower =

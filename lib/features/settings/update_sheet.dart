@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 
 import '../../app/widgets/changelog_markdown.dart';
 import '../../app/widgets/spendwise_sheet.dart';
@@ -184,7 +184,7 @@ class _UpdateSheetState extends State<_UpdateSheet> {
               children: [
                 Text(
                   _titleText,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                   ),

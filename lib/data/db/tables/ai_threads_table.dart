@@ -12,6 +12,14 @@ class AiThreads extends Table {
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
 
+  // ── Chat organization (v18; local-only metadata) ─────────────────────────
+  // None of these reach the AI: ai_threads is never listed in schema_metadata,
+  // never queried by AI tools, and never read by AiPayloadBuilder. Folder is a
+  // user-authored organizational label; pinned/archived are booleans.
+  BoolColumn get pinned => boolean().withDefault(const Constant(false))();
+  BoolColumn get archived => boolean().withDefault(const Constant(false))();
+  TextColumn get folder => text().withDefault(const Constant(''))();
+
   @override
   Set<Column> get primaryKey => {id};
 }

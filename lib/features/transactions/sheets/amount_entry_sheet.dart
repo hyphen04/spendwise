@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
+import '../../../app/widgets/amount_numpad_step.dart';
 import '../../../app/widgets/date_strip.dart';
 import '../../../app/widgets/mono_numpad.dart';
 import '../../../app/widgets/mono_pill.dart';
@@ -9,19 +10,47 @@ import '../../../data/db/app_database.dart';
 import '../../../state/manage_providers.dart';
 import '../../../state/prefs_providers.dart';
 import '../../../state/transactions_providers.dart';
+import 'mode_auto_select.dart';
 Future<void> showAmountEntrySheet(
   BuildContext context, {
   String initialKind = 'expense',
+  // Optional prefill — used by the Home quick-add "edit full form" escape
+  // hatch so the amount/category/date the user already entered carry over.
+  // All default to unset, so existing callers see no behavior change.
+  String? prefillCategoryId,
+  String? prefillAccountId,
+  String? prefillModeId,
+  double? prefillAmount,
+  DateTime? prefillDate,
 }) {
   return showSpendWiseSheet(
     context,
-    builder: (_) => _AmountEntrySheet(initialKind: initialKind),
+    builder: (_) => _AmountEntrySheet(
+      initialKind: initialKind,
+      prefillCategoryId: prefillCategoryId,
+      prefillAccountId: prefillAccountId,
+      prefillModeId: prefillModeId,
+      prefillAmount: prefillAmount,
+      prefillDate: prefillDate,
+    ),
   );
 }
 
 class _AmountEntrySheet extends ConsumerStatefulWidget {
-  const _AmountEntrySheet({required this.initialKind});
+  const _AmountEntrySheet({
+    required this.initialKind,
+    this.prefillCategoryId,
+    this.prefillAccountId,
+    this.prefillModeId,
+    this.prefillAmount,
+    this.prefillDate,
+  });
   final String initialKind;
+  final String? prefillCategoryId;
+  final String? prefillAccountId;
+  final String? prefillModeId;
+  final double? prefillAmount;
+  final DateTime? prefillDate;
 
   @override
   ConsumerState<_AmountEntrySheet> createState() => _AmountEntrySheetState();
@@ -46,6 +75,18 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
   void initState() {
     super.initState();
     _kind = widget.initialKind;
+    // Apply optional prefill values immediately (amount/date/category/account).
+    if (widget.prefillAmount != null && widget.prefillAmount! > 0) {
+      _raw = widget.prefillAmount! == widget.prefillAmount!.truncateToDouble()
+          ? widget.prefillAmount!.toInt().toString()
+          : widget.prefillAmount!.toStringAsFixed(2);
+    }
+    if (widget.prefillDate != null) {
+      _selectedDate = widget.prefillDate!;
+    }
+    _categoryId = widget.prefillCategoryId;
+    _accountId = widget.prefillAccountId;
+    _modeId = widget.prefillModeId;
     // Pre-fill default account (if set) after first frame so providers are ready.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -57,6 +98,12 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
         final modes = ref.read(modesStreamProvider).valueOrNull ?? [];
         final cashMode = _cashMode(modes);
         _autoSetMode(defaultId, accounts, cashMode, modes);
+      } else if (_accountId != null) {
+        // A pre-filled account still needs its mode resolved.
+        final accounts = ref.read(accountsStreamProvider).valueOrNull ?? [];
+        final modes = ref.read(modesStreamProvider).valueOrNull ?? [];
+        final cashMode = _cashMode(modes);
+        _autoSetMode(_accountId, accounts, cashMode, modes);
       }
     });
   }
@@ -67,30 +114,16 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
     super.dispose();
   }
 
-  double get _amount => double.tryParse(_raw) ?? 0;
+  double get _amount => parseAmount(_raw);
   bool get _canContinue => _amount > 0;
   bool get _isTransfer => _kind == 'transfer';
 
   void _onDigit(String d) {
-    setState(() {
-      if (d == '.') {
-        if (_raw.contains('.')) return;
-        _raw = _raw.isEmpty ? '0.' : '$_raw.';
-        return;
-      }
-      final dotIdx = _raw.indexOf('.');
-      if (dotIdx != -1 && _raw.length - dotIdx > 2) return;
-      if (_raw == '0') {
-        _raw = d;
-      } else {
-        _raw = '$_raw$d';
-      }
-    });
+    setState(() => _raw = appendDigit(_raw, d));
   }
 
   void _onBackspace() {
-    if (_raw.isEmpty) return;
-    setState(() => _raw = _raw.substring(0, _raw.length - 1));
+    setState(() => _raw = backspaceDigit(_raw));
   }
 
   void _goToDetails() {
@@ -271,47 +304,9 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
 
         // Big amount + backspace (the numpad itself doesn't have a ⌫ in
         // confirm mode — that slot is the decimal point. The ⌫ lives here
-        // next to the amount for one-tap correction.)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '₹',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w800,
-                  color: cs.onSurface.withValues(alpha: 0.35),
-                  height: 1.0,
-                ),
-              ),
-              const SizedBox(width: 2),
-              Flexible(
-                child: Text(
-                  _raw.isEmpty ? '0' : _raw,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 52,
-                    fontWeight: FontWeight.w800,
-                    color: cs.onSurface,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                    height: 1.0,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (_raw.isNotEmpty)
-                IconButton(
-                  onPressed: _onBackspace,
-                  icon: const Icon(Icons.backspace_outlined),
-                  color: cs.onSurfaceVariant,
-                  tooltip: 'Delete last digit',
-                ),
-            ],
-          ),
-        ),
+        // next to the amount for one-tap correction.) Shared [AmountDisplay]
+        // — the Home quick-add sheet renders the exact same amount row.
+        AmountDisplay(raw: _raw, onBackspace: _onBackspace),
         const SizedBox(height: 16),
 
         // Transfer account selectors (compact)
@@ -373,43 +368,28 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
   // ── Mode auto-selection on account change ────────────────────────────────
 
   void _autoSetMode(String? accountId, List<Account> accounts, Mode? cashMode, List<Mode> allModes) {
-    final isCash = _isCashAccount(accountId, accounts);
-    if (isCash) {
-      _modeId = cashMode?.id;
-    } else {
-      // For bank accounts: keep existing digital mode or default to preferred/first digital.
-      if (_modeId == null || _modeId == cashMode?.id) {
-        final digital = _digitalModes(allModes);
-        final preferredId = ref.read(defaultModeIdProvider);
-        final isPreferredDigital =
-            preferredId != null && digital.any((m) => m.id == preferredId);
-        _modeId = isPreferredDigital
-            ? preferredId
-            : (digital.isNotEmpty ? digital.first.id : null);
-      }
-    }
+    _modeId = autoSelectMode(
+      accountId: accountId,
+      accounts: accounts,
+      cashMode: cashMode,
+      allModes: allModes,
+      currentModeId: _modeId,
+      defaultModeId: ref.read(defaultModeIdProvider),
+    );
   }
 
   // ── Mode filtering helpers ────────────────────────────────────────────────
 
   /// True when the account with [accountId] is a cash-type account (name
   /// contains "cash", case-insensitive).  No schema change needed.
-  bool _isCashAccount(String? accountId, List<Account> accounts) {
-    if (accountId == null) return false;
-    final matches = accounts.where((a) => a.id == accountId);
-    if (matches.isEmpty) return false;
-    return matches.first.name.toLowerCase().contains('cash');
-  }
+  bool _isCashAccount(String? accountId, List<Account> accounts) =>
+      isCashAccount(accountId, accounts);
 
   /// The "Cash" payment mode, or null if not seeded yet.
-  Mode? _cashMode(List<Mode> modes) {
-    final m = modes.where((m) => m.name.toLowerCase() == 'cash');
-    return m.isEmpty ? null : m.first;
-  }
+  Mode? _cashMode(List<Mode> modes) => cashMode(modes);
 
   /// Modes visible for a non-cash account (excludes the "Cash" mode).
-  List<Mode> _digitalModes(List<Mode> modes) =>
-      modes.where((m) => m.name.toLowerCase() != 'cash').toList();
+  List<Mode> _digitalModes(List<Mode> modes) => digitalModes(modes);
 
   Widget _buildDetails() {
     final cs = Theme.of(context).colorScheme;
@@ -459,11 +439,11 @@ class _AmountEntrySheetState extends ConsumerState<_AmountEntrySheet> {
                       children: [
                         Text(
                           _kind[0].toUpperCase() + _kind.substring(1),
-                          style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w500, color: cs.onSurfaceVariant),
+                          style: plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w500, color: cs.onSurfaceVariant),
                         ),
                         Text(
                           '₹$_raw',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: plusJakartaSans(
                             fontSize: 28, fontWeight: FontWeight.w800,
                             color: cs.onSurface,
                             fontFeatures: const [FontFeature.tabularFigures()],

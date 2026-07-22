@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 
 import '../../app/themes/app_colors.dart';
 import '../../app/utils/feedback.dart';
@@ -207,7 +207,7 @@ class _StatusChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
       child: Text(status,
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
               fontSize: 10, fontWeight: FontWeight.w600, color: fg)),
     );
   }

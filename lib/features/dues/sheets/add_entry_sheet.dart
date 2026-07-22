@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_colors.dart';
+import '../../../app/themes/app_fonts.dart';
 
 import '../../../data/db/app_database.dart';
 import '../../../state/dues_providers.dart';
@@ -9,6 +10,8 @@ import '../../../app/widgets/mono_numpad.dart';
 import '../../../app/widgets/mono_pill.dart';
 import '../../../app/widgets/date_strip.dart';
 import '../../../app/widgets/spendwise_sheet.dart';
+import '../../../app/widgets/success_overlay.dart';
+import '../../../widgets/swipe_action_button.dart';
 
 Future<void> showAddDueEntrySheet(
   BuildContext context, {
@@ -140,22 +143,31 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
         mealSlot: _selectedContact!.type == 'vendor' ? _mealSlot : null,
         note: _noteCtrl.text.trim(),
       );
-    } else {
-      await repo.addEntry(
-        contactId: _selectedContact!.id,
-        amount: amt,
-        direction: _direction,
-        date: _date,
-        mealSlot: _selectedContact!.type == 'vendor' ? _mealSlot : null,
-        note: _noteCtrl.text.trim(),
-      );
+      if (mounted) {
+        showFeedbackSnackBar(context, 'Entry updated');
+        Navigator.pop(context);
+      }
+      return;
     }
-    
-    if (mounted) {
-      showFeedbackSnackBar(
-          context, widget.existingEntry != null ? 'Entry updated' : 'Entry added');
-      Navigator.pop(context);
-    }
+
+    await repo.addEntry(
+      contactId: _selectedContact!.id,
+      amount: amt,
+      direction: _direction,
+      date: _date,
+      mealSlot: _selectedContact!.type == 'vendor' ? _mealSlot : null,
+      note: _noteCtrl.text.trim(),
+    );
+
+    if (!mounted) return;
+    // Celebrate on the ROOT overlay — it outlives this sheet, so we can pop
+    // the sheet *while* the celebration is still playing and it keeps animating
+    // on the screen beneath (Home). The short delay lets the overlay appear
+    // first; closing the sheet instantly made the success animation feel cut
+    // off mid-flight.
+    showSuccessOverlay(context, amount: amt);
+    await Future.delayed(const Duration(milliseconds: 350));
+    if (mounted) Navigator.pop(context);
   }
 
   @override
@@ -194,7 +206,7 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
                 const SizedBox(width: 8),
                 Text(
                   _selectedContact!.name,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: plusJakartaSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: cs.onSurface,
@@ -296,7 +308,7 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
                   children: [
                     Text(
                       'Amount',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: plusJakartaSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: cs.onSurfaceVariant,
@@ -309,7 +321,7 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
                         alignment: Alignment.centerRight,
                         child: Text(
                           '₹${_groupedAmount()}',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: plusJakartaSans(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
                             color: cs.onSurface,
@@ -327,12 +339,19 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
           ),
           const SizedBox(height: 20),
 
-          // Save
+          // Save — swipe to confirm. The direction's semantic color drives the
+          // track: red for "I owe them" (payable), green for "They owe me"
+          // (receivable). Disabled (dimmed at 0.5, ignores drags) until a valid
+          // amount + contact are set.
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: FilledButton(
-              onPressed: isValid ? _save : null,
-              child: Text(isUpdate ? 'Save Changes' : 'Add Entry'),
+            child: SwipeActionButton(
+              label: isUpdate ? 'Swipe to Save' : 'Swipe to Add',
+              color: _direction == 'payable'
+                  ? Theme.of(context).extension<AppColors>()!.expense
+                  : Theme.of(context).extension<AppColors>()!.income,
+              enabled: isValid,
+              onAction: _save,
             ),
           ),
         ],
@@ -364,7 +383,7 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
                     children: [
                       Text(
                         '₹',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: plusJakartaSans(
                           fontSize: 32,
                           fontWeight: FontWeight.w800,
                           color: cs.onSurface.withValues(alpha: 0.35),
@@ -378,7 +397,7 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
                           alignment: Alignment.centerLeft,
                           child: Text(
                             _groupedAmount(),
-                            style: GoogleFonts.plusJakartaSans(
+                            style: plusJakartaSans(
                               fontSize: 44,
                               fontWeight: FontWeight.w800,
                               color: cs.onSurface,

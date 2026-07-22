@@ -2,7 +2,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 
 import '../../../data/db/app_database.dart';
 import '../../../state/database_provider.dart';
@@ -44,6 +44,11 @@ final contactStatementOpeningProvider =
   final db = ref.watch(appDatabaseProvider);
   ref.watch(unsettledEntriesProvider(args.contactId));
   ref.watch(settlementsProvider(args.contactId));
+
+  // All-time (empty `from`) has no "before the period" — opening is 0.
+  // Returning here also avoids summing every entry as the opening (which would
+  // double the net in the Closing Balance = opening + (lent - borrowed) math).
+  if (args.from.isEmpty) return 0;
 
   final query = db.select(db.dueEntries)
     ..where((e) => e.contactId.equals(args.contactId));
@@ -366,14 +371,15 @@ class _ContactStatementBody extends ConsumerWidget {
 
     final lentSpots = <FlSpot>[];
     final borrowedSpots = <FlSpot>[];
+    // Sorted bucket keys. For all-time these are years — mapped to a sequential
+    // x index below, then back to a year label by the bottom-axis formatter.
+    final allKeys =
+        <int>{...lentByBucket.keys, ...borrowedByBucket.keys}.toList()..sort();
 
     if (timeframe == Timeframe.all) {
-      final keys = <int>{...lentByBucket.keys, ...borrowedByBucket.keys}.toList()..sort();
-      int i = 0;
-      for (final k in keys) {
-        lentSpots.add(FlSpot(i.toDouble(), lentByBucket[k] ?? 0));
-        borrowedSpots.add(FlSpot(i.toDouble(), borrowedByBucket[k] ?? 0));
-        i++;
+      for (int i = 0; i < allKeys.length; i++) {
+        lentSpots.add(FlSpot(i.toDouble(), lentByBucket[allKeys[i]] ?? 0));
+        borrowedSpots.add(FlSpot(i.toDouble(), borrowedByBucket[allKeys[i]] ?? 0));
       }
     } else {
       for (int i = 1; i <= maxIndex; i++) {
@@ -386,32 +392,90 @@ class _ContactStatementBody extends ConsumerWidget {
       ...lentSpots.map((s) => s.y),
       ...borrowedSpots.map((s) => s.y),
     ].fold<double>(0, (a, b) => a > b ? a : b);
-    final yMax = maxVal > 0 ? maxVal * 1.2 : 1000.0;
+    // `dataMax` is the top tick; `chartMaxY` adds ~30% headroom so that tick
+    // sits below the chart's top edge instead of overlapping the "NET FLOW"
+    // header (the previous *1.2 + auto-interval placed a label at the edge).
+    final dataMax = maxVal > 0 ? maxVal : 1000.0;
+    final chartMaxY = dataMax * 1.3;
+    final leftInterval = dataMax / 4; // ticks: 0, .25, .5, .75, 1.0 × dataMax
+
+    // X-axis bounds with a right margin so the last label (e.g. day 30 in a
+    // 31-day month) isn't drawn flush against the right edge. `bottomInterval`
+    // is per-timeframe so ticks land on meaningful values (days / months /
+    // every-Nth year) instead of a single hardcoded 5.
+    final double minXBound;
+    final double maxXBound;
+    final double bottomInterval;
+    if (timeframe == Timeframe.month) {
+      minXBound = 0;
+      maxXBound = 32;
+      bottomInterval = 5;
+    } else if (timeframe == Timeframe.year) {
+      minXBound = 0;
+      maxXBound = 13;
+      bottomInterval = 2;
+    } else {
+      minXBound = 0;
+      maxXBound = allKeys.length.toDouble();
+      bottomInterval = allKeys.isEmpty
+          ? 1.0
+          : (allKeys.length ~/ 6).clamp(1, allKeys.length).toDouble();
+    }
 
     return LineChart(
       LineChartData(
-        maxY: yMax,
+        minX: minXBound,
+        maxX: maxXBound,
+        maxY: chartMaxY,
         minY: 0,
-        titlesData: const FlTitlesData(
+        titlesData: FlTitlesData(
           show: true,
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 36,
+              reservedSize: 40,
+              interval: leftInterval,
+              // Compact labels (1K / 1.2M …), and skip the tick that would land
+              // on the very top edge so nothing overlaps the header above.
+              getTitlesWidget: (v, meta) {
+                if (v > dataMax + 0.01) return const SizedBox.shrink();
+                return Text(
+                  _shortAmt(v),
+                  style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant),
+                );
+              },
             ),
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 24,
-              interval: 5,
+              reservedSize: 28,
+              interval: bottomInterval,
+              // Render plain ints (no ".0"), filter to the valid range, and for
+              // all-time map the sequential x index back to its year.
+              getTitlesWidget: (v, meta) {
+                final i = v.toInt();
+                if (i != v) return const SizedBox.shrink();
+                if (timeframe == Timeframe.month) {
+                  if (i < 1 || i > 31) return const SizedBox.shrink();
+                } else if (timeframe == Timeframe.year) {
+                  if (i < 1 || i > 12) return const SizedBox.shrink();
+                } else if (i < 0 || i >= allKeys.length) {
+                  return const SizedBox.shrink();
+                }
+                final label = timeframe == Timeframe.all ? '${allKeys[i]}' : '$i';
+                return Text(
+                  label,
+                  style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant),
+                );
+              },
             ),
           ),
         ),
         gridData: FlGridData(
-          horizontalInterval: yMax / 4,
+          horizontalInterval: leftInterval,
           getDrawingHorizontalLine: (v) => FlLine(
             color: cs.outlineVariant.withAlpha(60),
             strokeWidth: 1,
@@ -467,6 +531,12 @@ class _ContactStatementBody extends ConsumerWidget {
 
   static String _fmt(double v) =>
       v == v.truncateToDouble() ? v.toInt().toString() : v.toStringAsFixed(2);
+
+  static String _shortAmt(double v) {
+    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
+    if (v >= 1000) return '${(v / 1000).toStringAsFixed(0)}K';
+    return v.toInt().toString();
+  }
 }
 
 class _SectionHeader extends StatelessWidget {
@@ -480,7 +550,7 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: GoogleFonts.plusJakartaSans(
+        style: plusJakartaSans(
           fontSize: 12,
           fontWeight: FontWeight.w700,
           color: cs.onSurfaceVariant,
@@ -579,7 +649,7 @@ class _FlowRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
             color: color,
             fontSize: isBold ? 15 : 14,
             fontWeight: isBold ? FontWeight.w600 : FontWeight.w500,
@@ -587,7 +657,7 @@ class _FlowRow extends StatelessWidget {
         ),
         Text(
           '$prefix₹${_fmt(amount)}',
-          style: GoogleFonts.plusJakartaSans(
+          style: plusJakartaSans(
             color: color,
             fontSize: isBold ? 16 : 15,
             fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
@@ -637,7 +707,7 @@ class _NetBalanceCard extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '$label: $prefix₹${_fmt(outstanding.abs())}',
-            style: GoogleFonts.plusJakartaSans(
+            style: plusJakartaSans(
               fontWeight: FontWeight.w700,
               fontSize: 15,
               color: color,

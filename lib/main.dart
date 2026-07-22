@@ -48,7 +48,7 @@ void main() async {
     ],
   );
 
-  if (prefsService.autoCheckUpdates) {
+  if (prefsService.appMode == 'online' && prefsService.autoCheckUpdates) {
     UpdateService.checkForUpdateIfDue(prefsService).then((update) {
       if (update != null) {
         container.read(pendingUpdateProvider.notifier).state = update;

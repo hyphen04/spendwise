@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../state/ai_providers.dart';
+import '../../../state/app_mode_providers.dart';
 import '../../../state/digest_providers.dart';
 import '../../../state/reports_providers.dart';
 import '../domain/ai_gatekeeper.dart';
@@ -49,6 +50,12 @@ class WeeklyDigestPolishController extends StateNotifier<DigestPolishState> {
 
   Future<void> polish() async {
     if (state.loading) return;
+    // Defense-in-depth: the AI summary card is hidden unless AI is effectively
+    // enabled, but refuse here too so no outbound LLM call can fire in Offline
+    // mode (or with AI off) — even if some future caller invokes polish().
+    if (!_ref.read(aiEffectiveEnabledProvider)) {
+      return;
+    }
     state = const DigestPolishState(loading: true);
     try {
       final digest = await _ref.read(weeklyDigestProvider.future);

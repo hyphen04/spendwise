@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../app/themes/app_fonts.dart';
 
 /// Standardised top header for all main screens.
 ///
@@ -47,7 +47,7 @@ class ScreenHeader extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: plusJakartaSans(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
                       color: cs.onSurface,
@@ -59,7 +59,7 @@ class ScreenHeader extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       subtitle!,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: plusJakartaSans(
                         fontSize: 13,
                         color: cs.onSurfaceVariant,
                         fontWeight: FontWeight.w400,
@@ -141,7 +141,7 @@ class HeaderIconButton extends StatelessWidget {
               alignment: Alignment.center,
               child: Text(
                 badge.toString(),
-                style: GoogleFonts.plusJakartaSans(
+                style: plusJakartaSans(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   color: cs.onPrimary,

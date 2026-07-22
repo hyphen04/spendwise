@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../app/themes/app_fonts.dart';
 
 class InsightCard extends StatelessWidget {
   const InsightCard({super.key, required this.text});
@@ -13,9 +13,9 @@ class InsightCard extends StatelessWidget {
       margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cs.primaryContainer.withValues(alpha: 0.15),
+        color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: cs.primary.withValues(alpha: 0.15), width: 1.5),
+        border: Border.all(color: cs.outline, width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -25,7 +25,7 @@ class InsightCard extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: GoogleFonts.plusJakartaSans(
+              style: plusJakartaSans(
                 fontSize: 13,
                 height: 1.5,
                 color: cs.onSurface,
