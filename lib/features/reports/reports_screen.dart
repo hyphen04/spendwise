@@ -239,12 +239,15 @@ class _CompactAiCard extends ConsumerWidget {
       child: InkWell(
         // When AI is on: ask → create a fresh chat thread and open it (pruned
         // automatically if the user backs out without sending); report → open
-        // the on-demand report. When AI is off, `go` (not push) to the
-        // Settings *tab* — pushing a tab route from another tab can stack a
-        // second /settings page and trip a duplicate page-key check.
+        // the on-demand report. When AI is off, push the dedicated AI Copilot
+        // settings screen — that's where the user enables AI / adds an API key,
+        // and it renders a usable "off" state with the enable toggle. `push` is
+        // safe here because /ai/settings is a pushed screen route, not a
+        // bottom-nav tab (the tab-route duplicate-page-key concern doesn't
+        // apply); back returns to this Reports screen.
         onTap: () async {
           if (!enabled) {
-            context.go('/settings');
+            context.push('/ai/settings');
             return;
           }
           if (isAsk) {
