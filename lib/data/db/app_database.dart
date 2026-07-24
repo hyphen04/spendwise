@@ -216,9 +216,35 @@ class AppDatabase extends _$AppDatabase {
             // Local-only organizational metadata — never in schema_metadata,
             // never read by AiPayloadBuilder / AI tools (ai_threads is a PII
             // table kept off the AI schema entirely).
-            await m.addColumn(aiThreads, aiThreads.pinned);
-            await m.addColumn(aiThreads, aiThreads.archived);
-            await m.addColumn(aiThreads, aiThreads.folder);
+            //
+            // Guard each column: `m.createTable(aiThreads)` at `from < 12`
+            // (and `m.createAll()` at `from < 7`) build the FULL current
+            // schema, which already includes pinned/archived/folder. So for
+            // anyone upgrading from before ai_threads existed (e.g. v2.14,
+            // schema v9), these columns are already present and a blind
+            // `ALTER TABLE ... ADD COLUMN` throws "duplicate column name",
+            // aborting onUpgrade BEFORE Drift bumps user_version (Drift only
+            // sets user_version after onUpgrade returns cleanly). That leaves
+            // the DB half-migrated (new tables created, version still 9) and
+            // un-openable — every launch re-runs the migration and throws
+            // again, so the Recovery screen's restore (which copies an old
+            // replica back) just re-triggers the same crash. Only add what's
+            // missing. This also recovers users already stuck in that
+            // half-migrated state on the next launch: the guarded adds no-op,
+            // onUpgrade completes, and user_version finally advances to 18.
+            final aiThreadsCols =
+                await customSelect('PRAGMA table_info(ai_threads)').get();
+            final aiThreadsColNames =
+                aiThreadsCols.map((r) => r.data['name'] as String).toSet();
+            if (!aiThreadsColNames.contains('pinned')) {
+              await m.addColumn(aiThreads, aiThreads.pinned);
+            }
+            if (!aiThreadsColNames.contains('archived')) {
+              await m.addColumn(aiThreads, aiThreads.archived);
+            }
+            if (!aiThreadsColNames.contains('folder')) {
+              await m.addColumn(aiThreads, aiThreads.folder);
+            }
           }
         },
       );
